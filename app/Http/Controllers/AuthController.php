@@ -21,7 +21,7 @@ class AuthController extends Controller
 
         $payload = $registerUser->handle(
             Arr::only($validated, ['name', 'email', 'password']),
-            $validated['device_name'] ?? $request->userAgent() ?? 'api-token',
+            $request->userAgent() ?? 'api-token',
         );
 
         return response()->json($payload, 201);
@@ -34,7 +34,7 @@ class AuthController extends Controller
         $payload = $loginUser->handle(
             $validated['email'],
             $validated['password'],
-            $validated['device_name'] ?? $request->userAgent() ?? 'api-token',
+            $request->userAgent() ?? 'api-token',
         );
 
         return response()->json($payload);
