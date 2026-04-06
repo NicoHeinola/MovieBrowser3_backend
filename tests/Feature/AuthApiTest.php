@@ -3,8 +3,13 @@
 use App\Models\User;
 use Laravel\Sanctum\PersonalAccessToken;
 
+use function Pest\Laravel\assertDatabaseHas;
+use function Pest\Laravel\getJson;
+use function Pest\Laravel\postJson;
+use function Pest\Laravel\withToken;
+
 test('a user can register and receive a token', function () {
-    $response = $this->postJson('/api/auth/register', [
+    $response = postJson('/api/auth/register', [
         'name' => 'Ada Lovelace',
         'email' => 'ada@example.com',
         'password' => 'password123',
@@ -17,7 +22,7 @@ test('a user can register and receive a token', function () {
         ->assertJsonPath('token_type', 'Bearer')
         ->assertJsonPath('user.email', 'ada@example.com');
 
-    $this->assertDatabaseHas('users', [
+    assertDatabaseHas('users', [
         'email' => 'ada@example.com',
     ]);
 
@@ -29,7 +34,7 @@ test('registration rejects duplicate emails', function () {
         'email' => 'ada@example.com',
     ]);
 
-    $response = $this->postJson('/api/auth/register', [
+    $response = postJson('/api/auth/register', [
         'name' => 'Ada Lovelace',
         'email' => 'ada@example.com',
         'password' => 'password123',
@@ -47,7 +52,7 @@ test('a user can log in and receive a token', function () {
         'password' => 'password123',
     ]);
 
-    $response = $this->postJson('/api/auth/login', [
+    $response = postJson('/api/auth/login', [
         'email' => 'ada@example.com',
         'password' => 'password123',
     ]);
@@ -67,7 +72,7 @@ test('login rejects invalid credentials', function () {
         'password' => 'password123',
     ]);
 
-    $response = $this->postJson('/api/auth/login', [
+    $response = postJson('/api/auth/login', [
         'email' => 'ada@example.com',
         'password' => 'wrong-password',
     ]);
@@ -83,10 +88,9 @@ test('an authenticated user can fetch their profile', function () {
     ]);
 
     $token = $user->createToken('test-token')->plainTextToken;
+    withToken($token);
 
-    $response = $this
-        ->withToken($token)
-        ->getJson('/api/auth/me');
+    $response = getJson('/api/auth/me');
 
     $response
         ->assertOk()
@@ -94,8 +98,8 @@ test('an authenticated user can fetch their profile', function () {
 });
 
 test('protected auth endpoints require authentication', function () {
-    $this->getJson('/api/auth/me')->assertUnauthorized();
-    $this->postJson('/api/auth/logout')->assertUnauthorized();
+    getJson('/api/auth/me')->assertUnauthorized();
+    postJson('/api/auth/logout')->assertUnauthorized();
 });
 
 test('logout revokes the current token', function () {
@@ -103,10 +107,9 @@ test('logout revokes the current token', function () {
     $token = $user->createToken('test-token')->plainTextToken;
 
     expect(PersonalAccessToken::count())->toBe(1);
+    withToken($token);
 
-    $response = $this
-        ->withToken($token)
-        ->postJson('/api/auth/logout');
+    $response = postJson('/api/auth/logout');
 
     $response
         ->assertOk()

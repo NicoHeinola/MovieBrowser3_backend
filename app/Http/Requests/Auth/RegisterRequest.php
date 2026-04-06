@@ -10,11 +10,6 @@ use Illuminate\Validation\Rules\Unique;
 
 class RegisterRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * @return array<string, list<string|Password|Unique>>
      */
