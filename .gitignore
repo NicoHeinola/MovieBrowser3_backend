@@ -1,5 +1,5 @@
 # Docker DB data (persistent on disk, not in git)
-/docker/db/data/
+/.docker/db/data/
 
 *.log
 .DS_Store

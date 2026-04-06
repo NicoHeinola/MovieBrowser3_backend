@@ -3,12 +3,12 @@ services:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: moviebrowser3
-      POSTGRES_USER: moviebrowser
-      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: ${DB_DATABASE:-moviebrowser3}
+      POSTGRES_USER: ${DB_USERNAME:-moviebrowser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
-      - ./docker/db/data:/var/lib/postgresql/data
+      - ./.docker/db/data:/var/lib/postgresql/data
 
 volumes: {}
