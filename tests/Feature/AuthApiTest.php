@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\PersonalAccessToken;
 
 use function Pest\Laravel\assertDatabaseHas;
@@ -116,4 +117,35 @@ test('logout revokes the current token', function () {
         ->assertJsonPath('message', 'Logged out successfully.');
 
     expect(PersonalAccessToken::count())->toBe(0);
+});
+
+test('issued tokens expire based on sanctum configuration', function () {
+    config()->set('sanctum.expiration', 5);
+    app('auth')->forgetGuards();
+
+    User::factory()->create([
+        'email' => 'ada@example.com',
+        'password' => 'password123',
+    ]);
+
+    $loginResponse = postJson('/api/auth/login', [
+        'email' => 'ada@example.com',
+        'password' => 'password123',
+    ]);
+
+    $token = $loginResponse->json('token');
+
+    expect($token)->not()->toBeEmpty();
+    expect(PersonalAccessToken::first()?->expires_at)->not()->toBeNull();
+
+    withToken($token);
+
+    getJson('/api/auth/me')->assertOk();
+
+    Carbon::setTestNow(now()->addMinutes(6));
+    app('auth')->forgetGuards();
+
+    getJson('/api/auth/me')->assertUnauthorized();
+
+    Carbon::setTestNow();
 });

@@ -12,7 +12,9 @@ class RegisterUser
     public function handle(array $attributes, string $tokenName): array
     {
         $user = User::create($attributes);
-        $token = $user->createToken($tokenName)->plainTextToken;
+        $expiration = config('sanctum.expiration');
+        $expiresAt = $expiration === null ? null : now()->addMinutes((int) $expiration);
+        $token = $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken;
 
         return [
             'message' => 'Registered successfully.',

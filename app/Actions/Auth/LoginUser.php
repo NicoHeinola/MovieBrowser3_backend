@@ -21,9 +21,12 @@ class LoginUser
             ]);
         }
 
+        $expiration = config('sanctum.expiration');
+        $expiresAt = $expiration === null ? null : now()->addMinutes((int) $expiration);
+
         return [
             'message' => 'Authenticated successfully.',
-            'token' => $user->createToken($tokenName)->plainTextToken,
+            'token' => $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken,
             'token_type' => 'Bearer',
             'user' => $user,
         ];
