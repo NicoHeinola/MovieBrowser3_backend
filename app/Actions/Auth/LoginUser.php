@@ -15,14 +15,18 @@ class LoginUser
     {
         $user = User::where('username', $username)->first();
 
-        $timestamp = now()->timestamp;
+        $startedAt = microtime(true);
 
         $hasLoginSucceeded = $user && Hash::check($password, $user->password);
 
-        $loginStaticDuration = 1000; // in milliseconds
+        $loginWaitDuration = max(0, (int) config('auth.login_wait_duration_ms', 1000));
 
         // To prevent brute-force attacks, we want to make sure that each login attempt takes at least a certain amount of time.
-        sleep((int) ceil(($loginStaticDuration - (now()->timestamp - $timestamp) * 1000) / 1000));
+        $remainingDelay = $loginWaitDuration - (int) round((microtime(true) - $startedAt) * 1000);
+
+        if ($remainingDelay > 0) {
+            usleep($remainingDelay * 1000);
+        }
 
         if (!$hasLoginSucceeded) {
             throw ValidationException::withMessages([

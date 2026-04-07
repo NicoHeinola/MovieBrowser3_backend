@@ -114,4 +114,6 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    'login_wait_duration_ms' => (int) env('AUTH_LOGIN_WAIT_DURATION_MS', 1000),
+
 ];
