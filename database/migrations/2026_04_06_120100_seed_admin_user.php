@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         $username = env('ADMIN_USER_USERNAME', 'admin');
-        $name = env('ADMIN_USER_NAME', 'Admin User');
         $password = env('ADMIN_USER_PASSWORD', 'password');
         $now = now();
 
@@ -29,7 +28,6 @@ return new class extends Migration
         }
 
         DB::table('users')->insert([
-            'name' => $name,
             'username' => $username,
             'password' => Hash::make($password),
             'is_admin' => true,

@@ -11,7 +11,6 @@ use function Pest\Laravel\withToken;
 
 test('a user can register and receive a token', function () {
     $response = postJson('/api/v1/auth/register', [
-        'name' => 'Ada Lovelace',
         'username' => 'adalovelace',
         'password' => 'password123',
         'password_confirmation' => 'password123',
@@ -36,7 +35,6 @@ test('registration rejects duplicate usernames', function () {
     ]);
 
     $response = postJson('/api/v1/auth/register', [
-        'name' => 'Ada Lovelace',
         'username' => 'adalovelace',
         'password' => 'password123',
         'password_confirmation' => 'password123',

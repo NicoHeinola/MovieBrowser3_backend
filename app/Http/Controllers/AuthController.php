@@ -11,16 +11,13 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 
 class AuthController extends Controller
 {
     public function register(RegisterRequest $request, RegisterUser $registerUser): JsonResponse
     {
-        $validated = $request->validated();
-
         $payload = $registerUser->handle(
-            Arr::only($validated, ['name', 'username', 'password']),
+            $request->validated(),
             $request->userAgent() ?? 'api-token',
         );
 
