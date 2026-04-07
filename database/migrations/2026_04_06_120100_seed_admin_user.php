@@ -8,13 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $email = env('ADMIN_USER_EMAIL', 'admin@example.com');
+        $username = env('ADMIN_USER_USERNAME', 'admin');
         $name = env('ADMIN_USER_NAME', 'Admin User');
         $password = env('ADMIN_USER_PASSWORD', 'password');
         $now = now();
 
         $existingAdmin = DB::table('users')
-            ->where('email', $email)
+            ->where('username', $username)
             ->first();
 
         if ($existingAdmin !== null) {
@@ -30,8 +30,7 @@ return new class extends Migration
 
         DB::table('users')->insert([
             'name' => $name,
-            'email' => $email,
-            'email_verified_at' => $now,
+            'username' => $username,
             'password' => Hash::make($password),
             'is_admin' => true,
             'remember_token' => null,

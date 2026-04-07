@@ -12,7 +12,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email', 'max:255'],
+            'username' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ];
     }
@@ -20,7 +20,7 @@ class LoginRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'email' => mb_strtolower((string) $this->input('email')),
+            'username' => mb_strtolower(trim((string) $this->input('username'))),
         ]);
     }
 }

@@ -20,7 +20,7 @@ class AuthController extends Controller
         $validated = $request->validated();
 
         $payload = $registerUser->handle(
-            Arr::only($validated, ['name', 'email', 'password']),
+            Arr::only($validated, ['name', 'username', 'password']),
             $request->userAgent() ?? 'api-token',
         );
 
@@ -32,7 +32,7 @@ class AuthController extends Controller
         $validated = $request->validated();
 
         $payload = $loginUser->handle(
-            $validated['email'],
+            $validated['username'],
             $validated['password'],
             $request->userAgent() ?? 'api-token',
         );

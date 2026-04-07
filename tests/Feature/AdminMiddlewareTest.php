@@ -19,7 +19,7 @@ beforeEach(function () {
 
 test('the admin user migration seeds an admin account', function () {
     assertDatabaseHas('users', [
-        'email' => env('ADMIN_USER_EMAIL', 'admin@example.com'),
+        'username' => env('ADMIN_USER_USERNAME', 'admin'),
         'is_admin' => true,
     ]);
 });

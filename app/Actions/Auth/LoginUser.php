@@ -11,13 +11,13 @@ class LoginUser
 {
     use AsAction;
 
-    public function handle(string $email, string $password, string $tokenName): array
+    public function handle(string $username, string $password, string $tokenName): array
     {
-        $user = User::where('email', $email)->first();
+        $user = User::where('username', $username)->first();
 
         if (!$user || !Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+                'username' => ['The provided credentials are incorrect.'],
             ]);
         }
 

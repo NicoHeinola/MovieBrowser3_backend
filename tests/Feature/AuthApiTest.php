@@ -10,9 +10,9 @@ use function Pest\Laravel\postJson;
 use function Pest\Laravel\withToken;
 
 test('a user can register and receive a token', function () {
-    $response = postJson('/api/auth/register', [
+    $response = postJson('/api/v1/auth/register', [
         'name' => 'Ada Lovelace',
-        'email' => 'ada@example.com',
+        'username' => 'adalovelace',
         'password' => 'password123',
         'password_confirmation' => 'password123',
     ]);
@@ -21,40 +21,40 @@ test('a user can register and receive a token', function () {
         ->assertCreated()
         ->assertJsonPath('message', 'Registered successfully.')
         ->assertJsonPath('token_type', 'Bearer')
-        ->assertJsonPath('user.email', 'ada@example.com');
+        ->assertJsonPath('user.username', 'adalovelace');
 
     assertDatabaseHas('users', [
-        'email' => 'ada@example.com',
+        'username' => 'adalovelace',
     ]);
 
     expect(PersonalAccessToken::count())->toBe(1);
 });
 
-test('registration rejects duplicate emails', function () {
+test('registration rejects duplicate usernames', function () {
     User::factory()->create([
-        'email' => 'ada@example.com',
+        'username' => 'adalovelace',
     ]);
 
-    $response = postJson('/api/auth/register', [
+    $response = postJson('/api/v1/auth/register', [
         'name' => 'Ada Lovelace',
-        'email' => 'ada@example.com',
+        'username' => 'adalovelace',
         'password' => 'password123',
         'password_confirmation' => 'password123',
     ]);
 
     $response
         ->assertUnprocessable()
-        ->assertJsonValidationErrors(['email']);
+        ->assertJsonValidationErrors(['username']);
 });
 
 test('a user can log in and receive a token', function () {
     User::factory()->create([
-        'email' => 'ada@example.com',
+        'username' => 'adalovelace',
         'password' => 'password123',
     ]);
 
-    $response = postJson('/api/auth/login', [
-        'email' => 'ada@example.com',
+    $response = postJson('/api/v1/auth/login', [
+        'username' => 'adalovelace',
         'password' => 'password123',
     ]);
 
@@ -62,45 +62,45 @@ test('a user can log in and receive a token', function () {
         ->assertOk()
         ->assertJsonPath('message', 'Authenticated successfully.')
         ->assertJsonPath('token_type', 'Bearer')
-        ->assertJsonPath('user.email', 'ada@example.com');
+        ->assertJsonPath('user.username', 'adalovelace');
 
     expect(PersonalAccessToken::count())->toBe(1);
 });
 
 test('login rejects invalid credentials', function () {
     User::factory()->create([
-        'email' => 'ada@example.com',
+        'username' => 'adalovelace',
         'password' => 'password123',
     ]);
 
-    $response = postJson('/api/auth/login', [
-        'email' => 'ada@example.com',
+    $response = postJson('/api/v1/auth/login', [
+        'username' => 'adalovelace',
         'password' => 'wrong-password',
     ]);
 
     $response
         ->assertUnprocessable()
-        ->assertJsonValidationErrors(['email']);
+        ->assertJsonValidationErrors(['username']);
 });
 
 test('an authenticated user can fetch their profile', function () {
     $user = User::factory()->create([
-        'email' => 'ada@example.com',
+        'username' => 'adalovelace',
     ]);
 
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
 
-    $response = getJson('/api/auth/me');
+    $response = getJson('/api/v1/auth/me');
 
     $response
         ->assertOk()
-        ->assertJsonPath('user.email', 'ada@example.com');
+        ->assertJsonPath('user.username', 'adalovelace');
 });
 
 test('protected auth endpoints require authentication', function () {
-    getJson('/api/auth/me')->assertUnauthorized();
-    postJson('/api/auth/logout')->assertUnauthorized();
+    getJson('/api/v1/auth/me')->assertUnauthorized();
+    postJson('/api/v1/auth/logout')->assertUnauthorized();
 });
 
 test('logout revokes the current token', function () {
@@ -110,7 +110,7 @@ test('logout revokes the current token', function () {
     expect(PersonalAccessToken::count())->toBe(1);
     withToken($token);
 
-    $response = postJson('/api/auth/logout');
+    $response = postJson('/api/v1/auth/logout');
 
     $response
         ->assertOk()
@@ -124,12 +124,12 @@ test('issued tokens expire based on sanctum configuration', function () {
     app('auth')->forgetGuards();
 
     User::factory()->create([
-        'email' => 'ada@example.com',
+        'username' => 'adalovelace',
         'password' => 'password123',
     ]);
 
-    $loginResponse = postJson('/api/auth/login', [
-        'email' => 'ada@example.com',
+    $loginResponse = postJson('/api/v1/auth/login', [
+        'username' => 'adalovelace',
         'password' => 'password123',
     ]);
 
@@ -140,12 +140,12 @@ test('issued tokens expire based on sanctum configuration', function () {
 
     withToken($token);
 
-    getJson('/api/auth/me')->assertOk();
+    getJson('/api/v1/auth/me')->assertOk();
 
     Carbon::setTestNow(now()->addMinutes(6));
     app('auth')->forgetGuards();
 
-    getJson('/api/auth/me')->assertUnauthorized();
+    getJson('/api/v1/auth/me')->assertUnauthorized();
 
     Carbon::setTestNow();
 });
