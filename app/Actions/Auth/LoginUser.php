@@ -15,7 +15,16 @@ class LoginUser
     {
         $user = User::where('username', $username)->first();
 
-        if (!$user || !Hash::check($password, $user->password)) {
+        $timestamp = now()->timestamp;
+
+        $hasLoginSucceeded = $user && Hash::check($password, $user->password);
+
+        $loginStaticDuration = 1000; // in milliseconds
+
+        // To prevent brute-force attacks, we want to make sure that each login attempt takes at least a certain amount of time.
+        sleep((int) ceil(($loginStaticDuration - (now()->timestamp - $timestamp) * 1000) / 1000));
+
+        if (!$hasLoginSucceeded) {
             throw ValidationException::withMessages([
                 'username' => ['The provided credentials are incorrect.'],
             ]);
