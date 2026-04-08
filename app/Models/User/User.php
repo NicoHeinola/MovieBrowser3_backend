@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\User;
 
+use App\Models\User\Query\HasUserQuery;
+use App\Models\User\Relations\HasUserRelations;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -17,8 +19,16 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
+    use HasUserQuery;
+    use HasUserRelations;
+
     protected $casts = [
         'is_admin' => 'boolean',
         'password' => 'hashed',
     ];
+
+    protected static function newFactory(): UserFactory
+    {
+        return UserFactory::new();
+    }
 }

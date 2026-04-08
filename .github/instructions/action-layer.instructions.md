@@ -20,4 +20,5 @@ applyTo: "app/Actions/**/*.php"
 ## Reuse
 
 - Actions should be callable from controllers and remain suitable for reuse from jobs, commands, listeners, or tests.
+- Collection-level actions may orchestrate single-record actions when that keeps bulk behavior consistent with the single-item path.
 - Throw clear exceptions when business rules fail rather than returning ambiguous error payloads from deep inside the action.

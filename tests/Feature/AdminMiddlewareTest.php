@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\User\User;
 use Illuminate\Support\Facades\Route;
 
 use function Pest\Laravel\assertDatabaseHas;

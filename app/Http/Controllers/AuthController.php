@@ -8,7 +8,7 @@ use App\Actions\Auth\LogoutCurrentToken;
 use App\Actions\Auth\RegisterUser;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
-use App\Models\User;
+use App\Models\User\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
