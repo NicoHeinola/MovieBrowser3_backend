@@ -2,10 +2,12 @@
 
 namespace App\Dtos\Show;
 
-use Cerbero\LaravelDto\Dto;
+use Spatie\LaravelData\Data;
 
-/**
- * @property string $title
- * @property bool $isPrimary
- */
-class ShowTitleData extends Dto {}
+class ShowTitleData extends Data
+{
+    public function __construct(
+        public string $title,
+        public bool $isPrimary,
+    ) {}
+}

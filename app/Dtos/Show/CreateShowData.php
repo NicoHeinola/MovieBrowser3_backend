@@ -2,12 +2,19 @@
 
 namespace App\Dtos\Show;
 
-use Cerbero\LaravelDto\Dto;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Data;
 
-/**
- * @property string $bannerUrl
- * @property string $cardImageUrl
- * @property string|null $previewUrl
- * @property ShowTitleData[] $titles
- */
-class CreateShowData extends Dto {}
+class CreateShowData extends Data
+{
+    /**
+     * @param  array<int, ShowTitleData>  $titles
+     */
+    public function __construct(
+        public string $bannerUrl,
+        public string $cardImageUrl,
+        public ?string $previewUrl,
+        #[DataCollectionOf(ShowTitleData::class)]
+        public array $titles,
+    ) {}
+}

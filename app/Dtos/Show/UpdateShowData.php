@@ -2,19 +2,22 @@
 
 namespace App\Dtos\Show;
 
-use const Cerbero\Dto\PARTIAL;
-
 use App\Models\Show\Show;
-use Cerbero\LaravelDto\Dto;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
+use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Optional;
 
-/**
- * @property Show $show
- * @property string $bannerUrl
- * @property string $cardImageUrl
- * @property string|null $previewUrl
- * @property ShowTitleData[] $titles
- */
-class UpdateShowData extends Dto
+class UpdateShowData extends Data
 {
-    protected static $defaultFlags = PARTIAL;
+    /**
+     * @param  array<int, ShowTitleData>|Optional  $titles
+     */
+    public function __construct(
+        public Show $show,
+        public string|Optional $bannerUrl,
+        public string|Optional $cardImageUrl,
+        public string|Optional|null $previewUrl,
+        #[DataCollectionOf(ShowTitleData::class)]
+        public array|Optional $titles,
+    ) {}
 }

@@ -7,6 +7,7 @@ use App\Dtos\Show\UpdateShowData;
 use App\Models\Show\Show;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
+use Spatie\LaravelData\Optional;
 
 class UpdateShowAction
 {
@@ -19,15 +20,15 @@ class UpdateShowAction
         return DB::transaction(function () use ($data): Show {
             $attributes = [];
 
-            if ($data->hasProperty('bannerUrl')) {
+            if (!($data->bannerUrl instanceof Optional)) {
                 $attributes['banner_url'] = $data->bannerUrl;
             }
 
-            if ($data->hasProperty('cardImageUrl')) {
+            if (!($data->cardImageUrl instanceof Optional)) {
                 $attributes['card_image_url'] = $data->cardImageUrl;
             }
 
-            if ($data->hasProperty('previewUrl')) {
+            if (!($data->previewUrl instanceof Optional)) {
                 $attributes['preview_url'] = $data->previewUrl;
             }
 
@@ -35,7 +36,7 @@ class UpdateShowAction
                 $data->show->update($attributes);
             }
 
-            if ($data->hasProperty('titles')) {
+            if (!($data->titles instanceof Optional)) {
                 $this->syncShowTitlesAction->handle($data->show, $data->titles);
             }
 

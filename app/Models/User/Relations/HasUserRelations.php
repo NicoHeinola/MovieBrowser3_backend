@@ -2,6 +2,4 @@
 
 namespace App\Models\User\Relations;
 
-trait HasUserRelations
-{
-}
+trait HasUserRelations {}

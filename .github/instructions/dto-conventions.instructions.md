@@ -1,12 +1,12 @@
 ---
-description: "DTO conventions for Cerbero Laravel DTO classes. Use when creating or editing files under app/Dtos."
+description: "DTO conventions for Spatie Laravel Data classes. Use when creating or editing files under app/Dtos."
 applyTo: "app/Dtos/**/*.php"
 ---
 
 # DTO Rules
 
-- Use class-level `@property` annotations to declare DTO fields; Cerbero DTO reads its mapped properties from the class docblock rather than native class variables.
-- Prefer camelCase DTO property names so snake_case or camelCase source keys map cleanly through the package.
+- Use declared constructor-promoted properties instead of class-level `@property` docblocks.
+- Prefer camelCase DTO property names and rely on the repository Spatie Data input mapping for snake_case payloads unless a DTO needs a narrower override.
 - Use DTOs for grouped scalar or array payloads at action boundaries, not for single models or a small number of obvious arguments.
-- Keep DTO classes declarative; add flags such as partial support only when the payload genuinely allows missing fields.
-- Import nested DTO and model types explicitly so annotated property types remain resolvable.
+- Keep DTO classes declarative; use `Optional` unions only when the payload genuinely supports partial input.
+- Define nested DTO arrays explicitly with `DataCollectionOf` and accurate array annotations so hydration stays unambiguous.

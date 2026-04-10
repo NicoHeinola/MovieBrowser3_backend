@@ -2,11 +2,13 @@
 
 namespace App\Dtos\Auth;
 
-use Cerbero\LaravelDto\Dto;
+use Spatie\LaravelData\Data;
 
-/**
- * @property string $username
- * @property string $password
- * @property string $tokenName
- */
-class LoginUserData extends Dto {}
+class LoginUserData extends Data
+{
+    public function __construct(
+        public string $username,
+        public string $password,
+        public string $tokenName,
+    ) {}
+}
