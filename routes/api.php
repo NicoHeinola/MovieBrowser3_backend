@@ -16,6 +16,8 @@ Route::prefix('v1')->group(function (): void {
         });
     });
 
+    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+
     Route::middleware(['auth:sanctum', 'admin'])->group(function (): void {
         Route::delete('shows', [ShowController::class, 'destroyMany'])->name('shows.destroy-many');
         Route::apiResource('shows', ShowController::class);

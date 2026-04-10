@@ -5,12 +5,20 @@ namespace App\Http\Controllers;
 use App\Actions\Setting\UpdateSettingAction;
 use App\Dtos\Setting\UpdateSettingData;
 use App\Http\Requests\Setting\UpdateSettingRequest;
+use App\Http\Resources\Setting\SettingCollection;
 use App\Http\Resources\Setting\SettingResource;
 use App\Models\Setting\Setting;
 use Illuminate\Http\JsonResponse;
 
 class SettingController extends Controller
 {
+    public function index(): JsonResponse
+    {
+        $settings = Setting::all();
+
+        return SettingCollection::make($settings)->response();
+    }
+
     public function update(string $key, UpdateSettingRequest $request, UpdateSettingAction $updateSettingAction): JsonResponse
     {
         $setting = Setting::where('key', $key)->firstOrFail();

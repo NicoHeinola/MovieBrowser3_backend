@@ -4,8 +4,21 @@ use App\Models\Setting\Setting;
 use App\Models\User\User;
 
 use function Pest\Laravel\assertDatabaseHas;
+use function Pest\Laravel\getJson;
 use function Pest\Laravel\patchJson;
 use function Pest\Laravel\withToken;
+
+test('any user can list settings', function () {
+    Setting::factory()->count(2)->create();
+
+    $response = getJson('/api/v1/settings')
+        ->assertOk()
+        ->assertJsonCount(2 + 2); // 2 seeded + 2 factory
+
+    $data = $response->json();
+    $firstKey = array_key_first($data);
+    expect($data[$firstKey])->toHaveKey('key', $firstKey);
+});
 
 test('setting update requires authentication', function () {
     patchJson('/api/v1/settings/any-key', ['value' => 'foo'])->assertUnauthorized();
