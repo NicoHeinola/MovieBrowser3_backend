@@ -10,16 +10,12 @@ class LogoutCurrentToken
 {
     use AsAction;
 
-    public function handle(User $user, ?PersonalAccessToken $token): array
+    public function handle(User $user, ?PersonalAccessToken $token): void
     {
         if ($token) {
             $token->delete();
         } else {
             $user->tokens()->delete();
         }
-
-        return [
-            'message' => 'Logged out successfully.',
-        ];
     }
 }

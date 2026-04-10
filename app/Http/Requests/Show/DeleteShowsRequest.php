@@ -19,17 +19,4 @@ class DeleteShowsRequest extends FormRequest
             'ids.*' => ['required', 'integer', 'distinct', Rule::exists(Show::class, 'id')],
         ];
     }
-
-    protected function prepareForValidation(): void
-    {
-        $ids = $this->input('ids');
-
-        if (!is_array($ids)) {
-            return;
-        }
-
-        $this->merge([
-            'ids' => array_map(static fn (mixed $id): mixed => is_numeric($id) ? (int) $id : $id, $ids),
-        ]);
-    }
 }

@@ -12,7 +12,7 @@ Use this skill when the work changes persistence or domain structure rather than
 1. Identify the entity and relationship changes required.
 2. Add or update migrations with explicit keys, constraints, and nullability.
 3. Keep model responsibilities to relationships, casts, scopes, and model-level concerns.
-4. Place each model in its own namespace folder under `app/Models/<Domain>/` and keep reusable logic in focused query and relations traits next to the model when practical.
+4. Place each model in its own namespace folder under `app/Models/<Domain>/`, keep the base model at the folder root, and keep local traits under `Relations/` and `Query/`.
 5. Put relationship methods in the relations trait and Spatie Query Builder configuration such as `getAllowedFilters()` and `getAllowedSorts()` in the query trait.
 6. Add or update factories and seeders when test or local data needs change.
 7. Recheck queries for eager-loading and integrity risks.
@@ -30,6 +30,6 @@ Use this skill when the work changes persistence or domain structure rather than
 
 - Migration intent is explicit.
 - Relationship ownership is clear.
-- Model folder layout is consistent and supporting traits live alongside the model or in a clearly local structure within the same model namespace.
+- Model folder layout is consistent and supporting traits live under the same model namespace.
 - Factories and seeders still support tests and local development.
 - Query behavior is acceptable for the changed endpoints.

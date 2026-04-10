@@ -65,12 +65,11 @@ test('an admin can create a show with nested titles', function () {
 
     $response
         ->assertCreated()
-        ->assertJsonPath('message', 'Show created successfully.')
-        ->assertJsonPath('show.banner_url', 'https://cdn.example.com/banners/severance.jpg')
-        ->assertJsonPath('show.preview_url', null)
-        ->assertJsonPath('show.titles.0.title', 'Severance')
-        ->assertJsonPath('show.titles.0.is_primary', true)
-        ->assertJsonCount(2, 'show.titles');
+        ->assertJsonPath('banner_url', 'https://cdn.example.com/banners/severance.jpg')
+        ->assertJsonPath('preview_url', null)
+        ->assertJsonPath('titles.0.title', 'Severance')
+        ->assertJsonPath('titles.0.is_primary', true)
+        ->assertJsonCount(2, 'titles');
 
     assertDatabaseHas('shows', [
         'banner_url' => 'https://cdn.example.com/banners/severance.jpg',
@@ -105,16 +104,16 @@ test('an admin can list and fetch shows with titles', function () {
 
     getJson('/api/v1/shows')
         ->assertOk()
-        ->assertJsonCount(1, 'shows')
-        ->assertJsonPath('shows.0.banner_url', 'https://cdn.example.com/banners/the-bear.jpg')
-        ->assertJsonPath('shows.0.titles.0.title', 'The Bear')
-        ->assertJsonCount(2, 'shows.0.titles');
+        ->assertJsonCount(1)
+        ->assertJsonPath('0.banner_url', 'https://cdn.example.com/banners/the-bear.jpg')
+        ->assertJsonPath('0.titles.0.title', 'The Bear')
+        ->assertJsonCount(2, '0.titles');
 
     getJson("/api/v1/shows/{$show->id}")
         ->assertOk()
-        ->assertJsonPath('show.id', $show->id)
-        ->assertJsonPath('show.titles.0.title', 'The Bear')
-        ->assertJsonCount(2, 'show.titles');
+        ->assertJsonPath('id', $show->id)
+        ->assertJsonPath('titles.0.title', 'The Bear')
+        ->assertJsonCount(2, 'titles');
 });
 
 test('an admin can filter shows by related title through query builder', function () {
@@ -132,9 +131,9 @@ test('an admin can filter shows by related title through query builder', functio
 
     getJson('/api/v1/shows?filter[title]=bear')
         ->assertOk()
-        ->assertJsonCount(1, 'shows')
-        ->assertJsonPath('shows.0.id', $matchingShow->id)
-        ->assertJsonPath('shows.0.titles.0.title', 'The Bear');
+        ->assertJsonCount(1)
+        ->assertJsonPath('0.id', $matchingShow->id)
+        ->assertJsonPath('0.titles.0.title', 'The Bear');
 });
 
 test('an admin can sort shows through query builder', function () {
@@ -156,13 +155,13 @@ test('an admin can sort shows through query builder', function () {
 
     getJson('/api/v1/shows?sort=banner_url')
         ->assertOk()
-        ->assertJsonPath('shows.0.id', $earlierShow->id)
-        ->assertJsonPath('shows.1.id', $laterShow->id);
+        ->assertJsonPath('0.id', $earlierShow->id)
+        ->assertJsonPath('1.id', $laterShow->id);
 
     getJson('/api/v1/shows?sort=-banner_url')
         ->assertOk()
-        ->assertJsonPath('shows.0.id', $laterShow->id)
-        ->assertJsonPath('shows.1.id', $earlierShow->id);
+        ->assertJsonPath('0.id', $laterShow->id)
+        ->assertJsonPath('1.id', $earlierShow->id);
 });
 
 test('an admin can update a show and replace its titles', function () {
@@ -196,11 +195,10 @@ test('an admin can update a show and replace its titles', function () {
 
     $response
         ->assertOk()
-        ->assertJsonPath('message', 'Show updated successfully.')
-        ->assertJsonPath('show.banner_url', 'https://cdn.example.com/banners/updated.jpg')
-        ->assertJsonPath('show.preview_url', null)
-        ->assertJsonPath('show.titles.0.title', 'Updated Primary Title')
-        ->assertJsonCount(2, 'show.titles');
+        ->assertJsonPath('banner_url', 'https://cdn.example.com/banners/updated.jpg')
+        ->assertJsonPath('preview_url', null)
+        ->assertJsonPath('titles.0.title', 'Updated Primary Title')
+        ->assertJsonCount(2, 'titles');
 
     assertDatabaseHas('shows', [
         'id' => $show->id,
@@ -227,8 +225,7 @@ test('an admin can delete a show and its titles cascade', function () {
     $title = ShowTitle::factory()->for($show)->primary()->create();
 
     deleteJson("/api/v1/shows/{$show->id}")
-        ->assertOk()
-        ->assertJsonPath('message', 'Show deleted successfully.');
+        ->assertNoContent();
 
     assertDatabaseMissing('shows', [
         'id' => $show->id,
@@ -254,7 +251,6 @@ test('an admin can delete multiple shows at once', function () {
         'ids' => [$firstShow->id, $secondShow->id],
     ])
         ->assertOk()
-        ->assertJsonPath('message', 'Shows deleted successfully.')
         ->assertJsonPath('deleted_count', 2);
 
     assertDatabaseMissing('shows', [
@@ -333,8 +329,8 @@ test('show update can change only scalar fields without replacing titles', funct
         'card_image_url' => 'https://cdn.example.com/cards/new-card.jpg',
     ])
         ->assertOk()
-        ->assertJsonPath('show.card_image_url', 'https://cdn.example.com/cards/new-card.jpg')
-        ->assertJsonCount(1, 'show.titles');
+        ->assertJsonPath('card_image_url', 'https://cdn.example.com/cards/new-card.jpg')
+        ->assertJsonCount(1, 'titles');
 
     assertDatabaseHas('show_titles', [
         'show_id' => $show->id,

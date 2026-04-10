@@ -6,73 +6,67 @@ use App\Actions\Show\CreateShowAction;
 use App\Actions\Show\DeleteShowAction;
 use App\Actions\Show\DeleteShowsAction;
 use App\Actions\Show\UpdateShowAction;
+use App\Dtos\Show\CreateShowData;
+use App\Dtos\Show\UpdateShowData;
 use App\Http\Requests\Show\DeleteShowsRequest;
 use App\Http\Requests\Show\StoreShowRequest;
 use App\Http\Requests\Show\UpdateShowRequest;
+use App\Http\Resources\Show\DeleteShowsResponseResource;
+use App\Http\Resources\Show\ShowResource;
 use App\Models\Show\Show;
 use Illuminate\Http\JsonResponse;
 use Spatie\QueryBuilder\QueryBuilder;
+use Symfony\Component\HttpFoundation\Response;
 
 class ShowController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json([
-            'shows' => QueryBuilder::for(Show::query()->with('titles'))
-                ->allowedFilters(...Show::getAllowedFilters())
-                ->allowedSorts(...Show::getAllowedSorts())
-                ->defaultSort('-created_at')
-                ->get(),
-        ]);
+        $shows = QueryBuilder::for(Show::query()->with('titles'))
+            ->allowedFilters(...Show::getAllowedFilters())
+            ->allowedSorts(...Show::getAllowedSorts())
+            ->defaultSort('-created_at')
+            ->get();
+
+        return ShowResource::collection($shows)->response();
     }
 
     public function store(StoreShowRequest $request, CreateShowAction $createShowAction): JsonResponse
     {
-        $validated = $request->validated();
-        $titles = $validated['titles'];
-        unset($validated['titles']);
+        $show = $createShowAction->handle(CreateShowData::from($request->validated()));
 
-        return response()->json([
-            'message' => 'Show created successfully.',
-            'show' => $createShowAction->handle($validated, $titles),
-        ], 201);
+        return ShowResource::make($show)->response()->setStatusCode(201);
     }
 
     public function show(Show $show): JsonResponse
     {
-        return response()->json([
-            'show' => $show->load('titles'),
-        ]);
+        return ShowResource::make($show->load('titles'))->response();
     }
 
     public function update(Show $show, UpdateShowRequest $request, UpdateShowAction $updateShowAction): JsonResponse
     {
-        $validated = $request->validated();
-        $titles = $validated['titles'] ?? null;
-        unset($validated['titles']);
+        $updatedShow = $updateShowAction->handle(UpdateShowData::from([
+            ...$request->validated(),
+            'show' => $show,
+        ]));
 
-        return response()->json([
-            'message' => 'Show updated successfully.',
-            'show' => $updateShowAction->handle($show, $validated, $titles),
-        ]);
+        return ShowResource::make($updatedShow)->response();
     }
 
-    public function destroy(Show $show, DeleteShowAction $deleteShowAction): JsonResponse
+    public function destroy(Show $show, DeleteShowAction $deleteShowAction): Response
     {
         $deleteShowAction->handle($show);
 
-        return response()->json([
-            'message' => 'Show deleted successfully.',
-        ]);
+        return response()->noContent();
     }
 
     public function destroyMany(DeleteShowsRequest $request, DeleteShowsAction $deleteShowsAction): JsonResponse
     {
         $validated = $request->validated();
+        $deletedCount = $deleteShowsAction->handle($validated['ids']);
 
-        return response()->json([
-            'message' => 'Shows deleted successfully.',
-            'deleted_count' => $deleteShowsAction->handle($validated['ids']),
-        ]);
+        return DeleteShowsResponseResource::make([
+            'deleted_count' => $deletedCount,
+        ])->response();
     }
 }

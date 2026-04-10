@@ -19,7 +19,7 @@ Use this skill when testing is part of the task or when the change increases beh
 
 - Auth and protected endpoints should keep explicit coverage.
 - Validation changes should be reflected in request-level or feature-level assertions.
-- Action logic that carries meaningful branching should be covered at the most useful layer.
+- Action logic with meaningful branching should be covered at the most useful layer.
 
 ## Useful Commands
 

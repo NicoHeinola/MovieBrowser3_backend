@@ -10,11 +10,11 @@ class CreateShowTitleAction
 {
     use AsAction;
 
-    /**
-     * @param  array{title: string, is_primary: bool}  $attributes
-     */
-    public function handle(Show $show, array $attributes): ShowTitle
+    public function handle(Show $show, string $title, bool $isPrimary): ShowTitle
     {
-        return $show->titles()->create($attributes);
+        return $show->titles()->create([
+            'title' => $title,
+            'is_primary' => $isPrimary,
+        ]);
     }
 }

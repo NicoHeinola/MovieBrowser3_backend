@@ -2,6 +2,8 @@
 
 namespace App\Actions\Auth;
 
+use App\Dtos\Auth\AuthTokenData;
+use App\Dtos\Auth\LoginUserData;
 use App\Models\User\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -11,13 +13,13 @@ class LoginUser
 {
     use AsAction;
 
-    public function handle(string $username, string $password, string $tokenName): array
+    public function handle(LoginUserData $data): AuthTokenData
     {
-        $user = User::where('username', $username)->first();
+        $user = User::where('username', $data->username)->first();
 
         $startedAt = microtime(true);
 
-        $hasLoginSucceeded = $user && Hash::check($password, $user->password);
+        $hasLoginSucceeded = $user && Hash::check($data->password, $user->password);
 
         $loginWaitDuration = max(0, (int) config('auth.login_wait_duration_ms', 1000));
 
@@ -37,11 +39,10 @@ class LoginUser
         $expiration = config('sanctum.expiration');
         $expiresAt = $expiration === null ? null : now()->addMinutes((int) $expiration);
 
-        return [
-            'message' => 'Authenticated successfully.',
-            'token' => $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken,
+        return AuthTokenData::from([
+            'token' => $user->createToken($data->tokenName, ['*'], $expiresAt)->plainTextToken,
             'token_type' => 'Bearer',
             'user' => $user,
-        ];
+        ]);
     }
 }

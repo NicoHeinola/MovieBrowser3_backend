@@ -1,25 +1,16 @@
 ---
-description: "Controller rules for Laravel API files. Use when editing controllers under app/Http/Controllers or wiring request-controller-action endpoint flow."
-applyTo: "app/Http/Controllers/**/*.php"
+description: "Controller conventions for Laravel API controllers. Use when editing files under app/Http/Controllers or wiring an endpoint through a controller."
+applyTo: |
+    app/Http/Controllers/*.php
+    app/Http/Controllers/**/*.php
 ---
 
 # Controller Flow Rules
 
-## Responsibility
-
 - Controllers coordinate HTTP flow only.
-- Keep controllers thin: accept request objects, call actions, and return responses.
-- Do not place persistence, validation-rule definitions, or domain branching logic in controllers.
-
-## Endpoint Shape
-
-- Prefer one public method per endpoint.
-- Type-hint the specific request class when validation is required.
-- Extract validated data in the controller before calling an action.
-- Return explicit JSON responses when the endpoint is part of the API surface.
-
-## Boundaries
-
-- Route registration belongs in `routes/api.php`, not inside controllers.
-- Request normalization belongs in request classes.
-- Application logic belongs in actions.
+- Keep public methods thin: accept request and model dependencies, call actions or query builders, and return explicit API responses.
+- Return controller-managed API payloads through resource classes instead of raw `response()->json([...])` arrays.
+- Prefer lean success responses; omit generic `message` fields unless the contract has a concrete reason to carry one.
+- Type-hint the specific request class when validation is required and extract `validated()` data before calling an action.
+- Build DTOs only when the action boundary benefits from grouped scalar or array payloads.
+- Do not place validation rules, persistence workflows, or domain branching logic in controllers.

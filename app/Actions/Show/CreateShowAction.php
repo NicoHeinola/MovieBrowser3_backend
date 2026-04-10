@@ -3,6 +3,7 @@
 namespace App\Actions\Show;
 
 use App\Actions\ShowTitle\CreateShowTitleAction;
+use App\Dtos\Show\CreateShowData;
 use App\Models\Show\Show;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -13,17 +14,17 @@ class CreateShowAction
 
     public function __construct(private readonly CreateShowTitleAction $createShowTitleAction) {}
 
-    /**
-     * @param  array<string, string|null>  $attributes
-     * @param  array<int, array{title: string, is_primary: bool}>  $titles
-     */
-    public function handle(array $attributes, array $titles): Show
+    public function handle(CreateShowData $data): Show
     {
-        return DB::transaction(function () use ($attributes, $titles): Show {
-            $show = Show::create($attributes);
+        return DB::transaction(function () use ($data): Show {
+            $show = Show::create([
+                'banner_url' => $data->bannerUrl,
+                'card_image_url' => $data->cardImageUrl,
+                'preview_url' => $data->previewUrl,
+            ]);
 
-            foreach ($titles as $title) {
-                $this->createShowTitleAction->handle($show, $title);
+            foreach ($data->titles as $title) {
+                $this->createShowTitleAction->handle($show, $title->title, $title->isPrimary);
             }
 
             return $show->load('titles');

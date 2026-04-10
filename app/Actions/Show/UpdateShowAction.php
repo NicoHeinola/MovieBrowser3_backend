@@ -3,6 +3,7 @@
 namespace App\Actions\Show;
 
 use App\Actions\ShowTitle\SyncShowTitlesAction;
+use App\Dtos\Show\UpdateShowData;
 use App\Models\Show\Show;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -13,22 +14,32 @@ class UpdateShowAction
 
     public function __construct(private readonly SyncShowTitlesAction $syncShowTitlesAction) {}
 
-    /**
-     * @param  array<string, string|null>  $attributes
-     * @param  array<int, array{title: string, is_primary: bool}>|null  $titles
-     */
-    public function handle(Show $show, array $attributes, ?array $titles = null): Show
+    public function handle(UpdateShowData $data): Show
     {
-        return DB::transaction(function () use ($show, $attributes, $titles): Show {
+        return DB::transaction(function () use ($data): Show {
+            $attributes = [];
+
+            if ($data->hasProperty('bannerUrl')) {
+                $attributes['banner_url'] = $data->bannerUrl;
+            }
+
+            if ($data->hasProperty('cardImageUrl')) {
+                $attributes['card_image_url'] = $data->cardImageUrl;
+            }
+
+            if ($data->hasProperty('previewUrl')) {
+                $attributes['preview_url'] = $data->previewUrl;
+            }
+
             if ($attributes !== []) {
-                $show->update($attributes);
+                $data->show->update($attributes);
             }
 
-            if ($titles !== null) {
-                $this->syncShowTitlesAction->handle($show, $titles);
+            if ($data->hasProperty('titles')) {
+                $this->syncShowTitlesAction->handle($data->show, $data->titles);
             }
 
-            return $show->fresh()->load('titles');
+            return $data->show->fresh()->load('titles');
         });
     }
 }

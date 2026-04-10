@@ -18,7 +18,6 @@ test('a user can register and receive a token', function () {
 
     $response
         ->assertCreated()
-        ->assertJsonPath('message', 'Registered successfully.')
         ->assertJsonPath('token_type', 'Bearer')
         ->assertJsonPath('user.username', 'adalovelace');
 
@@ -58,7 +57,6 @@ test('a user can log in and receive a token', function () {
 
     $response
         ->assertOk()
-        ->assertJsonPath('message', 'Authenticated successfully.')
         ->assertJsonPath('token_type', 'Bearer')
         ->assertJsonPath('user.username', 'adalovelace');
 
@@ -110,9 +108,7 @@ test('logout revokes the current token', function () {
 
     $response = postJson('/api/v1/auth/logout');
 
-    $response
-        ->assertOk()
-        ->assertJsonPath('message', 'Logged out successfully.');
+    $response->assertNoContent();
 
     expect(PersonalAccessToken::count())->toBe(0);
 });
