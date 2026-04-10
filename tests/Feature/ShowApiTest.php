@@ -13,16 +13,6 @@ use function Pest\Laravel\patchJson;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\withToken;
 
-function actingAsAdmin(): User
-{
-    $user = User::factory()->admin()->create();
-    $token = $user->createToken('test-token')->plainTextToken;
-
-    withToken($token);
-
-    return $user;
-}
-
 test('show endpoints require authentication', function () {
     getJson('/api/v1/shows')->assertUnauthorized();
     postJson('/api/v1/shows', [])->assertUnauthorized();

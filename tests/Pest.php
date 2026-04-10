@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,6 +18,16 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
+
+function actingAsAdmin(): User
+{
+    $user = User::factory()->admin()->create();
+    $token = $user->createToken('test-token')->plainTextToken;
+
+    \Pest\Laravel\withToken($token);
+
+    return $user;
+}
 
 /*
 |--------------------------------------------------------------------------

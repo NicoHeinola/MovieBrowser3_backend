@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShowController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,5 +19,7 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware(['auth:sanctum', 'admin'])->group(function (): void {
         Route::delete('shows', [ShowController::class, 'destroyMany'])->name('shows.destroy-many');
         Route::apiResource('shows', ShowController::class);
+
+        Route::patch('settings/{key}', [SettingController::class, 'update'])->name('settings.update');
     });
 });
