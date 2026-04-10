@@ -1,18 +1,26 @@
 ---
-description: "Authoring rules for workspace .instructions.md files. Use when creating or editing backend instruction files under .github/instructions."
-applyTo: '.github/instructions/**'
+description: "Structure rules for backend .instructions.md files. Use when creating or editing instruction files under .github/instructions."
+applyTo: ".github/instructions/**/*.instructions.md"
 ---
 
-# Authoring Instructions
+# Instruction File Rules
 
-## What Instructions Are For
+## File Shape
 
-- Instructions describe file-specific rules that apply directly to files matched by `applyTo`.
-- Keep each instruction narrow, concrete, and tied to the matched file set.
-- Use `description` as the discovery surface with plain-language trigger phrases such as `controller files`, `request validation`, or `Pest tests`.
-- Keep `applyTo` specific and avoid broad globs unless the rule truly belongs everywhere inside that file family.
+- Start each instruction with YAML frontmatter containing a plain-language `description` and a specific `applyTo` pattern.
+- Keep `description` written as discovery text that names the file family and the structural concern, such as `Controller conventions for Laravel API controllers`.
+- Keep `applyTo` as narrow as practical for the matched file family; avoid broad globs when the rule only fits one subtree or filename pattern.
+- Use a short title and a flat list of structural rules that describe how matched files should be organized or what they should avoid owning.
 
-## What Instructions Are Not For
+## Content Rules
 
-- Instructions are not the place for multi-step workflows or repository-wide domain guidance.
-- Do not turn an instruction into a general how-to guide for features that span multiple file types.
+- Keep the guidance about file shape, ownership, and repository conventions for the matched files.
+- Prefer concrete wording over abstract advice so a future edit can be checked directly against the instruction.
+- Include a short example when the repository has an important pattern that could otherwise be implemented two different ways.
+
+## Example Pattern
+
+- Good: `Form Request conventions for API validation and authorization. Use when creating or editing files under app/Http/Requests.`
+- Good: `applyTo: "app/Http/Requests/**/*.php"`
+- Good: include one short example when a repository pattern could be implemented in more than one reasonable way.
+- Avoid turning an instruction into a task workflow that spans routes, requests, controllers, actions, and tests.

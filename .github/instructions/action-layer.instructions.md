@@ -6,7 +6,7 @@ applyTo: "app/Actions/**/*.php"
 # Action Layer Rules
 
 - Keep each action focused on one application use case.
-- Keep `handle()` signatures explicit: pass models, simple scalars, or a DTO only when grouping related scalar or array fields helps the boundary.
+- Keep `handle()` signatures explicit: pass models and simple scalars directly, and only introduce a DTO when that boundary should follow the DTO conventions.
 - Do not pass request objects into actions or duplicate request validation inside them.
 - Return models, DTOs, or simple values rather than controller-shaped HTTP payloads.
 - Keep actions reusable from controllers, jobs, commands, listeners, or tests.

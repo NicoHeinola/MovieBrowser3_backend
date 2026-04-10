@@ -5,31 +5,30 @@ description: "Design or refactor Laravel models, relationships, migrations, fact
 
 # Eloquent And Schema Workflow
 
-Use this skill when the work changes persistence or domain structure rather than only HTTP wiring.
+Use this skill when the work changes persistence or domain structure rather than only HTTP wiring. Use the matching model instruction files for file placement and trait structure while this skill sequences the persistence work.
 
 ## Workflow
 
 1. Identify the entity and relationship changes required.
 2. Add or update migrations with explicit keys, constraints, and nullability.
 3. Keep model responsibilities to relationships, casts, scopes, and model-level concerns.
-4. Place each model in its own namespace folder under `app/Models/<Domain>/`, keep the base model at the folder root, and keep local traits under `Relations/` and `Query/`.
-5. Put relationship methods in the relations trait and Spatie Query Builder configuration such as `getAllowedFilters()` and `getAllowedSorts()` in the query trait.
+4. Follow the repository model folder layout and split local relationship and query concerns into the model traits defined by the model instructions.
+5. Keep relationship methods in relation traits and keep Spatie Query Builder configuration such as `getAllowedFilters()` and `getAllowedSorts()` in query traits.
 6. Add or update factories and seeders when test or local data needs change.
-7. Recheck queries for eager-loading and integrity risks.
+7. Recheck queries for eager-loading, integrity, and backfill risks.
 8. Add or update tests that cover the changed persistence behavior.
 
 ## Common Risks
 
 - Missing foreign-key constraints or cascade decisions.
-- Implicit N+1 queries after adding relations.
-- Mixing persistence rules into controllers instead of models or actions.
-- Putting relation methods, query-builder configuration, and model behavior into one large class instead of the repository's folder-based model layout.
-- Schema changes without matching factories or seed data updates.
+- Implicit N+1 queries after adding relations or changing eager-loading assumptions.
+- Schema changes without matching factories, seed data, or test updates.
+- Destructive or non-nullable changes without a safe migration or backfill path.
 
 ## Completion Checklist
 
 - Migration intent is explicit.
 - Relationship ownership is clear.
-- Model folder layout is consistent and supporting traits live under the same model namespace.
+- Model instructions still fit the changed files and traits.
 - Factories and seeders still support tests and local development.
 - Query behavior is acceptable for the changed endpoints.

@@ -1,8 +1,6 @@
 ---
-description: "Testing conventions for Pest feature and unit tests. Use when creating or editing PHP tests under tests/Feature or tests/Unit."
-applyTo: |
-    tests/Feature/**/*.php
-    tests/Unit/**/*.php
+description: "Testing conventions for Pest PHP tests under tests. Use when creating or editing repository test files."
+applyTo: "tests/**/*.php"
 ---
 
 # Testing Rules

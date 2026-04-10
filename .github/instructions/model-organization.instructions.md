@@ -10,4 +10,4 @@ applyTo: "app/Models/**/*.php"
 - Put relationship traits under `Relations/` and query-builder traits under `Query/` within that model namespace.
 - Base models should compose those traits and own casts, fillable behavior, and factory wiring.
 - Relations traits should contain Eloquent relationship methods only.
-- Query traits should expose reusable filters, sorts, and query configuration rather than parse request input or shape API responses.
+- Query traits should expose reusable Spatie Query Builder filters, sorts, and query configuration rather than parse request input or shape API responses.

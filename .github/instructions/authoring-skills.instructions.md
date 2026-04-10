@@ -1,18 +1,26 @@
 ---
-description: "Authoring rules for project SKILL.md files. Use when creating or editing backend skills under .github/skills."
-applyTo: '.github/skills/**'
+description: "Structure rules for backend SKILL.md files. Use when creating or editing skill files under .github/skills."
+applyTo: ".github/skills/**/SKILL.md"
 ---
 
-# Authoring Skills
+# Skill File Rules
 
-## What Skills Are For
+## File Shape
 
-- Skills encode concept-driven workflows and domain knowledge that span multiple steps or file types.
-- Use a skill when guidance needs to connect routes, requests, controllers, actions, models, migrations, and tests rather than one file family.
-- Keep skill descriptions explicit about when they should trigger automatically.
-- Prefer short workflow sections and concrete completion checks over long prose.
+- Start each skill with YAML frontmatter containing a `name` that matches the folder name and a `description` that clearly says when the skill should trigger.
+- Open with one short paragraph that states the task or concept the skill handles.
+- Organize the body around action-oriented sections such as `Workflow`, `Repository-Specific Focus`, `Common Risks`, `Completion Checklist`, or `Useful Commands`.
 
-## When To Use An Instruction Instead
+## Content Rules
 
-- Use an instruction when the rule can be expressed as `files matching X should look like Y`.
-- If the guidance only applies to one file family and does not need cross-file reasoning, keep it as an instruction instead of a skill.
+- Keep steps task-oriented so the skill explains how to execute the work across multiple files or layers.
+- Keep completion checks explicit so the user can tell when the workflow is finished.
+- Reference file-family instructions briefly when structural rules matter instead of restating those rules in full.
+- Prefer short sections and concrete checks over long prose.
+
+## Example Pattern
+
+- Good workflow step: `Add or update the request class for authorization and validation before wiring the controller.`
+- Good completion check: `Feature tests cover the changed API contract.`
+- Good: mention the structural instruction file family only as a brief dependency, not as the place where the workflow is defined.
+- Avoid using a skill as the canonical home for controller, request, model, or DTO file-structure doctrine.
