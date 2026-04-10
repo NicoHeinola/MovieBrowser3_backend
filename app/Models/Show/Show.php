@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['banner_url', 'card_image_url', 'preview_url'])]
+#[Fillable(['banner_url', 'card_image_url', 'preview_url', 'description'])]
 class Show extends Model
 {
     /** @use HasFactory<ShowFactory> */

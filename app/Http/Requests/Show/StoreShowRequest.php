@@ -16,6 +16,7 @@ class StoreShowRequest extends FormRequest
             'banner_url' => ['required', 'string', 'max:2048'],
             'card_image_url' => ['required', 'string', 'max:2048'],
             'preview_url' => ['nullable', 'string', 'max:2048'],
+            'description' => ['nullable', 'string'],
             'titles' => ['required', 'array', 'min:1', new ExactlyOnePrimaryTitle],
             'titles.*.title' => ['required', 'string', 'max:255', 'distinct:ignore_case'],
             'titles.*.is_primary' => ['required', 'boolean'],

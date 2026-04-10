@@ -32,6 +32,10 @@ class UpdateShowAction
                 $attributes['preview_url'] = $data->previewUrl;
             }
 
+            if (!($data->description instanceof Optional)) {
+                $attributes['description'] = $data->description;
+            }
+
             if ($attributes !== []) {
                 $data->show->update($attributes);
             }

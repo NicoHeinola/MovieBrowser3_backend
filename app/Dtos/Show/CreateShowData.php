@@ -14,6 +14,7 @@ class CreateShowData extends Data
         public string $bannerUrl,
         public string $cardImageUrl,
         public ?string $previewUrl,
+        public ?string $description,
         #[DataCollectionOf(ShowTitleData::class)]
         public array $titles,
     ) {}

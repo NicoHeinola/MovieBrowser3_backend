@@ -21,6 +21,7 @@ class CreateShowAction
                 'banner_url' => $data->bannerUrl,
                 'card_image_url' => $data->cardImageUrl,
                 'preview_url' => $data->previewUrl,
+                'description' => $data->description,
             ]);
 
             foreach ($data->titles as $title) {

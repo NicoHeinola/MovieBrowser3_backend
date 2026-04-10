@@ -21,6 +21,7 @@ class ShowFactory extends Factory
             'banner_url' => fake()->url().'/banner-'.fake()->unique()->slug().'.jpg',
             'card_image_url' => fake()->url().'/card-'.fake()->unique()->slug().'.jpg',
             'preview_url' => fake()->boolean() ? fake()->url().'/preview-'.fake()->unique()->slug().'.mp4' : null,
+            'description' => fake()->sentence(),
         ];
     }
 }

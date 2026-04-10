@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('banner_url');
             $table->string('card_image_url');
             $table->string('preview_url')->nullable();
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

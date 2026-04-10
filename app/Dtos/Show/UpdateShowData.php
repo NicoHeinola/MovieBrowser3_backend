@@ -17,6 +17,7 @@ class UpdateShowData extends Data
         public string|Optional $bannerUrl,
         public string|Optional $cardImageUrl,
         public string|Optional|null $previewUrl,
+        public string|Optional|null $description,
         #[DataCollectionOf(ShowTitleData::class)]
         public array|Optional $titles,
     ) {}

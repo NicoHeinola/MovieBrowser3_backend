@@ -41,6 +41,7 @@ test('an admin can create a show with nested titles', function () {
         'banner_url' => ' https://cdn.example.com/banners/severance.jpg ',
         'card_image_url' => 'https://cdn.example.com/cards/severance.jpg',
         'preview_url' => '',
+        'description' => 'A group of office workers whose memories have been surgically divided between their work and personal lives.',
         'titles' => [
             [
                 'title' => ' Severance ',
@@ -57,6 +58,7 @@ test('an admin can create a show with nested titles', function () {
         ->assertCreated()
         ->assertJsonPath('banner_url', 'https://cdn.example.com/banners/severance.jpg')
         ->assertJsonPath('preview_url', null)
+        ->assertJsonPath('description', 'A group of office workers whose memories have been surgically divided between their work and personal lives.')
         ->assertJsonPath('titles.0.title', 'Severance')
         ->assertJsonPath('titles.0.is_primary', true)
         ->assertJsonCount(2, 'titles');
@@ -65,6 +67,7 @@ test('an admin can create a show with nested titles', function () {
         'banner_url' => 'https://cdn.example.com/banners/severance.jpg',
         'card_image_url' => 'https://cdn.example.com/cards/severance.jpg',
         'preview_url' => null,
+        'description' => 'A group of office workers whose memories have been surgically divided between their work and personal lives.',
     ]);
 
     assertDatabaseHas('show_titles', [
