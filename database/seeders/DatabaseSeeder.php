@@ -2,7 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\User\User;
+use App\Models\Show\Show;
+use App\Models\ShowTitle\ShowTitle;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,10 +16,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'username' => 'testuser',
-        ]);
+        Show::factory(20)
+            ->has(ShowTitle::factory()->primary(), 'titles')
+            ->has(ShowTitle::factory(2), 'titles')
+            ->create();
     }
 }

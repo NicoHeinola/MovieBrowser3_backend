@@ -18,10 +18,10 @@ class ShowFactory extends Factory
     public function definition(): array
     {
         return [
-            'banner_url' => fake()->url().'/banner-'.fake()->unique()->slug().'.jpg',
-            'card_image_url' => fake()->url().'/card-'.fake()->unique()->slug().'.jpg',
+            'banner_url' => 'https://picsum.photos/800/450',
+            'card_image_url' => 'https://picsum.photos/200/300',
             'preview_url' => fake()->boolean() ? fake()->url().'/preview-'.fake()->unique()->slug().'.mp4' : null,
-            'description' => fake()->sentence(),
+            'description' => fake()->paragraph(fake()->numberBetween(3, 15)),
         ];
     }
 }
