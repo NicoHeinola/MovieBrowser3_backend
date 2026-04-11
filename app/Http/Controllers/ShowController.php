@@ -25,7 +25,6 @@ class ShowController extends Controller
         $shows = QueryBuilder::for(Show::query()->with('titles'))
             ->allowedFilters(...Show::getAllowedFilters())
             ->allowedSorts(...Show::getAllowedSorts())
-            ->defaultSort('-created_at')
             ->jsonPaginate();
 
         return ShowResource::collection($shows)->response();
