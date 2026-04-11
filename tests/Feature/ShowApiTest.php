@@ -109,6 +109,16 @@ test('an admin can list and fetch shows with titles', function () {
         ->assertJsonCount(2, 'titles');
 });
 
+test('an admin can sort shows by random', function () {
+    actingAsAdmin();
+
+    Show::factory()->count(10)->hasTitles(1, ['is_primary' => true])->create();
+
+    getJson('/api/v1/shows?sort=random')
+        ->assertOk()
+        ->assertJsonCount(10);
+});
+
 test('an admin can filter shows by related title through query builder', function () {
     actingAsAdmin();
 

@@ -2,7 +2,9 @@
 
 namespace App\Models\Show\Query;
 
+use App\Models\Show\Query\Sorts\RandomSort;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
 
 trait HasShowQuery
 {
@@ -20,7 +22,7 @@ trait HasShowQuery
     }
 
     /**
-     * @return array<int, string>
+     * @return array<int, string|AllowedSort>
      */
     public static function getAllowedSorts(): array
     {
@@ -31,6 +33,7 @@ trait HasShowQuery
             'preview_url',
             'created_at',
             'updated_at',
+            AllowedSort::custom('random', new RandomSort),
         ];
     }
 }
