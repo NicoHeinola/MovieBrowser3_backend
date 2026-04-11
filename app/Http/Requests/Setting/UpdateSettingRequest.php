@@ -13,7 +13,7 @@ class UpdateSettingRequest extends FormRequest
         $setting = Setting::where('key', $key)->first();
 
         $rules = [
-            'value' => ['required'],
+            'value' => ['nullable'],
         ];
 
         if ($setting) {
