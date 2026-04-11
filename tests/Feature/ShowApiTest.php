@@ -97,10 +97,10 @@ test('an admin can list and fetch shows with titles', function () {
 
     getJson('/api/v1/shows')
         ->assertOk()
-        ->assertJsonCount(1)
-        ->assertJsonPath('0.banner_url', 'https://cdn.example.com/banners/the-bear.jpg')
-        ->assertJsonPath('0.titles.0.title', 'The Bear')
-        ->assertJsonCount(2, '0.titles');
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.banner_url', 'https://cdn.example.com/banners/the-bear.jpg')
+        ->assertJsonPath('data.0.titles.0.title', 'The Bear')
+        ->assertJsonCount(2, 'data.0.titles');
 
     getJson("/api/v1/shows/{$show->id}")
         ->assertOk()
@@ -116,7 +116,7 @@ test('an admin can sort shows by random', function () {
 
     getJson('/api/v1/shows?sort=random')
         ->assertOk()
-        ->assertJsonCount(10);
+        ->assertJsonCount(10, 'data');
 });
 
 test('an admin can filter shows by related title through query builder', function () {
@@ -134,9 +134,9 @@ test('an admin can filter shows by related title through query builder', functio
 
     getJson('/api/v1/shows?filter[title]=bear')
         ->assertOk()
-        ->assertJsonCount(1)
-        ->assertJsonPath('0.id', $matchingShow->id)
-        ->assertJsonPath('0.titles.0.title', 'The Bear');
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $matchingShow->id)
+        ->assertJsonPath('data.0.titles.0.title', 'The Bear');
 });
 
 test('an admin can sort shows through query builder', function () {
@@ -158,13 +158,13 @@ test('an admin can sort shows through query builder', function () {
 
     getJson('/api/v1/shows?sort=banner_url')
         ->assertOk()
-        ->assertJsonPath('0.id', $earlierShow->id)
-        ->assertJsonPath('1.id', $laterShow->id);
+        ->assertJsonPath('data.0.id', $earlierShow->id)
+        ->assertJsonPath('data.1.id', $laterShow->id);
 
     getJson('/api/v1/shows?sort=-banner_url')
         ->assertOk()
-        ->assertJsonPath('0.id', $laterShow->id)
-        ->assertJsonPath('1.id', $earlierShow->id);
+        ->assertJsonPath('data.0.id', $laterShow->id)
+        ->assertJsonPath('data.1.id', $earlierShow->id);
 });
 
 test('an admin can update a show and replace its titles', function () {

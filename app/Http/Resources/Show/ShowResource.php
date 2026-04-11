@@ -9,8 +9,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin Show */
 class ShowResource extends JsonResource
 {
-    public static $wrap = null;
-
     /**
      * @return array<string, mixed>
      */

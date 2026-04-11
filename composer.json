@@ -15,6 +15,7 @@
         "laravel/tinker": "^3.0",
         "lorisleiva/laravel-actions": "^2.10",
         "spatie/laravel-data": "^4.21",
+        "spatie/laravel-json-api-paginate": "^2.0",
         "spatie/laravel-query-builder": "^7"
     },
     "require-dev": {

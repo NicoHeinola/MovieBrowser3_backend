@@ -26,7 +26,7 @@ class ShowController extends Controller
             ->allowedFilters(...Show::getAllowedFilters())
             ->allowedSorts(...Show::getAllowedSorts())
             ->defaultSort('-created_at')
-            ->get();
+            ->jsonPaginate();
 
         return ShowResource::collection($shows)->response();
     }
