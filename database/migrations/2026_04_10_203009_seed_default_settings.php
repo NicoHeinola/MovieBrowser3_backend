@@ -15,11 +15,15 @@ return new class extends Migration
                 'key' => 'banner_default_videos',
                 'value' => json_encode([]),
                 'type' => 'json',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'key' => 'banner_default_backgrounds',
                 'value' => json_encode([]),
                 'type' => 'json',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
     }
