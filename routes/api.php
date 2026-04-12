@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShowController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -16,6 +17,10 @@ Route::prefix('v1')->group(function (): void {
         });
     });
 
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
+    });
+
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
 
     Route::middleware(['auth:sanctum', 'admin'])->group(function (): void {
@@ -23,5 +28,8 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('shows', ShowController::class);
 
         Route::patch('settings/{key}', [SettingController::class, 'update'])->name('settings.update');
+
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 });

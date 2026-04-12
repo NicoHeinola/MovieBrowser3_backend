@@ -1,11 +1,12 @@
 ---
-description: "Form Request conventions for API validation and authorization. Use when creating or editing files under app/Http/Requests."
+description: "Form Request conventions for API validation. Use when creating or editing files under app/Http/Requests."
 applyTo: "app/Http/Requests/**/*.php"
 ---
 
 # Request Validation Rules
 
-- Requests own endpoint authorization and validation rules.
+- Requests own endpoint validation rules only; do not put authorization logic in `authorize()`.
+- Keep authorization in policies and wire it through the controller or route layer.
 - Keep requests focused on HTTP input concerns; do not perform persistence, token creation, side-effecting queries, or broader application logic here.
 - Prefer explicit rule arrays and custom rule objects for complex validation.
 - Reach for `prepareForValidation()` or `withValidator()` only when the endpoint genuinely needs request-level normalization or validation hooks.
