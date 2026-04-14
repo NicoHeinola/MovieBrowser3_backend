@@ -139,6 +139,55 @@ test('an admin can filter shows by related title through query builder', functio
         ->assertJsonPath('data.0.titles.0.title', 'The Bear');
 });
 
+test('an admin can search shows by related title through query builder', function () {
+    actingAsAdmin();
+
+    $matchingShow = Show::factory()->create();
+    $otherShow = Show::factory()->create();
+
+    ShowTitle::factory()->for($matchingShow)->primary()->create([
+        'title' => 'The Bear',
+    ]);
+    ShowTitle::factory()->for($otherShow)->primary()->create([
+        'title' => 'Andor',
+    ]);
+
+    getJson('/api/v1/shows?filter[search]=bear')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $matchingShow->id)
+        ->assertJsonPath('data.0.titles.0.title', 'The Bear');
+});
+
+test('an admin can filter shows with metadata operators', function () {
+    actingAsAdmin();
+
+    $showWithUrl = Show::factory()->create([
+        'preview_url' => 'https://cdn.example.com/previews/andor.mp4',
+    ]);
+    $showWithoutUrl = Show::factory()->create([
+        'preview_url' => null,
+    ]);
+
+    ShowTitle::factory()->for($showWithUrl)->primary()->create(['title' => 'Andor']);
+    ShowTitle::factory()->for($showWithoutUrl)->primary()->create(['title' => 'Severance']);
+
+    getJson('/api/v1/shows?filter[preview_url]=null')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $showWithoutUrl->id);
+
+    getJson('/api/v1/shows?filter[preview_url]=not_null')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $showWithUrl->id);
+
+    getJson('/api/v1/shows?filter[preview_url]=exact:https://cdn.example.com/previews/andor.mp4')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $showWithUrl->id);
+});
+
 test('an admin can sort shows through query builder', function () {
     actingAsAdmin();
 
