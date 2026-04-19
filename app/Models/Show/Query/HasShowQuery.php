@@ -20,7 +20,7 @@ trait HasShowQuery
             AllowedFilter::custom('card_image_url', new MetadataFilter),
             AllowedFilter::custom('preview_url', new MetadataFilter),
             AllowedFilter::scope('search', 'search'),
-            AllowedFilter::partial('title', 'titles.title'),
+            AllowedFilter::custom('title', new MetadataFilter, 'titles.title'),
         ];
     }
 

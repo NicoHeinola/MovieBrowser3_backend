@@ -25,8 +25,26 @@ class MetadataFilter implements Filter
 
     protected function apply(Builder $query, string $property, mixed $value): void
     {
+        if (str_contains($property, '.')) {
+            [$relation, $column] = collect(explode('.', $property))->pipe(fn ($parts) => [
+                $parts->slice(0, -1)->implode('.'),
+                $parts->last(),
+            ]);
+
+            $query->whereHas($relation, function (Builder $related) use ($column, $value) {
+                $this->applyCondition($related, $column, $value);
+            });
+
+            return;
+        }
+
+        $this->applyCondition($query, $property, $value);
+    }
+
+    protected function applyCondition(Builder $query, string $column, mixed $value): void
+    {
         if (!is_string($value)) {
-            $query->where($property, '=', $value);
+            $query->where($column, '=', $value);
 
             return;
         }
@@ -40,22 +58,22 @@ class MetadataFilter implements Filter
             }
 
             match ($operator) {
-                'eq', 'exact' => $query->where($property, '=', $actualValue),
-                'not_eq' => $query->where($property, '!=', $actualValue),
-                'gte' => $query->where($property, '>=', $actualValue),
-                'gt' => $query->where($property, '>', $actualValue),
-                'lte' => $query->where($property, '<=', $actualValue),
-                'lt' => $query->where($property, '<', $actualValue),
-                'null' => $query->whereNull($property),
-                'not_null' => $query->whereNotNull($property),
-                'like' => $query->where($property, 'like', "%{$actualValue}%"),
-                default => $query->where($property, '=', $value),
+                'eq', 'exact' => $query->where($column, '=', $actualValue),
+                'not_eq' => $query->where($column, '!=', $actualValue),
+                'gte' => $query->where($column, '>=', $actualValue),
+                'gt' => $query->where($column, '>', $actualValue),
+                'lte' => $query->where($column, '<=', $actualValue),
+                'lt' => $query->where($column, '<', $actualValue),
+                'null' => $query->whereNull($column),
+                'not_null' => $query->whereNotNull($column),
+                'like' => $query->where($column, 'like', "%{$actualValue}%"),
+                default => $query->where($column, '=', $value),
             };
 
             return;
         }
 
         // Default to exact match if no operator provided
-        $query->where($property, '=', $value);
+        $query->where($column, '=', $value);
     }
 }

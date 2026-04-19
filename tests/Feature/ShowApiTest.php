@@ -132,7 +132,7 @@ test('an admin can filter shows by related title through query builder', functio
         'title' => 'Andor',
     ]);
 
-    getJson('/api/v1/shows?filter[title]=bear')
+    getJson('/api/v1/shows?filter[title]=like:bear')
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $matchingShow->id)
