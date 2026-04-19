@@ -34,7 +34,7 @@ class ShowController extends Controller
     {
         $show = $createShowAction->handle(CreateShowData::from($request->validated()));
 
-        return ShowResource::make($show)->response()->setStatusCode(201);
+        return ShowResource::make($show->load('titles', 'entries.episodes', 'incomingLinks.sourceShow'))->response()->setStatusCode(201);
     }
 
     public function show(Show $show): JsonResponse
@@ -49,7 +49,7 @@ class ShowController extends Controller
             'show' => $show,
         ]));
 
-        return ShowResource::make($updatedShow)->response();
+        return ShowResource::make($updatedShow->load('titles', 'entries.episodes', 'incomingLinks.sourceShow'))->response();
     }
 
     public function destroy(Show $show, DeleteShowAction $deleteShowAction): Response
