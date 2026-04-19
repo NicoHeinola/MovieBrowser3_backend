@@ -13,11 +13,17 @@ test('any user can list settings', function () {
 
     $response = getJson('/api/v1/settings')
         ->assertOk()
-        ->assertJsonCount(2 + 2); // 2 seeded + 2 factory
+        ->assertJsonCount(2 + 2, 'data'); // 2 seeded + 2 factory
 
-    $data = $response->json();
-    $firstKey = array_key_first($data);
-    expect($data[$firstKey])->toHaveKey('key', $firstKey);
+    $data = $response->json('data');
+    $keys = collect($data)->pluck('key')->all();
+    $sortedKeys = $keys;
+
+    sort($sortedKeys);
+
+    expect($data[0])->toHaveKey('key');
+    expect($keys)->toBe($sortedKeys);
+    expect($keys)->toContain('banner_default_backgrounds', 'banner_default_videos');
 });
 
 test('setting update requires authentication', function () {

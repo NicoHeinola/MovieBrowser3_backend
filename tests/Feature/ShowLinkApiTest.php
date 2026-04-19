@@ -199,7 +199,36 @@ test('duplicate source-target-type link is rejected', function () {
     postJson("/api/v1/shows/{$source->id}/links", [
         'target_show_id' => $target->id,
         'type' => 'sequel',
-    ])->assertStatus(500);
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['type']);
+});
+
+test('updating a show link to a duplicate source-target-type combination is rejected', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $firstTarget = Show::factory()->create();
+    $secondTarget = Show::factory()->create();
+
+    ShowLink::factory()->create([
+        'source_show_id' => $source->id,
+        'target_show_id' => $firstTarget->id,
+        'type' => ShowLinkType::Sequel,
+    ]);
+
+    $linkToUpdate = ShowLink::factory()->create([
+        'source_show_id' => $source->id,
+        'target_show_id' => $secondTarget->id,
+        'type' => ShowLinkType::Prequel,
+    ]);
+
+    patchJson("/api/v1/links/{$linkToUpdate->id}", [
+        'target_show_id' => $firstTarget->id,
+        'type' => 'sequel',
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['type']);
 });
 
 test('deleting a show cascades to its links', function () {

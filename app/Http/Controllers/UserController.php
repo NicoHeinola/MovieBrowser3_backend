@@ -12,14 +12,13 @@ use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserController extends Controller
 {
     public function store(StoreUserRequest $request, CreateUserAction $createUserAction): JsonResponse
     {
-        Gate::authorize('create', User::class);
+        $this->authorize('create', User::class);
 
         $user = $createUserAction->handle(CreateUserData::from($request->validated()));
 
@@ -28,7 +27,7 @@ class UserController extends Controller
 
     public function update(User $user, UpdateUserRequest $request, UpdateUserAction $updateUserAction): JsonResponse
     {
-        Gate::authorize('update', $user);
+        $this->authorize('update', $user);
 
         $updatedUser = $updateUserAction->handle($user, UpdateUserData::from($request->validated()));
 
@@ -37,7 +36,7 @@ class UserController extends Controller
 
     public function destroy(User $user, DeleteUserAction $deleteUserAction): Response
     {
-        Gate::authorize('delete', $user);
+        $this->authorize('delete', $user);
 
         $deleteUserAction->handle($user);
 

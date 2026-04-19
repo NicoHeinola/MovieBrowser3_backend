@@ -41,7 +41,7 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('shows.links', ShowLinkController::class)->shallow()->except(['index', 'show']);
         Route::apiResource('shows.titles', ShowTitleController::class)->shallow()->except(['index', 'show']);
 
-        Route::patch('settings/{key}', [SettingController::class, 'update'])->name('settings.update');
+        Route::patch('settings/{setting}', [SettingController::class, 'update'])->name('settings.update');
 
         Route::post('users', [UserController::class, 'store'])->name('users.store');
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');

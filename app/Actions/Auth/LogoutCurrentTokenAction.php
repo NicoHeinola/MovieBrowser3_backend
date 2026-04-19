@@ -6,7 +6,7 @@ use App\Models\User\User;
 use Laravel\Sanctum\PersonalAccessToken;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-class LogoutCurrentToken
+class LogoutCurrentTokenAction
 {
     use AsAction;
 

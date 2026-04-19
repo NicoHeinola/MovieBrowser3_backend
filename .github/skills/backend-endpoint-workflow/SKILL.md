@@ -10,7 +10,7 @@ Use this skill when a task adds or refactors one API endpoint or a small related
 ## Workflow
 
 1. Confirm the route shape, middleware, and expected API contract.
-2. Add or update the request class for authorization and validation; prefer explicit rules or custom rule objects before request lifecycle hooks.
+2. Add or update the request class for validation; keep authorization in route middleware and policy checks at the controller boundary, and prefer explicit rules or custom rule objects before request lifecycle hooks.
 3. Keep the controller thin, extract validated data there, and introduce a DTO only when the endpoint should follow the DTO conventions.
 4. Keep application logic inside the action and keep its return value HTTP-agnostic.
 5. Return controller-managed API payloads through resources so outward response shaping stays in the resource layer, and keep success payloads lean unless the contract needs extra metadata.
@@ -23,7 +23,7 @@ Use this skill when a task adds or refactors one API endpoint or a small related
 ## Completion Checklist
 
 - Route paths and middleware are correct.
-- Validation and authorization live in the request class.
+- Validation lives in the request class, and authorization is enforced through middleware or controller policy checks.
 - Controller logic stays thin.
 - Action logic is isolated and reusable.
 - Resource classes shape the API response.

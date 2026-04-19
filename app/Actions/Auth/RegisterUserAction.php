@@ -7,7 +7,7 @@ use App\Dtos\Auth\RegisterUserData;
 use App\Models\User\User;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-class RegisterUser
+class RegisterUserAction
 {
     use AsAction;
 

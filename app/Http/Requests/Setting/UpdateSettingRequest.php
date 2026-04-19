@@ -7,10 +7,13 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateSettingRequest extends FormRequest
 {
+    /**
+     * @return array<string, list<string>>
+     */
     public function rules(): array
     {
-        $key = $this->route('key') ?: $this->route('setting');
-        $setting = Setting::where('key', $key)->first();
+        /** @var Setting|null $setting */
+        $setting = $this->route('setting');
 
         $rules = [
             'value' => ['nullable'],
