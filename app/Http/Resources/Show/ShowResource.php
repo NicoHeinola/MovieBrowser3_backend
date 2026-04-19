@@ -2,6 +2,8 @@
 
 namespace App\Http\Resources\Show;
 
+use App\Http\Resources\ShowEntry\ShowEntryResource;
+use App\Http\Resources\ShowLink\ShowLinkResource;
 use App\Http\Resources\ShowTitle\ShowTitleResource;
 use App\Models\Show\Show;
 use Illuminate\Http\Request;
@@ -21,9 +23,10 @@ class ShowResource extends JsonResource
             'card_image_url' => $this->card_image_url,
             'preview_url' => $this->preview_url,
             'description' => $this->description,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
             'titles' => ShowTitleResource::collection($this->whenLoaded('titles')),
+            'entries' => ShowEntryResource::collection($this->whenLoaded('entries')),
+            'incoming_links' => ShowLinkResource::collection($this->whenLoaded('incomingLinks')),
+            'outgoing_links' => ShowLinkResource::collection($this->whenLoaded('outgoingLinks')),
         ];
     }
 }

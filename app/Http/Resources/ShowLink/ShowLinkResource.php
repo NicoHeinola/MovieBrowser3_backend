@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\ShowLink;
 
+use App\Http\Resources\Show\ShowResource;
 use App\Models\ShowLink\ShowLink;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -19,6 +20,9 @@ class ShowLinkResource extends JsonResource
             'source_show_id' => $this->source_show_id,
             'target_show_id' => $this->target_show_id,
             'type' => $this->type,
+
+            'source_show' => ShowResource::make($this->whenLoaded('sourceShow')),
+            'target_show' => ShowResource::make($this->whenLoaded('targetShow')),
         ];
     }
 }

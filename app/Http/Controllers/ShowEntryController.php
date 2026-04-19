@@ -20,6 +20,8 @@ class ShowEntryController extends Controller
 {
     public function index(Show $show): JsonResponse
     {
+        $show->loadMissing('titles');
+
         $entries = QueryBuilder::for($show->entries()->with('episodes'))
             ->allowedFilters(...ShowEntry::getAllowedFilters())
             ->allowedSorts(...ShowEntry::getAllowedSorts())
@@ -32,12 +34,12 @@ class ShowEntryController extends Controller
     {
         $entry = $action->handle($show, CreateShowEntryData::from($request->validated()));
 
-        return ShowEntryResource::make($entry->load('episodes'))->response()->setStatusCode(201);
+        return ShowEntryResource::make($entry->load('show.titles', 'episodes'))->response()->setStatusCode(201);
     }
 
     public function show(Show $show, ShowEntry $entry): JsonResponse
     {
-        return ShowEntryResource::make($entry->load('episodes'))->response();
+        return ShowEntryResource::make($entry->load('show.titles', 'episodes'))->response();
     }
 
     public function update(Show $show, ShowEntry $entry, UpdateShowEntryRequest $request, UpdateShowEntryAction $action): JsonResponse
@@ -47,7 +49,7 @@ class ShowEntryController extends Controller
             'show_entry' => $entry,
         ]));
 
-        return ShowEntryResource::make($updatedEntry->load('episodes'))->response();
+        return ShowEntryResource::make($updatedEntry->load('show.titles', 'episodes'))->response();
     }
 
     public function destroy(Show $show, ShowEntry $entry, DeleteShowEntryAction $action): Response

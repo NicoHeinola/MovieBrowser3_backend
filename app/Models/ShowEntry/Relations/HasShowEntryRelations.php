@@ -16,6 +16,6 @@ trait HasShowEntryRelations
 
     public function episodes(): HasMany
     {
-        return $this->hasMany(Episode::class)->orderBy('sequence_number');
+        return $this->hasMany(Episode::class)->chaperone('entry')->orderBy('sequence_number');
     }
 }

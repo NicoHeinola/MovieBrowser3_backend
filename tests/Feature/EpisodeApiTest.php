@@ -5,6 +5,7 @@ use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowTitle\ShowTitle;
 use App\Models\User\User;
+use Illuminate\Support\Facades\DB;
 
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
@@ -67,6 +68,44 @@ test('authenticated users can view a single episode with file_path', function ()
         ->assertJsonPath('filename', 'episode_1.mkv')
         ->assertJsonPath('sequence_number', 1)
         ->assertJsonPath('file_path', 'Dr. Stone/Season 1/episode_1.mkv');
+});
+
+test('preloaded episode file_path values do not trigger extra queries', function () {
+    $show = Show::factory()->create();
+    ShowTitle::factory()->for($show)->primary()->create(['title' => 'Dr. Stone']);
+
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    Episode::factory()->for($entry, 'entry')->create([
+        'filename' => 'episode_1.mkv',
+        'sequence_number' => 1,
+    ]);
+    Episode::factory()->for($entry, 'entry')->create([
+        'filename' => 'episode_2.mkv',
+        'sequence_number' => 2,
+    ]);
+
+    $loadedShow = Show::query()
+        ->with('titles', 'entries.episodes')
+        ->findOrFail($show->id);
+
+    $connection = DB::connection();
+    $connection->enableQueryLog();
+    $connection->flushQueryLog();
+
+    $paths = $loadedShow->entries
+        ->flatMap(fn (ShowEntry $loadedEntry) => $loadedEntry->episodes)
+        ->map(fn (Episode $loadedEpisode) => $loadedEpisode->file_path)
+        ->values()
+        ->all();
+
+    $queryLog = $connection->getQueryLog();
+    $connection->disableQueryLog();
+
+    expect($paths)->toBe([
+        'Dr. Stone/Season 1/episode_1.mkv',
+        'Dr. Stone/Season 1/episode_2.mkv',
+    ]);
+    expect($queryLog)->toHaveCount(0);
 });
 
 test('an admin can create an episode', function () {

@@ -16,7 +16,7 @@ trait HasShowRelations
 
     public function entries(): HasMany
     {
-        return $this->hasMany(ShowEntry::class)->orderBy('sort_order');
+        return $this->hasMany(ShowEntry::class)->chaperone('show')->orderBy('sort_order');
     }
 
     /**

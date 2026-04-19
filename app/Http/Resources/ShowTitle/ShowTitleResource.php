@@ -19,8 +19,6 @@ class ShowTitleResource extends JsonResource
             'show_id' => $this->show_id,
             'title' => $this->title,
             'is_primary' => $this->is_primary,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
         ];
     }
 }
