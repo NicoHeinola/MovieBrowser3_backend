@@ -22,30 +22,57 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $shows = Show::factory(20)
+        $shows = Show::factory(30)
             ->has(ShowTitle::factory()->primary(), 'titles')
-            ->has(ShowTitle::factory(2), 'titles')
+            ->has(ShowTitle::factory(rand(1, 3)), 'titles')
             ->create();
 
         $shows->each(function (Show $show, int $index): void {
-            $seasonEntry = ShowEntry::factory()->for($show)->create([
-                'type' => ShowEntryType::Season,
-                'name' => 'Season 1',
-                'sort_order' => 1,
-            ]);
-            $this->seedSeasonEpisodes($seasonEntry, [10, 12, 13][$index % 3]);
+            $types = collect();
+            $seasonCounter = 0;
 
-            $movieEntry = ShowEntry::factory()->for($show)->movie()->create([
-                'name' => 'Movie',
-                'sort_order' => 2,
-            ]);
-            $this->seedMovieEpisode($movieEntry);
+            // Give every show at least one "main" entry (Season or Movie)
+            if (rand(0, 100) < 80) {
+                $types->push(ShowEntryType::Season);
+            } else {
+                $types->push(ShowEntryType::Movie);
+            }
 
-            $tvSpecialEntry = ShowEntry::factory()->for($show)->tvSpecial()->create([
-                'name' => 'TV Special',
-                'sort_order' => 3,
-            ]);
-            $this->seedTvSpecialEpisodes($tvSpecialEntry, $index % 4 === 0 ? 2 : 1);
+            // Maybe add more seasons
+            if ($types->contains(ShowEntryType::Season) && rand(0, 100) < 40) {
+                $types->push(ShowEntryType::Season);
+                if (rand(0, 100) < 30) {
+                    $types->push(ShowEntryType::Season);
+                }
+            }
+
+            // Maybe add a movie if it doesn't have one
+            if (!$types->contains(ShowEntryType::Movie) && rand(0, 100) < 20) {
+                $types->push(ShowEntryType::Movie);
+            }
+
+            // Maybe add TV specials
+            if (rand(0, 100) < 30) {
+                $types->push(ShowEntryType::TvSpecial);
+            }
+
+            $types->shuffle()->each(function (ShowEntryType $type, int $sortOrder) use ($show, &$seasonCounter): void {
+                $entry = ShowEntry::factory()->for($show)->create([
+                    'type' => $type,
+                    'name' => match ($type) {
+                        ShowEntryType::Season => 'Season '.++$seasonCounter,
+                        ShowEntryType::Movie => fake()->sentence(rand(2, 3)),
+                        ShowEntryType::TvSpecial => 'Special: '.fake()->sentence(rand(3, 4)),
+                    },
+                    'sort_order' => $sortOrder + 1,
+                ]);
+
+                match ($type) {
+                    ShowEntryType::Season => $this->seedSeasonEpisodes($entry, rand(8, 24)),
+                    ShowEntryType::Movie => $this->seedMovieEpisode($entry),
+                    ShowEntryType::TvSpecial => $this->seedTvSpecialEpisodes($entry, rand(1, 3)),
+                };
+            });
         });
 
         $this->seedShowLinks($shows);
@@ -54,8 +81,10 @@ class DatabaseSeeder extends Seeder
     private function seedSeasonEpisodes(ShowEntry $entry, int $episodeCount): void
     {
         for ($sequenceNumber = 1; $sequenceNumber <= $episodeCount; $sequenceNumber++) {
+            $episodeName = fake()->unique()->sentence(rand(1, 4));
+
             Episode::factory()->for($entry, 'entry')->create([
-                'name' => sprintf('Episode %02d', $sequenceNumber),
+                'name' => sprintf('Episode %02d - %s', $sequenceNumber, rtrim($episodeName, '. ')),
                 'filename' => sprintf('show-entry-%d-%02d.mkv', $entry->id, $sequenceNumber),
                 'sequence_number' => $sequenceNumber,
             ]);
@@ -64,8 +93,10 @@ class DatabaseSeeder extends Seeder
 
     private function seedMovieEpisode(ShowEntry $entry): void
     {
+        $movieName = fake()->unique()->sentence(rand(2, 5));
+
         Episode::factory()->for($entry, 'entry')->create([
-            'name' => 'Feature Presentation',
+            'name' => rtrim($movieName, '. '),
             'filename' => sprintf('show-entry-%d-feature.mkv', $entry->id),
             'sequence_number' => 1,
         ]);
@@ -74,10 +105,10 @@ class DatabaseSeeder extends Seeder
     private function seedTvSpecialEpisodes(ShowEntry $entry, int $episodeCount): void
     {
         for ($sequenceNumber = 1; $sequenceNumber <= $episodeCount; $sequenceNumber++) {
+            $specialName = fake()->unique()->sentence(rand(2, 6));
+
             Episode::factory()->for($entry, 'entry')->create([
-                'name' => $episodeCount === 1
-                    ? 'Broadcast Special'
-                    : sprintf('Broadcast Special Part %d', $sequenceNumber),
+                'name' => rtrim($specialName, '. '),
                 'filename' => sprintf('show-entry-%d-special-%02d.mkv', $entry->id, $sequenceNumber),
                 'sequence_number' => $sequenceNumber,
             ]);
