@@ -22,7 +22,7 @@ class ShowController extends Controller
 {
     public function index(): JsonResponse
     {
-        $shows = QueryBuilder::for(Show::query()->with('titles', 'entries.episodes'))
+        $shows = QueryBuilder::for(Show::query()->with('titles', 'entries.episodes', 'incomingLinks.sourceShow'))
             ->allowedFilters(...Show::getAllowedFilters())
             ->allowedSorts(...Show::getAllowedSorts())
             ->jsonPaginate();
