@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Show;
 
+use App\Http\Resources\ShowTitle\ShowTitleResource;
 use App\Models\Show\Show;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;

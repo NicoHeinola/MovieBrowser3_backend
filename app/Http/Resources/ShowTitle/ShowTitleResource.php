@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Resources\Show;
+namespace App\Http\Resources\ShowTitle;
 
 use App\Models\ShowTitle\ShowTitle;
 use Illuminate\Http\Request;

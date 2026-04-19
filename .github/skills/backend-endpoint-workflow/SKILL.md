@@ -17,7 +17,8 @@ Use this skill when a task adds or refactors one API endpoint or a small related
 6. For index-style endpoints, reuse model query traits for Spatie Query Builder configuration and explicit eager loading rather than ad hoc query parsing in the controller.
 7. Use dedicated collection requests and actions for bulk operations.
 8. Add or update feature tests for the changed contract.
-9. Run the narrowest relevant Pest command.
+9. If the change standardizes or changes a durable repository pattern, update the owning instruction or skill file in the same change set.
+10. Run the narrowest relevant Pest command.
 
 ## Completion Checklist
 
@@ -27,4 +28,5 @@ Use this skill when a task adds or refactors one API endpoint or a small related
 - Action logic is isolated and reusable.
 - Resource classes shape the API response.
 - Filtering, sorting, and bulk collection behavior follow repository conventions when present.
+- Relevant instruction or skill files were reviewed and updated when the work changed a durable convention.
 - Feature tests cover the changed contract.

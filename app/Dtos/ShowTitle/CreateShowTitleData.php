@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Dtos\Show;
+namespace App\Dtos\ShowTitle;
 
 use Spatie\LaravelData\Data;
 
-class ShowTitleData extends Data
+class CreateShowTitleData extends Data
 {
     public function __construct(
         public string $title,

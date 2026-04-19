@@ -6,6 +6,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShowController;
 use App\Http\Controllers\ShowEntryController;
 use App\Http\Controllers\ShowLinkController;
+use App\Http\Controllers\ShowTitleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,7 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->only(['index', 'show']);
         Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->only(['index', 'show']);
         Route::apiResource('shows.links', ShowLinkController::class)->shallow()->only(['index', 'show']);
+        Route::apiResource('shows.titles', ShowTitleController::class)->shallow()->only(['index', 'show']);
     });
 
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
@@ -37,6 +39,7 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->except(['index', 'show']);
         Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->except(['index', 'show']);
         Route::apiResource('shows.links', ShowLinkController::class)->shallow()->except(['index', 'show']);
+        Route::apiResource('shows.titles', ShowTitleController::class)->shallow()->except(['index', 'show']);
 
         Route::patch('settings/{key}', [SettingController::class, 'update'])->name('settings.update');
 

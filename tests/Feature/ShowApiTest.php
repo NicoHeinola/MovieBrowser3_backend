@@ -4,7 +4,6 @@ use App\Models\Show\Show;
 use App\Models\ShowTitle\ShowTitle;
 use App\Models\User\User;
 
-use function Pest\Laravel\assertDatabaseCount;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
 use function Pest\Laravel\deleteJson;
@@ -34,7 +33,7 @@ test('show endpoints forbid authenticated non-admin users', function () {
         ->assertJsonPath('message', 'Forbidden.');
 });
 
-test('an admin can create a show with nested titles', function () {
+test('an admin can create a show', function () {
     actingAsAdmin();
 
     $response = postJson('/api/v1/shows', [
@@ -42,42 +41,19 @@ test('an admin can create a show with nested titles', function () {
         'card_image_url' => 'https://cdn.example.com/cards/severance.jpg',
         'preview_url' => '',
         'description' => 'A group of office workers whose memories have been surgically divided between their work and personal lives.',
-        'titles' => [
-            [
-                'title' => ' Severance ',
-                'is_primary' => true,
-            ],
-            [
-                'title' => 'Severance: Director Cut',
-                'is_primary' => false,
-            ],
-        ],
     ]);
 
     $response
         ->assertCreated()
         ->assertJsonPath('banner_url', 'https://cdn.example.com/banners/severance.jpg')
         ->assertJsonPath('preview_url', null)
-        ->assertJsonPath('description', 'A group of office workers whose memories have been surgically divided between their work and personal lives.')
-        ->assertJsonPath('titles.0.title', 'Severance')
-        ->assertJsonPath('titles.0.is_primary', true)
-        ->assertJsonCount(2, 'titles');
+        ->assertJsonPath('description', 'A group of office workers whose memories have been surgically divided between their work and personal lives.');
 
     assertDatabaseHas('shows', [
         'banner_url' => 'https://cdn.example.com/banners/severance.jpg',
         'card_image_url' => 'https://cdn.example.com/cards/severance.jpg',
         'preview_url' => null,
         'description' => 'A group of office workers whose memories have been surgically divided between their work and personal lives.',
-    ]);
-
-    assertDatabaseHas('show_titles', [
-        'title' => 'Severance',
-        'is_primary' => true,
-    ]);
-
-    assertDatabaseHas('show_titles', [
-        'title' => 'Severance: Director Cut',
-        'is_primary' => false,
     ]);
 });
 
@@ -216,57 +192,27 @@ test('an admin can sort shows through query builder', function () {
         ->assertJsonPath('data.1.id', $earlierShow->id);
 });
 
-test('an admin can update a show and replace its titles', function () {
+test('an admin can update a show', function () {
     actingAsAdmin();
 
     $show = Show::factory()->create([
         'preview_url' => 'https://cdn.example.com/previews/original.mp4',
     ]);
 
-    ShowTitle::factory()->for($show)->primary()->create([
-        'title' => 'Original Title',
-    ]);
-    ShowTitle::factory()->for($show)->create([
-        'title' => 'Original Alt Title',
-    ]);
-
     $response = patchJson("/api/v1/shows/{$show->id}", [
         'banner_url' => 'https://cdn.example.com/banners/updated.jpg',
         'preview_url' => '',
-        'titles' => [
-            [
-                'title' => 'Updated Primary Title',
-                'is_primary' => true,
-            ],
-            [
-                'title' => 'Updated Secondary Title',
-                'is_primary' => false,
-            ],
-        ],
     ]);
 
     $response
         ->assertOk()
         ->assertJsonPath('banner_url', 'https://cdn.example.com/banners/updated.jpg')
-        ->assertJsonPath('preview_url', null)
-        ->assertJsonPath('titles.0.title', 'Updated Primary Title')
-        ->assertJsonCount(2, 'titles');
+        ->assertJsonPath('preview_url', null);
 
     assertDatabaseHas('shows', [
         'id' => $show->id,
         'banner_url' => 'https://cdn.example.com/banners/updated.jpg',
         'preview_url' => null,
-    ]);
-
-    assertDatabaseMissing('show_titles', [
-        'show_id' => $show->id,
-        'title' => 'Original Title',
-    ]);
-
-    assertDatabaseHas('show_titles', [
-        'show_id' => $show->id,
-        'title' => 'Updated Primary Title',
-        'is_primary' => true,
     ]);
 });
 
@@ -340,33 +286,7 @@ test('bulk show deletion validates the ids payload', function () {
         ->assertJsonValidationErrors(['ids.0', 'ids.1']);
 });
 
-test('show creation requires exactly one primary title', function () {
-    actingAsAdmin();
-
-    $response = postJson('/api/v1/shows', [
-        'banner_url' => 'https://cdn.example.com/banners/andor.jpg',
-        'card_image_url' => 'https://cdn.example.com/cards/andor.jpg',
-        'preview_url' => 'https://cdn.example.com/previews/andor.mp4',
-        'titles' => [
-            [
-                'title' => 'Andor',
-                'is_primary' => false,
-            ],
-            [
-                'title' => 'Andor Alt',
-                'is_primary' => false,
-            ],
-        ],
-    ]);
-
-    $response
-        ->assertUnprocessable()
-        ->assertJsonValidationErrors(['titles']);
-
-    assertDatabaseCount('shows', 0);
-});
-
-test('show update can change only scalar fields without replacing titles', function () {
+test('an admin can update a show without affecting its titles', function () {
     actingAsAdmin();
 
     $show = Show::factory()->create([

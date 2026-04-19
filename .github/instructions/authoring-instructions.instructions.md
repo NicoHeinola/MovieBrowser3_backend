@@ -17,6 +17,8 @@ applyTo: ".github/instructions/**/*.instructions.md"
 - Keep the guidance about file shape, ownership, and repository conventions for the matched files.
 - Prefer concrete wording over abstract advice so a future edit can be checked directly against the instruction.
 - Include a short example when the repository has an important pattern that could otherwise be implemented two different ways.
+- When a repository refactor changes a durable convention or standardizes one implementation pattern over another, update the owning instruction file in the same change set so future work sees the new rule automatically.
+- Capture only durable conventions in instruction files; do not add one-off feature behavior that is unlikely to generalize beyond the immediate change.
 
 ## Example Pattern
 

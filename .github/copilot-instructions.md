@@ -21,6 +21,13 @@
 - Use Composer, Artisan, and Pest for project commands and validation.
 - Add or update the narrowest relevant tests when behavior changes.
 
+## Instruction Maintenance
+
+- When a change introduces or removes a durable repository convention, ownership boundary, endpoint pattern, file placement rule, or cross-file workflow, update the relevant `.github/instructions/*.instructions.md` and `SKILL.md` files in the same change set.
+- Treat large refactors that standardize one pattern over another as instruction-impacting by default, even when the runtime API contract stays mostly the same.
+- If no existing instruction file cleanly owns the new convention, extend the closest existing instruction or skill file before creating a new one.
+- Review instruction and skill updates as part of completion for architecture-level or pattern-level changes; do not leave the repository guidance stale after the code has been standardized.
+
 ## Customization Boundaries
 
 - Keep `.instructions.md` files focused on how a matched file family should be structured, with concrete examples when the rule could be interpreted multiple ways.
