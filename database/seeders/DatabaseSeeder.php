@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
     {
         $shows = Show::factory(30)
             ->has(ShowTitle::factory()->primary(), 'titles')
-            ->has(ShowTitle::factory(rand(1, 3)), 'titles')
+            ->has(ShowTitle::factory(rand(1, 5)), 'titles')
             ->create();
 
         $shows->each(function (Show $show, int $index): void {
