@@ -24,7 +24,7 @@ class EpisodeFactory extends Factory
             'show_entry_id' => ShowEntry::factory(),
             'name' => $name,
             'filename' => $name.'.mkv',
-            'sequence_number' => fake()->unique()->numberBetween(1, 1000),
+            'sequence_number' => fake()->unique()->numberBetween(1, 1000000),
         ];
     }
 }

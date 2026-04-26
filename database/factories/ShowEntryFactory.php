@@ -22,8 +22,8 @@ class ShowEntryFactory extends Factory
         return [
             'show_id' => Show::factory(),
             'type' => ShowEntryType::Season,
-            'name' => 'Season '.fake()->unique()->numberBetween(1, 100),
-            'sort_order' => fake()->unique()->numberBetween(1, 1000),
+            'name' => 'Season '.fake()->unique()->numberBetween(1, 100000),
+            'sort_order' => fake()->unique()->numberBetween(1, 100000),
         ];
     }
 
