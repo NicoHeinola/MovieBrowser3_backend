@@ -15,8 +15,6 @@ return new class extends Migration
             $table->string('name');
             $table->unsignedInteger('sort_order');
             $table->timestamps();
-
-            $table->unique(['show_id', 'sort_order']);
         });
     }
 

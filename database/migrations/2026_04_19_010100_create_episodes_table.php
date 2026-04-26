@@ -15,8 +15,6 @@ return new class extends Migration
             $table->string('filename');
             $table->unsignedInteger('sequence_number');
             $table->timestamps();
-
-            $table->unique(['show_entry_id', 'sequence_number']);
         });
     }
 
