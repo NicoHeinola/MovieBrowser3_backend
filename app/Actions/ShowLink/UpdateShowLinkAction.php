@@ -4,8 +4,8 @@ namespace App\Actions\ShowLink;
 
 use App\Dtos\ShowLink\UpdateShowLinkData;
 use App\Models\ShowLink\ShowLink;
+use Illuminate\Support\Arr;
 use Lorisleiva\Actions\Concerns\AsAction;
-use Spatie\LaravelData\Optional;
 
 class UpdateShowLinkAction
 {
@@ -13,19 +13,7 @@ class UpdateShowLinkAction
 
     public function handle(UpdateShowLinkData $data): ShowLink
     {
-        $attributes = [];
-
-        if (!($data->targetShowId instanceof Optional)) {
-            $attributes['target_show_id'] = $data->targetShowId;
-        }
-
-        if (!($data->type instanceof Optional)) {
-            $attributes['type'] = $data->type;
-        }
-
-        if ($attributes !== []) {
-            $data->showLink->update($attributes);
-        }
+        $data->showLink->fill(Arr::only($data->all(), $data->showLink->getFillable()))->save();
 
         return $data->showLink->fresh();
     }

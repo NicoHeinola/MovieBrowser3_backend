@@ -4,8 +4,8 @@ namespace App\Actions\ShowEntry;
 
 use App\Dtos\ShowEntry\UpdateShowEntryData;
 use App\Models\ShowEntry\ShowEntry;
+use Illuminate\Support\Arr;
 use Lorisleiva\Actions\Concerns\AsAction;
-use Spatie\LaravelData\Optional;
 
 class UpdateShowEntryAction
 {
@@ -13,23 +13,7 @@ class UpdateShowEntryAction
 
     public function handle(UpdateShowEntryData $data): ShowEntry
     {
-        $attributes = [];
-
-        if (!($data->type instanceof Optional)) {
-            $attributes['type'] = $data->type;
-        }
-
-        if (!($data->name instanceof Optional)) {
-            $attributes['name'] = $data->name;
-        }
-
-        if (!($data->sortOrder instanceof Optional)) {
-            $attributes['sort_order'] = $data->sortOrder;
-        }
-
-        if ($attributes !== []) {
-            $data->showEntry->update($attributes);
-        }
+        $data->showEntry->fill(Arr::only($data->all(), $data->showEntry->getFillable()))->save();
 
         return $data->showEntry->fresh();
     }

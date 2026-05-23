@@ -32,11 +32,12 @@ test('setting update requires authentication', function () {
 
 test('setting update forbids non-admin users', function () {
     $user = User::factory()->create();
+    $setting = Setting::factory()->create(['type' => 'string', 'value' => 'old']);
     $token = $user->createToken('test-token')->plainTextToken;
 
     withToken($token);
 
-    patchJson('/api/v1/settings/any-key', ['value' => 'foo'])->assertForbidden();
+    patchJson("/api/v1/settings/{$setting->key}", ['value' => 'foo'])->assertForbidden();
 });
 
 test('an admin can update a string setting', function () {

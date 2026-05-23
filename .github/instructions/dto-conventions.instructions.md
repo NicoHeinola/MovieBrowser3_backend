@@ -9,4 +9,5 @@ applyTo: "app/Dtos/**/*.php"
 - Prefer camelCase DTO property names and rely on the repository Spatie Data input mapping for snake_case payloads unless a DTO needs a narrower override.
 - Use DTOs for grouped scalar or array payloads at action boundaries, not for single models or a small number of obvious arguments.
 - Keep DTO classes declarative; use `Optional` unions only when the payload genuinely supports partial input.
+- When a partial-update DTO feeds Eloquent `fill()`, add `#[MapOutputName(SnakeCaseMapper::class)]` so camelCase DTO properties become snake_case model attributes while omitted `Optional` fields stay out of the payload.
 - Define nested DTO arrays explicitly with `DataCollectionOf` and accurate array annotations so hydration stays unambiguous.
