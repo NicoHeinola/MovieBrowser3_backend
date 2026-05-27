@@ -92,6 +92,57 @@ test('an admin can create a show link', function () {
     ]);
 });
 
+test('creating a mirrored show link also creates the reciprocal link', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $target = Show::factory()->create();
+
+    postJson("/api/v1/shows/{$source->id}/links", [
+        'target_show_id' => $target->id,
+        'type' => 'sequel',
+    ])->assertCreated();
+
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $source->id,
+        'target_show_id' => $target->id,
+        'type' => 'sequel',
+    ]);
+
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => 'prequel',
+    ]);
+
+    assertDatabaseCount('show_links', 2);
+});
+
+test('creating a one-way show link does not create a reciprocal link', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $target = Show::factory()->create();
+
+    postJson("/api/v1/shows/{$source->id}/links", [
+        'target_show_id' => $target->id,
+        'type' => 'spin_off',
+    ])->assertCreated();
+
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $source->id,
+        'target_show_id' => $target->id,
+        'type' => 'spin_off',
+    ]);
+
+    assertDatabaseMissing('show_links', [
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+    ]);
+
+    assertDatabaseCount('show_links', 1);
+});
+
 test('an admin can update a show link', function () {
     actingAsAdmin();
 
@@ -119,6 +170,36 @@ test('an admin can update a show link', function () {
     ]);
 });
 
+test('updating a mirrored show link to a one-way type removes the reciprocal link', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $target = Show::factory()->create();
+    $link = ShowLink::factory()->create([
+        'source_show_id' => $source->id,
+        'target_show_id' => $target->id,
+        'type' => ShowLinkType::Sequel,
+    ]);
+    $reciprocalLink = ShowLink::factory()->create([
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => ShowLinkType::Prequel,
+    ]);
+
+    patchJson("/api/v1/links/{$link->id}", [
+        'type' => 'spin_off',
+    ])
+        ->assertOk()
+        ->assertJsonPath('type', 'spin_off');
+
+    assertDatabaseHas('show_links', [
+        'id' => $link->id,
+        'type' => 'spin_off',
+    ]);
+    assertDatabaseMissing('show_links', ['id' => $reciprocalLink->id]);
+    assertDatabaseCount('show_links', 1);
+});
+
 test('an admin can delete a show link', function () {
     actingAsAdmin();
 
@@ -128,6 +209,30 @@ test('an admin can delete a show link', function () {
         ->assertNoContent();
 
     assertDatabaseMissing('show_links', ['id' => $link->id]);
+});
+
+test('deleting a mirrored show link also deletes its reciprocal link', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $target = Show::factory()->create();
+    $link = ShowLink::factory()->create([
+        'source_show_id' => $source->id,
+        'target_show_id' => $target->id,
+        'type' => ShowLinkType::Sequel,
+    ]);
+    $reciprocalLink = ShowLink::factory()->create([
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => ShowLinkType::Prequel,
+    ]);
+
+    deleteJson("/api/v1/links/{$link->id}")
+        ->assertNoContent();
+
+    assertDatabaseMissing('show_links', ['id' => $link->id]);
+    assertDatabaseMissing('show_links', ['id' => $reciprocalLink->id]);
+    assertDatabaseCount('show_links', 0);
 });
 
 test('creating a show link validates type enum', function () {
@@ -181,7 +286,19 @@ test('multiple link types per pair are allowed', function () {
         'type' => 'suggested_next',
     ])->assertCreated();
 
-    assertDatabaseCount('show_links', 2);
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => 'prequel',
+    ]);
+
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => 'suggested_previous',
+    ]);
+
+    assertDatabaseCount('show_links', 4);
 });
 
 test('duplicate source-target-type link is rejected', function () {

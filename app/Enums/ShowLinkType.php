@@ -10,4 +10,15 @@ enum ShowLinkType: string
     case SuggestedNext = 'suggested_next';
     case SuggestedPrevious = 'suggested_previous';
     case SpinOff = 'spin_off';
+
+    public function reciprocalType(): ?self
+    {
+        return match ($this) {
+            self::Sequel => self::Prequel,
+            self::Prequel => self::Sequel,
+            self::SuggestedNext => self::SuggestedPrevious,
+            self::SuggestedPrevious => self::SuggestedNext,
+            default => null,
+        };
+    }
 }
