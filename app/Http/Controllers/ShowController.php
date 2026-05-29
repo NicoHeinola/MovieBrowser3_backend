@@ -22,7 +22,7 @@ class ShowController extends Controller
 {
     public function index(): JsonResponse
     {
-        $shows = QueryBuilder::for(Show::query()->with('titles', 'entries.episodes', 'incomingLinks.sourceShow', 'outgoingLinks.targetShow'))
+        $shows = QueryBuilder::for(Show::query()->with('titles', 'entries.episodes', 'incomingLinks.sourceShow.titles', 'outgoingLinks.targetShow.titles'))
             ->allowedFilters(...Show::getAllowedFilters())
             ->allowedSorts(...Show::getAllowedSorts())
             ->jsonPaginate();
@@ -34,12 +34,12 @@ class ShowController extends Controller
     {
         $show = $createShowAction->handle(CreateShowData::from($request->validated()));
 
-        return ShowResource::make($show->load('titles', 'entries.episodes', 'incomingLinks.sourceShow', 'outgoingLinks.targetShow'))->response()->setStatusCode(201);
+        return ShowResource::make($show->load('titles', 'entries.episodes', 'incomingLinks.sourceShow.titles', 'outgoingLinks.targetShow.titles'))->response()->setStatusCode(201);
     }
 
     public function show(Show $show): JsonResponse
     {
-        return ShowResource::make($show->load('titles', 'entries.episodes', 'incomingLinks.sourceShow', 'outgoingLinks.targetShow'))->response();
+        return ShowResource::make($show->load('titles', 'entries.episodes', 'incomingLinks.sourceShow.titles', 'outgoingLinks.targetShow.titles'))->response();
     }
 
     public function update(Show $show, UpdateShowRequest $request, UpdateShowAction $updateShowAction): JsonResponse
@@ -49,7 +49,7 @@ class ShowController extends Controller
             'show' => $show,
         ]));
 
-        return ShowResource::make($updatedShow->load('titles', 'entries.episodes', 'incomingLinks.sourceShow', 'outgoingLinks.targetShow'))->response();
+        return ShowResource::make($updatedShow->load('titles', 'entries.episodes', 'incomingLinks.sourceShow.titles', 'outgoingLinks.targetShow.titles'))->response();
     }
 
     public function destroy(Show $show, DeleteShowAction $deleteShowAction): Response
