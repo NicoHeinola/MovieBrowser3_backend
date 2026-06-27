@@ -27,7 +27,7 @@ return new class extends Migration
             ],
             [
                 'key' => 'video_base_path',
-                'value' => '',
+                'value' => storage_path('app/videos'),
                 'type' => 'string',
                 'created_at' => now(),
                 'updated_at' => now(),

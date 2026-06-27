@@ -1,8 +1,12 @@
 <?php
 
+use App\Models\Episode\Episode;
+use App\Models\Setting\Setting;
 use App\Models\Show\Show;
+use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowTitle\ShowTitle;
 use App\Models\User\User;
+use Illuminate\Support\Facades\File;
 
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertDatabaseMissing;
@@ -217,10 +221,26 @@ test('an admin can update a show', function () {
 });
 
 test('an admin can delete a show and its titles cascade', function () {
+    global $videoBasePath;
+
     actingAsAdmin();
 
+    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+
     $show = Show::factory()->create();
-    $title = ShowTitle::factory()->for($show)->primary()->create();
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create([
+        'name' => 'Episode 1',
+        'filename' => 'episode_1.mkv',
+    ]);
+
+    $title = ShowTitle::factory()->for($show)->primary()->create([
+        'title' => 'Dr. Stone',
+    ]);
+
+    $episodePath = "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1/episode_1.mkv";
+    File::ensureDirectoryExists(dirname($episodePath));
+    File::put($episodePath, 'video-bytes');
 
     deleteJson("/api/v1/shows/{$show->id}")
         ->assertNoContent();
@@ -232,6 +252,8 @@ test('an admin can delete a show and its titles cascade', function () {
     assertDatabaseMissing('show_titles', [
         'id' => $title->id,
     ]);
+
+    expect(File::exists($episodePath))->toBeFalse();
 });
 
 test('an admin can delete multiple shows at once', function () {

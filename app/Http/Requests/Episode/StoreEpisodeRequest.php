@@ -13,7 +13,7 @@ class StoreEpisodeRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'filename' => ['required', 'string', 'max:255'],
+            'file' => ['sometimes', 'file'],
             'sequence_number' => ['required', 'integer', 'min:0'],
         ];
     }

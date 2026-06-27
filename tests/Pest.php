@@ -19,6 +19,9 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
+pest()->extend(TestCase::class)
+    ->in('Unit');
+
 function actingAsAdmin(): User
 {
     $user = User::factory()->admin()->create();
@@ -28,6 +31,13 @@ function actingAsAdmin(): User
 
     return $user;
 }
+
+function videoBasePathForTests(): string
+{
+    return dirname(__DIR__).'/storage/app/testing-video-base';
+}
+
+$GLOBALS['videoBasePath'] = videoBasePathForTests();
 
 /*
 |--------------------------------------------------------------------------

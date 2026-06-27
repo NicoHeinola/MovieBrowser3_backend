@@ -13,7 +13,7 @@ class UpdateEpisodeRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'filename' => ['sometimes', 'required', 'string', 'max:255'],
+            'file' => ['sometimes', 'required', 'file'],
             'sequence_number' => ['sometimes', 'required', 'integer', 'min:0'],
         ];
     }
