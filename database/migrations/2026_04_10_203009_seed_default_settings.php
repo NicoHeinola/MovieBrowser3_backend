@@ -25,6 +25,20 @@ return new class extends Migration
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'key' => 'video_base_path',
+                'value' => '',
+                'type' => 'string',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'key' => 'vlc_media_player_path',
+                'value' => '',
+                'type' => 'string',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 
@@ -33,6 +47,8 @@ return new class extends Migration
         DB::table('settings')->whereIn('key', [
             'banner_default_videos',
             'banner_default_backgrounds',
+            'video_base_path',
+            'vlc_media_player_path',
         ])->delete();
     }
 };
