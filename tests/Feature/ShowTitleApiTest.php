@@ -191,6 +191,40 @@ test('creating a primary title auto-demotes the existing primary', function () {
     ]);
 });
 
+test('creating a new primary title relocates episode files to the new show folder', function () {
+    global $videoBasePath;
+    actingAsAdmin();
+
+    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+
+    $show = Show::factory()->create();
+    ShowTitle::factory()->for($show)->primary()->create([
+        'title' => 'Old Primary',
+    ]);
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create([
+        'name' => 'Episode 1',
+        'filename' => 'episode_1.mkv',
+    ]);
+
+    $oldPath = "$videoBasePath/{$show->id}_Old Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $newPath = "$videoBasePath/{$show->id}_New Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+
+    File::ensureDirectoryExists(dirname($oldPath));
+    File::put($oldPath, 'video-bytes');
+
+    postJson("/api/v1/shows/{$show->id}/titles", [
+        'title' => 'New Primary',
+        'is_primary' => true,
+    ])
+        ->assertCreated()
+        ->assertJsonPath('title', 'New Primary')
+        ->assertJsonPath('is_primary', true);
+
+    expect(File::exists($oldPath))->toBeFalse();
+    expect(File::exists($newPath))->toBeTrue();
+});
+
 test('updating a title to primary auto-demotes the existing primary', function () {
     global $videoBasePath;
     actingAsAdmin();
