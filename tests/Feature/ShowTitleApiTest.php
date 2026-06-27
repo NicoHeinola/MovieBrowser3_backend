@@ -133,8 +133,8 @@ test('updating the primary show title relocates episode files', function () {
         'filename' => 'episode_1.mkv',
     ]);
 
-    $oldPath = "$videoBasePath/{$show->id}_Old Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1/episode_1.mkv";
-    $newPath = "$videoBasePath/{$show->id}_Updated Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1/episode_1.mkv";
+    $oldPath = "$videoBasePath/{$show->id}_Old Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $newPath = "$videoBasePath/{$show->id}_Updated Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'video-bytes');
 

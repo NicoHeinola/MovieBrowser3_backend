@@ -34,7 +34,6 @@ class Episode extends Model
         ?string $basePath = null,
         ?string $showName = null,
         ?string $entryName = null,
-        ?string $episodeName = null,
     ): string {
         $entry = $this->entry;
         $show = $entry->show;
@@ -45,7 +44,6 @@ class Episode extends Model
             $this->normalizeBasePath($basePath ?? $this->videoBasePath()),
             $show->id.'_'.self::sanitizePathPart($resolvedShowName),
             $entry->id.'_'.self::sanitizePathPart($entryName ?? $entry->name),
-            $this->id.'_'.self::sanitizePathPart($episodeName ?? $this->name),
         ];
 
         return implode('/', array_values(array_filter($parts, fn (string $value): bool => $value !== '')));
@@ -58,11 +56,23 @@ class Episode extends Model
         ?string $episodeName = null,
         ?string $filename = null,
     ): string {
-        $directory = $this->videoDirectoryPath($basePath, $showName, $entryName, $episodeName);
+        $directory = $this->videoDirectoryPath($basePath, $showName, $entryName);
 
         $resolvedFilename = $filename ?? $this->filename;
 
-        return $resolvedFilename === '' ? $directory : "{$directory}/{$resolvedFilename}";
+        return $resolvedFilename === ''
+            ? $directory
+            : "{$directory}/{$this->videoFilename($episodeName, $resolvedFilename)}";
+    }
+
+    public function videoFilename(?string $episodeName = null, ?string $filename = null): string
+    {
+        $episodeSegment = $this->id.'_'.self::sanitizePathPart($episodeName ?? $this->name);
+
+        $resolvedFilename = $filename ?? $this->filename;
+        $extension = pathinfo($resolvedFilename, PATHINFO_EXTENSION);
+
+        return $extension === '' ? $episodeSegment : "{$episodeSegment}.{$extension}";
     }
 
     public function videoBasePath(): string

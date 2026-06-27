@@ -238,7 +238,7 @@ test('an admin can delete a show and its titles cascade', function () {
         'title' => 'Dr. Stone',
     ]);
 
-    $episodePath = "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1/episode_1.mkv";
+    $episodePath = "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
     File::ensureDirectoryExists(dirname($episodePath));
     File::put($episodePath, 'video-bytes');
 

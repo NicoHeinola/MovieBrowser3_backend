@@ -14,10 +14,11 @@ class StoreVideoFileAction
     public function handle(Episode $episode, UploadedFile $file, ?string $filename = null): Episode
     {
         $resolvedFilename = basename($filename ?? $file->getClientOriginalName());
+        $storedFilename = $episode->videoFilename(filename: $resolvedFilename);
         $targetDirectory = $episode->videoDirectoryPath();
 
         File::ensureDirectoryExists($targetDirectory);
-        $file->move($targetDirectory, $resolvedFilename);
+        $file->move($targetDirectory, $storedFilename);
 
         $episode->update(['filename' => $resolvedFilename]);
 

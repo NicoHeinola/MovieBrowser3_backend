@@ -84,7 +84,7 @@ test('authenticated users can view a single episode with file_path', function ()
         ->assertJsonPath('name', 'Episode 1')
         ->assertJsonPath('filename', 'episode_1.mkv')
         ->assertJsonPath('sequence_number', 1)
-        ->assertJsonPath('file_path', "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1/episode_1.mkv");
+        ->assertJsonPath('file_path', "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
 });
 
 test('preloaded episode file_path values do not trigger extra queries', function () {
@@ -124,8 +124,8 @@ test('preloaded episode file_path values do not trigger extra queries', function
     $connection->disableQueryLog();
 
     expect($paths)->toBe([
-        "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeOne->id}_Episode 1/episode_1.mkv",
-        "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeTwo->id}_Episode 2/episode_2.mkv",
+        "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeOne->id}_Episode 1.mkv",
+        "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeTwo->id}_Episode 2.mkv",
     ]);
     // Accessing file_path currently performs one settings lookup per episode.
     expect($queryLog)->toHaveCount(2);
@@ -154,7 +154,7 @@ test('an admin can create an episode', function () {
         ->assertCreated()
         ->assertJsonPath('name', 'Episode 1')
         ->assertJsonPath('filename', 'episode_1.mkv')
-        ->assertJsonPath('file_path', "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episodeId}_Episode 1/episode_1.mkv")
+        ->assertJsonPath('file_path', "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episodeId}_Episode 1.mkv")
         ->assertJsonPath('sequence_number', 1);
 
     assertDatabaseHas('episodes', [
@@ -164,7 +164,7 @@ test('an admin can create an episode', function () {
         'sequence_number' => 1,
     ]);
 
-    expect(File::exists("$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episodeId}_Episode 1/episode_1.mkv"))->toBeTrue();
+    expect(File::exists("$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episodeId}_Episode 1.mkv"))->toBeTrue();
 });
 
 test('an admin can create an episode without uploading a file', function () {
@@ -205,7 +205,7 @@ test('an admin can update an episode', function () {
         'sequence_number' => 1,
     ]);
 
-    $oldPath = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1/ep1.mkv";
+    $oldPath = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1.mkv";
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'old-video-bytes');
 
@@ -220,7 +220,7 @@ test('an admin can update an episode', function () {
         ->assertOk()
         ->assertJsonPath('name', 'Episode 1 - Revised')
         ->assertJsonPath('filename', 'ep1_revised.mkv')
-        ->assertJsonPath('file_path', "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Revised/ep1_revised.mkv")
+        ->assertJsonPath('file_path', "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Revised.mkv")
         ->assertJsonPath('sequence_number', 1);
 
     assertDatabaseHas('episodes', [
@@ -229,7 +229,7 @@ test('an admin can update an episode', function () {
         'filename' => 'ep1_revised.mkv',
     ]);
 
-    expect(File::exists("$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Revised/ep1_revised.mkv"))->toBeTrue();
+    expect(File::exists("$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Revised.mkv"))->toBeTrue();
     expect(File::exists($oldPath))->toBeFalse();
 });
 
@@ -246,8 +246,8 @@ test('renaming an episode without a new upload moves existing file to the new pa
         'sequence_number' => 1,
     ]);
 
-    $oldPath = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1/ep1.mkv";
-    $newPath = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Renamed/ep1.mkv";
+    $oldPath = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1.mkv";
+    $newPath = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Renamed.mkv";
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'video-bytes');
 
@@ -276,7 +276,7 @@ test('an admin can delete an episode', function () {
         'sequence_number' => 1,
     ]);
 
-    $path = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1/episode_1.mkv";
+    $path = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1.mkv";
     $episodeDirectory = dirname($path);
     File::ensureDirectoryExists($episodeDirectory);
     File::put($path, 'video-bytes');

@@ -129,10 +129,10 @@ test('changing video base path relocates all episode files', function () {
         'filename' => 'episode_2.mkv',
     ]);
 
-    $oldPathOne = "{$oldBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodeOne->id}_Episode 1/episode_1.mkv";
-    $oldPathTwo = "{$oldBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodeTwo->id}_Episode 2/episode_2.mkv";
-    $newPathOne = "{$newBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodeOne->id}_Episode 1/episode_1.mkv";
-    $newPathTwo = "{$newBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodeTwo->id}_Episode 2/episode_2.mkv";
+    $oldPathOne = "{$oldBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodeOne->id}_Episode 1.mkv";
+    $oldPathTwo = "{$oldBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodeTwo->id}_Episode 2.mkv";
+    $newPathOne = "{$newBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodeOne->id}_Episode 1.mkv";
+    $newPathTwo = "{$newBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodeTwo->id}_Episode 2.mkv";
 
     File::ensureDirectoryExists(dirname($oldPathOne));
     File::ensureDirectoryExists(dirname($oldPathTwo));
@@ -170,8 +170,8 @@ test('changing an absolute video base path relocates episode files on disk', fun
         'filename' => 'episode_1.mkv',
     ]);
 
-    $oldPath = "{$oldBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1/episode_1.mkv";
-    $newPath = "{$newBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1/episode_1.mkv";
+    $oldPath = "{$oldBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $newPath = "{$newBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
 
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'video-1');

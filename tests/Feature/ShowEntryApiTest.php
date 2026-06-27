@@ -136,8 +136,8 @@ test('renaming a show entry relocates its episode files', function () {
         'filename' => 'episode_1.mkv',
     ]);
 
-    $oldPath = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1/episode_1.mkv";
-    $newPath = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_Season 1 Stone Wars/{$episode->id}_Episode 1/episode_1.mkv";
+    $oldPath = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $newPath = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_Season 1 Stone Wars/{$episode->id}_Episode 1.mkv";
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'video-bytes');
 
@@ -183,8 +183,8 @@ test('deleting a show entry cascades to its episodes', function () {
         'sequence_number' => 2,
     ]);
 
-    $pathOne = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_{$entry->name}/{$episodeOne->id}_Episode 1/episode_1.mkv";
-    $pathTwo = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_{$entry->name}/{$episodeTwo->id}_Episode 2/episode_2.mkv";
+    $pathOne = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_{$entry->name}/{$episodeOne->id}_Episode 1.mkv";
+    $pathTwo = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_{$entry->name}/{$episodeTwo->id}_Episode 2.mkv";
     $episodeDirectoryOne = dirname($pathOne);
     $episodeDirectoryTwo = dirname($pathTwo);
     File::ensureDirectoryExists($episodeDirectoryOne);
