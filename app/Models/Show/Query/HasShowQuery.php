@@ -21,6 +21,7 @@ trait HasShowQuery
             AllowedFilter::custom('preview_url', new MetadataFilter),
             AllowedFilter::scope('search', 'search'),
             AllowedFilter::custom('title', new MetadataFilter, 'titles.title'),
+            AllowedFilter::custom('categories.value', new MetadataFilter, 'categories.value'),
         ];
     }
 
