@@ -18,6 +18,8 @@ enum ShowLinkType: string
             self::Prequel => self::Sequel,
             self::SuggestedNext => self::SuggestedPrevious,
             self::SuggestedPrevious => self::SuggestedNext,
+            self::SpinOff => self::Prequel,
+            self::TvSpecial => self::Prequel,
             default => null,
         };
     }

@@ -118,7 +118,7 @@ test('creating a mirrored show link also creates the reciprocal link', function 
     assertDatabaseCount('show_links', 2);
 });
 
-test('creating a one-way show link does not create a reciprocal link', function () {
+test('creating a spin-off show link also creates a reciprocal prequel link', function () {
     actingAsAdmin();
 
     $source = Show::factory()->create();
@@ -135,12 +135,13 @@ test('creating a one-way show link does not create a reciprocal link', function 
         'type' => 'spin_off',
     ]);
 
-    assertDatabaseMissing('show_links', [
+    assertDatabaseHas('show_links', [
         'source_show_id' => $target->id,
         'target_show_id' => $source->id,
+        'type' => 'prequel',
     ]);
 
-    assertDatabaseCount('show_links', 1);
+    assertDatabaseCount('show_links', 2);
 });
 
 test('an admin can update a show link', function () {
@@ -170,7 +171,7 @@ test('an admin can update a show link', function () {
     ]);
 });
 
-test('updating a mirrored show link to a one-way type removes the reciprocal link', function () {
+test('updating a mirrored show link to spin-off keeps reciprocal as prequel', function () {
     actingAsAdmin();
 
     $source = Show::factory()->create();
@@ -196,8 +197,39 @@ test('updating a mirrored show link to a one-way type removes the reciprocal lin
         'id' => $link->id,
         'type' => 'spin_off',
     ]);
-    assertDatabaseMissing('show_links', ['id' => $reciprocalLink->id]);
-    assertDatabaseCount('show_links', 1);
+    assertDatabaseHas('show_links', [
+        'id' => $reciprocalLink->id,
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => 'prequel',
+    ]);
+    assertDatabaseCount('show_links', 2);
+});
+
+test('creating a tv special show link also creates a reciprocal prequel link', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $target = Show::factory()->create();
+
+    postJson("/api/v1/shows/{$source->id}/links", [
+        'target_show_id' => $target->id,
+        'type' => 'tv_special',
+    ])->assertCreated();
+
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $source->id,
+        'target_show_id' => $target->id,
+        'type' => 'tv_special',
+    ]);
+
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => 'prequel',
+    ]);
+
+    assertDatabaseCount('show_links', 2);
 });
 
 test('an admin can delete a show link', function () {
