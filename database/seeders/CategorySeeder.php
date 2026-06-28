@@ -13,18 +13,18 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            ['name' => 'Action', 'value' => 'action', 'icon' => 'bolt'],
-            ['name' => 'Adventure', 'value' => 'adventure', 'icon' => 'map'],
-            ['name' => 'Comedy', 'value' => 'comedy', 'icon' => 'laugh'],
-            ['name' => 'Crime', 'value' => 'crime', 'icon' => 'shield'],
-            ['name' => 'Drama', 'value' => 'drama', 'icon' => 'masks'],
-            ['name' => 'Fantasy', 'value' => 'fantasy', 'icon' => 'wand'],
-            ['name' => 'Historical', 'value' => 'historical', 'icon' => 'landmark'],
-            ['name' => 'Horror', 'value' => 'horror', 'icon' => 'ghost'],
-            ['name' => 'Mystery', 'value' => 'mystery', 'icon' => 'search'],
-            ['name' => 'Romance', 'value' => 'romance', 'icon' => 'heart'],
-            ['name' => 'Science Fiction', 'value' => 'science-fiction', 'icon' => 'planet'],
-            ['name' => 'Thriller', 'value' => 'thriller', 'icon' => 'flashlight'],
+            ['name' => 'Action', 'value' => 'action', 'icon' => 'mdi-lightning-bolt'],
+            ['name' => 'Adventure', 'value' => 'adventure', 'icon' => 'mdi-map'],
+            ['name' => 'Comedy', 'value' => 'comedy', 'icon' => 'mdi-emoticon-happy'],
+            ['name' => 'Crime', 'value' => 'crime', 'icon' => 'mdi-police-badge'],
+            ['name' => 'Drama', 'value' => 'drama', 'icon' => 'mdi-drama-masks'],
+            ['name' => 'Fantasy', 'value' => 'fantasy', 'icon' => 'mdi-wizard-hat'],
+            ['name' => 'Historical', 'value' => 'historical', 'icon' => 'mdi-timeline-clock'],
+            ['name' => 'Horror', 'value' => 'horror', 'icon' => 'mdi-ghost'],
+            ['name' => 'Mystery', 'value' => 'mystery', 'icon' => 'mdi-magnify'],
+            ['name' => 'Romance', 'value' => 'romance', 'icon' => 'mdi-heart'],
+            ['name' => 'Science Fiction', 'value' => 'science-fiction', 'icon' => 'mdi-rocket-launch'],
+            ['name' => 'Thriller', 'value' => 'thriller', 'icon' => 'mdi-flashlight'],
         ];
 
         foreach ($categories as $category) {
