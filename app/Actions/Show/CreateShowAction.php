@@ -4,6 +4,7 @@ namespace App\Actions\Show;
 
 use App\Dtos\Show\CreateShowData;
 use App\Models\Show\Show;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CreateShowAction
@@ -12,11 +13,13 @@ class CreateShowAction
 
     public function handle(CreateShowData $data): Show
     {
-        return Show::create([
-            'banner_url' => $data->bannerUrl,
-            'card_image_url' => $data->cardImageUrl,
-            'preview_url' => $data->previewUrl,
-            'description' => $data->description,
-        ]);
+        return DB::transaction(function () use ($data): Show {
+            return Show::create([
+                'banner_url' => $data->bannerUrl,
+                'card_image_url' => $data->cardImageUrl,
+                'preview_url' => $data->previewUrl,
+                'description' => $data->description,
+            ]);
+        });
     }
 }

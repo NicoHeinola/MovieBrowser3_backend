@@ -3,6 +3,7 @@
 namespace App\Actions\User;
 
 use App\Models\User\User;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class DeleteUserAction
@@ -11,6 +12,8 @@ class DeleteUserAction
 
     public function handle(User $user): void
     {
-        $user->delete();
+        DB::transaction(function () use ($user): void {
+            $user->delete();
+        });
     }
 }

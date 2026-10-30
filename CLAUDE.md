@@ -32,7 +32,7 @@ The canonical conventions live in `.github/` (shared with Copilot). They are imp
 - Status codes: store returns `->response()->setStatusCode(201)`, destroy returns `response()->noContent()`.
 - Routes (`routes/api.php`, all under `v1`): read routes (`index`, `show`) go in the `auth:sanctum` group, write routes go in the `['auth:sanctum', 'admin']` group, with the same `apiResource` registered twice (`->only([...])` / `->except([...])`). Child resources use `apiResource('shows.links', ...)->shallow()`. Multi-word URIs are kebab-case (`show-sections`).
 - Enum validation: `Rule::enum(XType::class)`; enums live in `app/Enums` as string-backed enums.
-- Use `DB::transaction` in actions that write more than one row.
+- Every action that writes to the database wraps its `handle()` body in `DB::transaction` (see the action-layer instructions); `tests/Unit/ActionTransactionTest.php` enforces it.
 - Tests: Pest function style with `use function Pest\Laravel\{getJson, postJson, ...}`; `RefreshDatabase` is applied to `Feature` automatically. Use `actingAsAdmin()` for admin; for a regular user, create a token and call `withToken(...)`. Each resource usually covers: unauthenticated → 401, non-admin write → 403, list/show/create/update/delete happy paths, and validation 422s. Video-file tests: Feature tests already point `video_base_path` at a throwaway folder (cleaned after each test); use `putVideoFile($path)` to seed files, assert explicit paths, and cover the rollback case for any new flow that moves or deletes files.
 
 ## Commits

@@ -3,6 +3,7 @@
 namespace App\Actions\Category;
 
 use App\Models\Category\Category;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class DeleteCategoryAction
@@ -11,6 +12,8 @@ class DeleteCategoryAction
 
     public function handle(Category $category): void
     {
-        $category->delete();
+        DB::transaction(function () use ($category): void {
+            $category->delete();
+        });
     }
 }

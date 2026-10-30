@@ -93,14 +93,16 @@ class UpdateXAction
 
     public function handle(UpdateXData $data): X
     {
-        $data->x->fill(Arr::only($data->all(), $data->x->getFillable()))->save();
+        return DB::transaction(function () use ($data): X {
+            $data->x->fill(Arr::only($data->all(), $data->x->getFillable()))->save();
 
-        return $data->x->fresh();
+            return $data->x->fresh();
+        });
     }
 }
 ```
 
-Create uses `X::query()->create([... explicit snake_case keys ...])`. Delete is `handle(X $x): void { $x->delete(); }`. Wrap multi-row writes in `DB::transaction`. A child create takes the parent first: `handle(Show $show, CreateXData $data)`.
+Create uses `X::query()->create([... explicit snake_case keys ...])` and delete calls `$x->delete()`, both inside `DB::transaction` like every write action. A child create takes the parent first: `handle(Show $show, CreateXData $data)`.
 
 Requests: `rules()` only, with no `authorize()`. Add the `/** @return array<string, list<mixed>> */` docblock. For update, prefix rules with `'sometimes'` and read the bound model with `/** @var X $x */ $x = $this->route('x');` for `Rule::unique(...)->ignore($x->id)`.
 

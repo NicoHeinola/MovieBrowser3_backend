@@ -3,6 +3,7 @@
 namespace App\Actions\Auth;
 
 use App\Models\User\User;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\PersonalAccessToken;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -12,10 +13,12 @@ class LogoutCurrentTokenAction
 
     public function handle(User $user, ?PersonalAccessToken $token): void
     {
-        if ($token) {
-            $token->delete();
-        } else {
-            $user->tokens()->delete();
-        }
+        DB::transaction(function () use ($user, $token): void {
+            if ($token) {
+                $token->delete();
+            } else {
+                $user->tokens()->delete();
+            }
+        });
     }
 }

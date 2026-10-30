@@ -5,6 +5,7 @@ namespace App\Actions\Show;
 use App\Dtos\Show\UpdateShowData;
 use App\Models\Show\Show;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class UpdateShowAction
@@ -13,8 +14,10 @@ class UpdateShowAction
 
     public function handle(UpdateShowData $data): Show
     {
-        $data->show->fill(Arr::only($data->all(), $data->show->getFillable()))->save();
+        return DB::transaction(function () use ($data): Show {
+            $data->show->fill(Arr::only($data->all(), $data->show->getFillable()))->save();
 
-        return $data->show->fresh();
+            return $data->show->fresh();
+        });
     }
 }

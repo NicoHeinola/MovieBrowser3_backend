@@ -5,6 +5,7 @@ namespace App\Actions\Auth;
 use App\Dtos\Auth\AuthTokenData;
 use App\Dtos\Auth\RegisterUserData;
 use App\Models\User\User;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class RegisterUserAction
@@ -15,11 +16,13 @@ class RegisterUserAction
 
     public function handle(RegisterUserData $data): AuthTokenData
     {
-        $user = User::create([
-            'username' => $data->username,
-            'password' => $data->password,
-        ]);
+        return DB::transaction(function () use ($data): AuthTokenData {
+            $user = User::create([
+                'username' => $data->username,
+                'password' => $data->password,
+            ]);
 
-        return $this->issueAuthTokenAction->handle($user->fresh(), $data->tokenName);
+            return $this->issueAuthTokenAction->handle($user->fresh(), $data->tokenName);
+        });
     }
 }

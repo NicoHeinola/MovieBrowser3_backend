@@ -3,6 +3,7 @@
 namespace App\Actions\ShowSection;
 
 use App\Models\ShowSection\ShowSection;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class DeleteShowSectionAction
@@ -11,6 +12,8 @@ class DeleteShowSectionAction
 
     public function handle(ShowSection $showSection): void
     {
-        $showSection->delete();
+        DB::transaction(function () use ($showSection): void {
+            $showSection->delete();
+        });
     }
 }

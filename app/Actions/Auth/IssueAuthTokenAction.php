@@ -4,6 +4,7 @@ namespace App\Actions\Auth;
 
 use App\Dtos\Auth\AuthTokenData;
 use App\Models\User\User;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class IssueAuthTokenAction
@@ -12,14 +13,16 @@ class IssueAuthTokenAction
 
     public function handle(User $user, string $tokenName): AuthTokenData
     {
-        // A zero or empty expiration means tokens never expire, matching Sanctum's guard.
-        $expirationMinutes = (int) config('sanctum.expiration');
-        $expiresAt = $expirationMinutes > 0 ? now()->addMinutes($expirationMinutes) : null;
+        return DB::transaction(function () use ($user, $tokenName): AuthTokenData {
+            // A zero or empty expiration means tokens never expire, matching Sanctum's guard.
+            $expirationMinutes = (int) config('sanctum.expiration');
+            $expiresAt = $expirationMinutes > 0 ? now()->addMinutes($expirationMinutes) : null;
 
-        return AuthTokenData::from([
-            'token' => $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken,
-            'token_type' => 'Bearer',
-            'user' => $user,
-        ]);
+            return AuthTokenData::from([
+                'token' => $user->createToken($tokenName, ['*'], $expiresAt)->plainTextToken,
+                'token_type' => 'Bearer',
+                'user' => $user,
+            ]);
+        });
     }
 }
