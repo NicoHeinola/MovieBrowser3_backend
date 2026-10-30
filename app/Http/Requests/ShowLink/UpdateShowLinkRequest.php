@@ -19,9 +19,27 @@ class UpdateShowLinkRequest extends FormRequest
         $link = $this->route('link');
 
         return [
-            'target_show_id' => ['sometimes', 'required', 'integer', Rule::exists('shows', 'id')],
+            'target_show_id' => [
+                'sometimes',
+                'required',
+                'integer',
+                Rule::exists('shows', 'id'),
+                Rule::notIn([$link->source_show_id]),
+                Rule::when($this->missing('type'), [$this->uniqueTargetRule($link)]),
+            ],
             'type' => ['sometimes', 'required', 'string', Rule::enum(ShowLinkType::class), $this->uniqueLinkRule($link)],
         ];
+    }
+
+    /**
+     * Guards target-only updates; when `type` is sent, its own unique rule covers the new combination.
+     */
+    private function uniqueTargetRule(ShowLink $link): Unique
+    {
+        return Rule::unique('show_links', 'target_show_id')
+            ->ignore($link)
+            ->where('source_show_id', $link->source_show_id)
+            ->where('type', $link->type->value);
     }
 
     private function uniqueLinkRule(ShowLink $link): Unique

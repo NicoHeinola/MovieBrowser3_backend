@@ -28,7 +28,7 @@ class UpdateShowLinkAction
             $updatedReciprocalData = $this->reciprocalDataFor($updatedShowLink);
 
             if ($originalReciprocalLink !== null && !$this->matchesReciprocalData($originalReciprocalLink, $updatedReciprocalData)) {
-                $originalReciprocalLink->delete();
+                $this->deleteReciprocalUnlessStillImplied($originalReciprocalLink, $updatedShowLink);
             }
 
             $this->createReciprocalShowLink($updatedShowLink);

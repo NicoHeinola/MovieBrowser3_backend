@@ -3,6 +3,7 @@
 use App\Enums\ShowLinkType;
 use App\Models\Show\Show;
 use App\Models\ShowLink\ShowLink;
+use App\Models\ShowTitle\ShowTitle;
 use App\Models\User\User;
 
 use function Pest\Laravel\assertDatabaseCount;
@@ -393,4 +394,124 @@ test('deleting a show cascades to its links', function () {
         ->assertNoContent();
 
     assertDatabaseCount('show_links', 0);
+});
+
+test('updating only the target of a show link to a duplicate combination is rejected', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $firstTarget = Show::factory()->create();
+    $secondTarget = Show::factory()->create();
+
+    ShowLink::factory()->suggestedNext()->create([
+        'source_show_id' => $source->id,
+        'target_show_id' => $firstTarget->id,
+    ]);
+
+    $linkToUpdate = ShowLink::factory()->suggestedNext()->create([
+        'source_show_id' => $source->id,
+        'target_show_id' => $secondTarget->id,
+    ]);
+
+    patchJson("/api/v1/links/{$linkToUpdate->id}", [
+        'target_show_id' => $firstTarget->id,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['target_show_id']);
+
+    assertDatabaseHas('show_links', [
+        'id' => $linkToUpdate->id,
+        'target_show_id' => $secondTarget->id,
+    ]);
+});
+
+test('a show cannot be linked to itself', function () {
+    actingAsAdmin();
+
+    $show = Show::factory()->create();
+    $otherShow = Show::factory()->create();
+
+    postJson("/api/v1/shows/{$show->id}/links", [
+        'target_show_id' => $show->id,
+        'type' => 'sequel',
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['target_show_id']);
+
+    $link = ShowLink::factory()->suggestedNext()->create([
+        'source_show_id' => $show->id,
+        'target_show_id' => $otherShow->id,
+    ]);
+
+    patchJson("/api/v1/links/{$link->id}", [
+        'target_show_id' => $show->id,
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['target_show_id']);
+
+    assertDatabaseCount('show_links', 1);
+});
+
+test('deleting a spin-off link keeps a reciprocal prequel still needed by a sequel link', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $target = Show::factory()->create();
+
+    postJson("/api/v1/shows/{$source->id}/links", ['target_show_id' => $target->id, 'type' => 'sequel'])
+        ->assertCreated();
+    $spinOffId = postJson("/api/v1/shows/{$source->id}/links", ['target_show_id' => $target->id, 'type' => 'spin_off'])
+        ->assertCreated()
+        ->json('id');
+
+    deleteJson("/api/v1/links/{$spinOffId}")->assertNoContent();
+
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => 'prequel',
+    ]);
+    assertDatabaseCount('show_links', 2);
+});
+
+test('changing a spin-off link type keeps a reciprocal prequel still needed by a sequel link', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $target = Show::factory()->create();
+
+    postJson("/api/v1/shows/{$source->id}/links", ['target_show_id' => $target->id, 'type' => 'sequel'])
+        ->assertCreated();
+    $spinOffId = postJson("/api/v1/shows/{$source->id}/links", ['target_show_id' => $target->id, 'type' => 'spin_off'])
+        ->assertCreated()
+        ->json('id');
+
+    patchJson("/api/v1/links/{$spinOffId}", ['type' => 'suggested_next'])->assertOk();
+
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => 'prequel',
+    ]);
+    assertDatabaseHas('show_links', [
+        'source_show_id' => $target->id,
+        'target_show_id' => $source->id,
+        'type' => 'suggested_previous',
+    ]);
+});
+
+test('listing show links includes target show titles', function () {
+    actingAsAdmin();
+
+    $source = Show::factory()->create();
+    $target = Show::factory()->create();
+    ShowTitle::factory()->for($target)->primary()->create(['title' => 'Andor']);
+    ShowLink::factory()->suggestedNext()->create([
+        'source_show_id' => $source->id,
+        'target_show_id' => $target->id,
+    ]);
+
+    getJson("/api/v1/shows/{$source->id}/links")
+        ->assertOk()
+        ->assertJsonPath('data.0.target_show.titles.0.title', 'Andor');
 });

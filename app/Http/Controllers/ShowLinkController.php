@@ -20,7 +20,7 @@ class ShowLinkController extends Controller
 {
     public function index(Show $show): JsonResponse
     {
-        $links = QueryBuilder::for($show->outgoingLinks()->with('targetShow'))
+        $links = QueryBuilder::for($show->outgoingLinks()->with('targetShow.titles'))
             ->allowedFilters(...ShowLink::getAllowedFilters())
             ->allowedSorts(...ShowLink::getAllowedSorts())
             ->jsonPaginate();
@@ -32,12 +32,12 @@ class ShowLinkController extends Controller
     {
         $link = $action->handle($show, CreateShowLinkData::from($request->validated()));
 
-        return ShowLinkResource::make($link->load('targetShow'))->response()->setStatusCode(201);
+        return ShowLinkResource::make($link->load('targetShow.titles'))->response()->setStatusCode(201);
     }
 
     public function show(Show $show, ShowLink $link): JsonResponse
     {
-        return ShowLinkResource::make($link->load('targetShow'))->response();
+        return ShowLinkResource::make($link->load('targetShow.titles'))->response();
     }
 
     public function update(Show $show, ShowLink $link, UpdateShowLinkRequest $request, UpdateShowLinkAction $action): JsonResponse
@@ -47,7 +47,7 @@ class ShowLinkController extends Controller
             'show_link' => $link,
         ]));
 
-        return ShowLinkResource::make($updatedLink->load('targetShow'))->response();
+        return ShowLinkResource::make($updatedLink->load('targetShow.titles'))->response();
     }
 
     public function destroy(Show $show, ShowLink $link, DeleteShowLinkAction $action): Response

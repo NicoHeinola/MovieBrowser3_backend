@@ -19,7 +19,7 @@ class StoreShowLinkRequest extends FormRequest
         $show = $this->route('show');
 
         return [
-            'target_show_id' => ['required', 'integer', Rule::exists('shows', 'id')],
+            'target_show_id' => ['required', 'integer', Rule::exists('shows', 'id'), Rule::notIn([$show->id])],
             'type' => ['required', 'string', Rule::enum(ShowLinkType::class), $this->uniqueLinkRule($show->id)],
         ];
     }
