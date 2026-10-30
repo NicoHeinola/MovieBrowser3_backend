@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.3.0",
+        "php": "^8.4.0",
         "laravel/framework": "^13.39.0",
         "laravel/sanctum": "^4.3.3",
         "laravel/tinker": "^3.0.2",
