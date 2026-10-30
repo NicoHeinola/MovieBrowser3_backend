@@ -139,6 +139,43 @@ test('an admin can update a category', function () {
     ]);
 });
 
+test('a partial category update keeps omitted fields', function () {
+    actingAsAdmin();
+
+    $category = Category::factory()->create([
+        'name' => 'Drama',
+        'value' => 'drama',
+        'icon' => 'mask',
+    ]);
+
+    patchJson("/api/v1/categories/{$category->id}", [
+        'name' => 'Comedy',
+    ])
+        ->assertOk()
+        ->assertJsonPath('name', 'Comedy')
+        ->assertJsonPath('value', 'drama')
+        ->assertJsonPath('icon', 'mask');
+});
+
+test('an admin can clear a category icon', function () {
+    actingAsAdmin();
+
+    $category = Category::factory()->create([
+        'icon' => 'mask',
+    ]);
+
+    patchJson("/api/v1/categories/{$category->id}", [
+        'icon' => null,
+    ])
+        ->assertOk()
+        ->assertJsonPath('icon', null);
+
+    assertDatabaseHas('categories', [
+        'id' => $category->id,
+        'icon' => null,
+    ]);
+});
+
 test('an admin can delete a category', function () {
     actingAsAdmin();
 

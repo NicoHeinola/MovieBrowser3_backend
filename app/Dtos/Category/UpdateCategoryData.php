@@ -15,6 +15,6 @@ class UpdateCategoryData extends Data
         public Category $category,
         public string|Optional $name,
         public string|Optional $value,
-        public ?string $icon,
+        public string|Optional|null $icon,
     ) {}
 }

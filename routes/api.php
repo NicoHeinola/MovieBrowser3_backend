@@ -8,6 +8,7 @@ use App\Http\Controllers\ShowCategoryController;
 use App\Http\Controllers\ShowController;
 use App\Http\Controllers\ShowEntryController;
 use App\Http\Controllers\ShowLinkController;
+use App\Http\Controllers\ShowSectionController;
 use App\Http\Controllers\ShowTitleController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,7 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
+        Route::apiResource('show-sections', ShowSectionController::class)->only(['index', 'show']);
 
         Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->only(['index', 'show']);
         Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->only(['index', 'show']);
@@ -37,6 +39,7 @@ Route::prefix('v1')->group(function (): void {
 
     Route::middleware(['auth:sanctum', 'admin'])->group(function (): void {
         Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);
+        Route::apiResource('show-sections', ShowSectionController::class)->except(['index', 'show']);
         Route::post('shows/{show}/categories', [ShowCategoryController::class, 'store'])->name('shows.categories.store');
         Route::delete('shows/{show}/categories/{category}', [ShowCategoryController::class, 'destroy'])->name('shows.categories.destroy');
 

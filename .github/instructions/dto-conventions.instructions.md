@@ -10,4 +10,5 @@ applyTo: "app/Dtos/**/*.php"
 - Use DTOs for grouped scalar or array payloads at action boundaries, not for single models or a small number of obvious arguments.
 - Keep DTO classes declarative; use `Optional` unions only when the payload genuinely supports partial input.
 - When a partial-update DTO feeds Eloquent `fill()`, add `#[MapOutputName(SnakeCaseMapper::class)]` so camelCase DTO properties become snake_case model attributes while omitted `Optional` fields stay out of the payload.
+- In partial-update DTOs, type clearable nullable fields as `string|Optional|null`, not `?string`; a bare nullable property hydrates an omitted field as `null` and wipes it on `fill()`.
 - Define nested DTO arrays explicitly with `DataCollectionOf` and accurate array annotations so hydration stays unambiguous.
