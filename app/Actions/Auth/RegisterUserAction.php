@@ -11,20 +11,15 @@ class RegisterUserAction
 {
     use AsAction;
 
+    public function __construct(private readonly IssueAuthTokenAction $issueAuthTokenAction) {}
+
     public function handle(RegisterUserData $data): AuthTokenData
     {
         $user = User::create([
             'username' => $data->username,
             'password' => $data->password,
         ]);
-        $expiration = config('sanctum.expiration');
-        $expiresAt = $expiration === null ? null : now()->addMinutes((int) $expiration);
-        $token = $user->createToken($data->tokenName, ['*'], $expiresAt)->plainTextToken;
 
-        return AuthTokenData::from([
-            'token' => $token,
-            'token_type' => 'Bearer',
-            'user' => $user->fresh(),
-        ]);
+        return $this->issueAuthTokenAction->handle($user->fresh(), $data->tokenName);
     }
 }

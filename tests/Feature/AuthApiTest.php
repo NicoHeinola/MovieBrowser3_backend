@@ -143,3 +143,24 @@ test('issued tokens expire based on sanctum configuration', function () {
 
     Carbon::setTestNow();
 });
+
+test('a zero sanctum expiration issues tokens that do not expire', function () {
+    config()->set('sanctum.expiration', 0);
+    app('auth')->forgetGuards();
+
+    User::factory()->create([
+        'username' => 'adalovelace',
+        'password' => 'password123',
+    ]);
+
+    $token = postJson('/api/v1/auth/login', [
+        'username' => 'adalovelace',
+        'password' => 'password123',
+    ])->assertOk()->json('token');
+
+    expect(PersonalAccessToken::first()?->expires_at)->toBeNull();
+
+    withToken($token);
+
+    getJson('/api/v1/auth/me')->assertOk();
+});

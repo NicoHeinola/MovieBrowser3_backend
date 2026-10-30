@@ -13,6 +13,8 @@ class LoginUserAction
 {
     use AsAction;
 
+    public function __construct(private readonly IssueAuthTokenAction $issueAuthTokenAction) {}
+
     public function handle(LoginUserData $data): AuthTokenData
     {
         $user = User::where('username', $data->username)->first();
@@ -36,13 +38,6 @@ class LoginUserAction
             ]);
         }
 
-        $expiration = config('sanctum.expiration');
-        $expiresAt = $expiration === null ? null : now()->addMinutes((int) $expiration);
-
-        return AuthTokenData::from([
-            'token' => $user->createToken($data->tokenName, ['*'], $expiresAt)->plainTextToken,
-            'token_type' => 'Bearer',
-            'user' => $user,
-        ]);
+        return $this->issueAuthTokenAction->handle($user, $data->tokenName);
     }
 }
