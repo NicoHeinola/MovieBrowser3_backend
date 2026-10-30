@@ -15,6 +15,6 @@ class UpdateShowAction
     {
         $data->show->fill(Arr::only($data->all(), $data->show->getFillable()))->save();
 
-        return $data->show->fresh()->load('titles');
+        return $data->show->fresh();
     }
 }

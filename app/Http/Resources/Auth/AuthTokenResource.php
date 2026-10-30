@@ -10,8 +10,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin AuthTokenData */
 class AuthTokenResource extends JsonResource
 {
-    public static $wrap = null;
-
     /**
      * @return array<string, mixed>
      */

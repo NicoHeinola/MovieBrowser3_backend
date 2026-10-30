@@ -37,12 +37,12 @@ class ShowEntryController extends Controller
         return ShowEntryResource::make($entry->load('show.titles', 'episodes'))->response()->setStatusCode(201);
     }
 
-    public function show(Show $show, ShowEntry $entry): JsonResponse
+    public function show(ShowEntry $entry): JsonResponse
     {
         return ShowEntryResource::make($entry->load('show.titles', 'episodes'))->response();
     }
 
-    public function update(Show $show, ShowEntry $entry, UpdateShowEntryRequest $request, UpdateShowEntryAction $action): JsonResponse
+    public function update(ShowEntry $entry, UpdateShowEntryRequest $request, UpdateShowEntryAction $action): JsonResponse
     {
         $updatedEntry = $action->handle(UpdateShowEntryData::from([
             ...$request->validated(),
@@ -52,7 +52,7 @@ class ShowEntryController extends Controller
         return ShowEntryResource::make($updatedEntry->load('show.titles', 'episodes'))->response();
     }
 
-    public function destroy(Show $show, ShowEntry $entry, DeleteShowEntryAction $action): Response
+    public function destroy(ShowEntry $entry, DeleteShowEntryAction $action): Response
     {
         $action->handle($entry);
 

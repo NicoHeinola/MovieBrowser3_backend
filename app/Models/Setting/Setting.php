@@ -3,21 +3,16 @@
 namespace App\Models\Setting;
 
 use Database\Factories\SettingFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+#[Fillable(['key', 'value', 'type'])]
 class Setting extends Model
 {
     /** @use HasFactory<SettingFactory> */
     use HasFactory;
-
-    protected static function newFactory()
-    {
-        return SettingFactory::new();
-    }
-
-    protected $table = 'settings';
 
     protected $primaryKey = 'key';
 
@@ -25,11 +20,10 @@ class Setting extends Model
 
     protected $keyType = 'string';
 
-    protected $fillable = [
-        'key',
-        'value',
-        'type',
-    ];
+    protected static function newFactory(): SettingFactory
+    {
+        return SettingFactory::new();
+    }
 
     /**
      * Get the value attribute, cast based on the type.

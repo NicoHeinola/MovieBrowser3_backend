@@ -20,7 +20,7 @@ class ShowTitleController extends Controller
 {
     public function index(Show $show): JsonResponse
     {
-        $titles = QueryBuilder::for($show->titles()->getQuery())
+        $titles = QueryBuilder::for($show->titles())
             ->allowedFilters(...ShowTitle::getAllowedFilters())
             ->allowedSorts(...ShowTitle::getAllowedSorts())
             ->jsonPaginate();
@@ -35,12 +35,12 @@ class ShowTitleController extends Controller
         return ShowTitleResource::make($title)->response()->setStatusCode(201);
     }
 
-    public function show(Show $show, ShowTitle $title): JsonResponse
+    public function show(ShowTitle $title): JsonResponse
     {
         return ShowTitleResource::make($title)->response();
     }
 
-    public function update(Show $show, ShowTitle $title, UpdateShowTitleRequest $request, UpdateShowTitleAction $action): JsonResponse
+    public function update(ShowTitle $title, UpdateShowTitleRequest $request, UpdateShowTitleAction $action): JsonResponse
     {
         $updatedTitle = $action->handle(UpdateShowTitleData::from([
             ...$request->validated(),
@@ -50,7 +50,7 @@ class ShowTitleController extends Controller
         return ShowTitleResource::make($updatedTitle)->response();
     }
 
-    public function destroy(Show $show, ShowTitle $title, DeleteShowTitleAction $action): Response
+    public function destroy(ShowTitle $title, DeleteShowTitleAction $action): Response
     {
         $action->handle($title);
 

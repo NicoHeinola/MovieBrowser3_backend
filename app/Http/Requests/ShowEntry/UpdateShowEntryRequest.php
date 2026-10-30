@@ -14,7 +14,7 @@ class UpdateShowEntryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['sometimes', 'required', 'string', Rule::in(array_column(ShowEntryType::cases(), 'value'))],
+            'type' => ['sometimes', 'required', 'string', Rule::enum(ShowEntryType::class)],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'sort_order' => ['sometimes', 'required', 'integer', 'min:0'],
         ];

@@ -14,8 +14,8 @@ class UpdateShowRequest extends FormRequest
         return [
             'banner_url' => ['sometimes', 'required', 'string', 'max:2048'],
             'card_image_url' => ['sometimes', 'required', 'string', 'max:2048'],
-            'preview_url' => ['nullable', 'string', 'max:2048'],
-            'description' => ['nullable', 'string'],
+            'preview_url' => ['sometimes', 'nullable', 'string', 'max:2048'],
+            'description' => ['sometimes', 'nullable', 'string'],
         ];
     }
 }

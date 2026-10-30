@@ -35,12 +35,12 @@ class ShowLinkController extends Controller
         return ShowLinkResource::make($link->load('targetShow.titles'))->response()->setStatusCode(201);
     }
 
-    public function show(Show $show, ShowLink $link): JsonResponse
+    public function show(ShowLink $link): JsonResponse
     {
         return ShowLinkResource::make($link->load('targetShow.titles'))->response();
     }
 
-    public function update(Show $show, ShowLink $link, UpdateShowLinkRequest $request, UpdateShowLinkAction $action): JsonResponse
+    public function update(ShowLink $link, UpdateShowLinkRequest $request, UpdateShowLinkAction $action): JsonResponse
     {
         $updatedLink = $action->handle(UpdateShowLinkData::from([
             ...$request->validated(),
@@ -50,7 +50,7 @@ class ShowLinkController extends Controller
         return ShowLinkResource::make($updatedLink->load('targetShow.titles'))->response();
     }
 
-    public function destroy(Show $show, ShowLink $link, DeleteShowLinkAction $action): Response
+    public function destroy(ShowLink $link, DeleteShowLinkAction $action): Response
     {
         $action->handle($link);
 

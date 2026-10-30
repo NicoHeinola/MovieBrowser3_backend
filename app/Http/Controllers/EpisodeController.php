@@ -37,12 +37,12 @@ class EpisodeController extends Controller
         return EpisodeResource::make($episode->load('entry.show.titles'))->response()->setStatusCode(201);
     }
 
-    public function show(ShowEntry $showEntry, Episode $episode): JsonResponse
+    public function show(Episode $episode): JsonResponse
     {
         return EpisodeResource::make($episode->load('entry.show.titles'))->response();
     }
 
-    public function update(ShowEntry $showEntry, Episode $episode, UpdateEpisodeRequest $request, UpdateEpisodeAction $action): JsonResponse
+    public function update(Episode $episode, UpdateEpisodeRequest $request, UpdateEpisodeAction $action): JsonResponse
     {
         $updatedEpisode = $action->handle(UpdateEpisodeData::from([
             ...$request->validated(),
@@ -52,7 +52,7 @@ class EpisodeController extends Controller
         return EpisodeResource::make($updatedEpisode->load('entry.show.titles'))->response();
     }
 
-    public function destroy(ShowEntry $showEntry, Episode $episode, DeleteEpisodeAction $action): Response
+    public function destroy(Episode $episode, DeleteEpisodeAction $action): Response
     {
         $action->handle($episode);
 

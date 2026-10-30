@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\ShowCategory\AttachCategoryToShowAction;
+use App\Actions\ShowCategory\DetachCategoryFromShowAction;
 use App\Http\Requests\ShowCategory\StoreShowCategoryRequest;
 use App\Http\Resources\Category\CategoryResource;
 use App\Models\Category\Category;
@@ -22,9 +23,9 @@ class ShowCategoryController extends Controller
         return CategoryResource::make($attachedCategory)->response()->setStatusCode(201);
     }
 
-    public function destroy(Show $show, Category $category): Response
+    public function destroy(Show $show, Category $category, DetachCategoryFromShowAction $action): Response
     {
-        $show->categories()->detach($category->id);
+        $action->handle($show, $category);
 
         return response()->noContent();
     }

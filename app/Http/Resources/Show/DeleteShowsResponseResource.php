@@ -7,8 +7,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class DeleteShowsResponseResource extends JsonResource
 {
-    public static $wrap = null;
-
     /**
      * @return array<string, int>
      */

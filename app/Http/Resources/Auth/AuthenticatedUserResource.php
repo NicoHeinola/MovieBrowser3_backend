@@ -10,8 +10,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /** @mixin User */
 class AuthenticatedUserResource extends JsonResource
 {
-    public static $wrap = null;
-
     /**
      * @return array<string, mixed>
      */
