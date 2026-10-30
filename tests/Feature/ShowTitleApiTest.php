@@ -307,3 +307,78 @@ test('cannot unset the only primary title', function () {
         'is_primary' => true,
     ]);
 });
+
+test('non-primary title changes leave episode files in place', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $show = Show::factory()->create();
+    ShowTitle::factory()->for($show)->primary()->create(['title' => 'Primary']);
+    $secondary = ShowTitle::factory()->for($show)->create(['title' => 'Secondary']);
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $path = putVideoFile("$base/{$show->id}_Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
+
+    postJson("/api/v1/shows/{$show->id}/titles", ['title' => 'Another', 'is_primary' => false])->assertCreated();
+    patchJson("/api/v1/titles/{$secondary->id}", ['title' => 'Secondary Renamed'])->assertOk();
+    deleteJson("/api/v1/titles/{$secondary->id}")->assertNoContent();
+
+    expect(File::exists($path))->toBeTrue();
+});
+
+test('promoting a title to primary relocates episode files', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $show = Show::factory()->create();
+    ShowTitle::factory()->for($show)->primary()->create(['title' => 'Old Primary']);
+    $secondary = ShowTitle::factory()->for($show)->create(['title' => 'Promoted']);
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $oldPath = putVideoFile("$base/{$show->id}_Old Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
+
+    patchJson("/api/v1/titles/{$secondary->id}", ['is_primary' => true])->assertOk();
+
+    expect(File::exists($oldPath))->toBeFalse();
+    expect(File::exists("$base/{$show->id}_Promoted/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv"))->toBeTrue();
+    expect(File::isDirectory("$base/{$show->id}_Old Primary"))->toBeFalse();
+});
+
+test('the first primary title moves files out of the id-named show folder', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $show = Show::factory()->create();
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $oldPath = putVideoFile("$base/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
+
+    postJson("/api/v1/shows/{$show->id}/titles", ['title' => 'Dr. Stone', 'is_primary' => true])->assertCreated();
+
+    expect(File::exists($oldPath))->toBeFalse();
+    expect(File::exists("$base/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv"))->toBeTrue();
+});
+
+test('a failed relocation restores moved files and keeps the old title', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $show = Show::factory()->create();
+    $title = ShowTitle::factory()->for($show)->primary()->create(['title' => 'Old']);
+    $firstEntry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1', 'sort_order' => 1]);
+    $secondEntry = ShowEntry::factory()->for($show)->create(['name' => 'Season 2', 'sort_order' => 2]);
+    $firstEpisode = Episode::factory()->for($firstEntry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $secondEpisode = Episode::factory()->for($secondEntry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $firstPath = putVideoFile("$base/{$show->id}_Old/{$firstEntry->id}_Season 1/{$firstEpisode->id}_Episode 1.mkv", 'first');
+    $secondPath = putVideoFile("$base/{$show->id}_Old/{$secondEntry->id}_Season 2/{$secondEpisode->id}_Episode 1.mkv", 'second');
+
+    // A regular file where the second entry's new folder must go makes that move fail after the first one succeeded.
+    putVideoFile("$base/{$show->id}_New/{$secondEntry->id}_Season 2", 'blocker');
+
+    patchJson("/api/v1/titles/{$title->id}", ['title' => 'New'])->assertServerError();
+
+    assertDatabaseHas('show_titles', ['id' => $title->id, 'title' => 'Old']);
+    expect(File::get($firstPath))->toBe('first');
+    expect(File::get($secondPath))->toBe('second');
+    expect(File::exists("$base/{$show->id}_New/{$firstEntry->id}_Season 1/{$firstEpisode->id}_Episode 1.mkv"))->toBeFalse();
+});

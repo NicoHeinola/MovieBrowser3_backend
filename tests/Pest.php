@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\Setting\Setting;
 use App\Models\User\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 /*
@@ -17,6 +19,9 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    // The seeded video_base_path is the real storage/app/videos; keep every test away from it.
+    ->beforeEach(fn () => useTestVideoBasePath())
+    ->afterEach(fn () => File::deleteDirectory(videoBasePathForTests()))
     ->in('Feature');
 
 pest()->extend(TestCase::class)
@@ -38,6 +43,21 @@ function videoBasePathForTests(): string
 }
 
 $GLOBALS['videoBasePath'] = videoBasePathForTests();
+
+function useTestVideoBasePath(): string
+{
+    Setting::query()->whereKey('video_base_path')->update(['value' => videoBasePathForTests()]);
+
+    return videoBasePathForTests();
+}
+
+function putVideoFile(string $path, string $contents = 'video-bytes'): string
+{
+    File::ensureDirectoryExists(dirname($path));
+    File::put($path, $contents);
+
+    return $path;
+}
 
 /*
 |--------------------------------------------------------------------------

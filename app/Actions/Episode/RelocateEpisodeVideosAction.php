@@ -31,8 +31,7 @@ class RelocateEpisodeVideosAction
                     $newPath = $this->resolveEpisodeVideoPathAction->handle($episode, basePath: $newBasePath);
 
                     if ($oldPath !== $newPath) {
-                        // Prune emptied folders up to the old base path, which they live under.
-                        $this->moveVideoFileAction->handle($oldPath, $newPath, $oldBasePath);
+                        $this->moveVideoFileAction->handle($oldPath, $newPath, $oldBasePath, $newBasePath);
                     }
                 }
             });

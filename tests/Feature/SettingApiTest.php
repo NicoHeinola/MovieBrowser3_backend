@@ -266,3 +266,35 @@ test('windows absolute video base paths are accepted', function (string $path) {
     'backslash' => 'C:\\Videos',
     'forward slash' => 'C:/Videos',
 ]);
+
+test('a failed base path relocation restores moved files and the old setting', function () {
+    actingAsAdmin();
+
+    $oldBasePath = dirname(__DIR__, 2).'/storage/app/testing-video-old';
+    $newBasePath = dirname(__DIR__, 2).'/storage/app/testing-video-new';
+    File::deleteDirectory($oldBasePath);
+    File::deleteDirectory($newBasePath);
+
+    Setting::query()->whereKey('video_base_path')->update(['value' => $oldBasePath]);
+
+    $show = Show::factory()->create();
+    $firstEntry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $secondEntry = ShowEntry::factory()->for($show)->create(['name' => 'Season 2']);
+    $firstEpisode = Episode::factory()->for($firstEntry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $secondEpisode = Episode::factory()->for($secondEntry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $firstPath = putVideoFile("$oldBasePath/{$show->id}_{$show->id}/{$firstEntry->id}_Season 1/{$firstEpisode->id}_Episode 1.mkv", 'first');
+    $secondPath = putVideoFile("$oldBasePath/{$show->id}_{$show->id}/{$secondEntry->id}_Season 2/{$secondEpisode->id}_Episode 1.mkv", 'second');
+
+    // A regular file where the second episode's new folder must go makes that move fail after the first one succeeded.
+    putVideoFile("$newBasePath/{$show->id}_{$show->id}/{$secondEntry->id}_Season 2", 'blocker');
+
+    patchJson('/api/v1/settings/video_base_path', ['value' => $newBasePath])->assertServerError();
+
+    expect(Setting::query()->find('video_base_path')->value)->toBe($oldBasePath);
+    expect(File::get($firstPath))->toBe('first');
+    expect(File::get($secondPath))->toBe('second');
+    expect(File::exists("$newBasePath/{$show->id}_{$show->id}/{$firstEntry->id}_Season 1/{$firstEpisode->id}_Episode 1.mkv"))->toBeFalse();
+
+    File::deleteDirectory($oldBasePath);
+    File::deleteDirectory($newBasePath);
+});

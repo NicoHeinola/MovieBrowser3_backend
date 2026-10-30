@@ -38,7 +38,7 @@ class UpdateEpisodeAction
 
                 $newPath = $this->resolveEpisodeVideoPathAction->handle($episode);
 
-                if ($oldPath !== $newPath) {
+                if ($oldFilename !== '' && $oldPath !== $newPath) {
                     DB::afterCommit(fn () => $this->deleteVideoFileAction->handle($oldPath));
                 }
 

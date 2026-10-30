@@ -228,3 +228,43 @@ test('creating a show entry requires name, type, and sort_order', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['type', 'name', 'sort_order']);
 });
+
+test('updating a show entry without renaming leaves episode files in place', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $show = Show::factory()->create();
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1', 'sort_order' => 1]);
+    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $path = putVideoFile("$base/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
+
+    patchJson("/api/v1/entries/{$entry->id}", ['sort_order' => 9, 'type' => 'movie'])->assertOk();
+
+    expect(File::exists($path))->toBeTrue();
+});
+
+test('renaming a show entry moves all of its episodes and leaves other entries alone', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $show = Show::factory()->create();
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $otherEntry = ShowEntry::factory()->for($show)->create(['name' => 'Season 2']);
+    $episodes = Episode::factory()->for($entry, 'entry')->count(3)->sequence(
+        ['name' => 'Episode 1', 'filename' => 'ep1.mkv'],
+        ['name' => 'Episode 2', 'filename' => 'ep2.mkv'],
+        ['name' => 'Episode 3', 'filename' => ''],
+    )->create();
+    $otherEpisode = Episode::factory()->for($otherEntry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    putVideoFile("$base/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodes[0]->id}_Episode 1.mkv", 'one');
+    putVideoFile("$base/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episodes[1]->id}_Episode 2.mkv", 'two');
+    $otherPath = putVideoFile("$base/{$show->id}_{$show->id}/{$otherEntry->id}_Season 2/{$otherEpisode->id}_Episode 1.mkv", 'other');
+
+    patchJson("/api/v1/entries/{$entry->id}", ['name' => 'Part One'])->assertOk();
+
+    $newDirectory = "$base/{$show->id}_{$show->id}/{$entry->id}_Part One";
+    expect(File::get("$newDirectory/{$episodes[0]->id}_Episode 1.mkv"))->toBe('one');
+    expect(File::get("$newDirectory/{$episodes[1]->id}_Episode 2.mkv"))->toBe('two');
+    expect(File::isDirectory("$base/{$show->id}_{$show->id}/{$entry->id}_Season 1"))->toBeFalse();
+    expect(File::get($otherPath))->toBe('other');
+});

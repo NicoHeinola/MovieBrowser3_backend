@@ -419,3 +419,22 @@ test('bulk show deletion keeps video files when the transaction rolls back', fun
 
     File::deleteDirectory($videoBasePath);
 });
+
+test('bulk deleting shows removes their video files and keeps other shows files', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    [$firstShow, $secondShow, $keptShow] = Show::factory()->count(3)->create()->all();
+    $paths = collect([$firstShow, $secondShow, $keptShow])->mapWithKeys(function (Show $show) use ($base): array {
+        $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+        $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+
+        return [$show->id => putVideoFile("$base/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv")];
+    });
+
+    deleteJson('/api/v1/shows', ['ids' => [$firstShow->id, $secondShow->id]])->assertOk();
+
+    expect(File::exists($paths[$firstShow->id]))->toBeFalse();
+    expect(File::exists($paths[$secondShow->id]))->toBeFalse();
+    expect(File::exists($paths[$keptShow->id]))->toBeTrue();
+});
