@@ -3,6 +3,8 @@
 namespace App\Models\ShowEntry\Query;
 
 use App\Models\Show\Query\Filters\MetadataFilter;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Spatie\QueryBuilder\AllowedFilter;
 
 trait HasShowEntryQuery
@@ -13,7 +15,18 @@ trait HasShowEntryQuery
             AllowedFilter::custom('show_id', new MetadataFilter),
             AllowedFilter::custom('type', new MetadataFilter),
             AllowedFilter::custom('name', new MetadataFilter),
+            AllowedFilter::scope('status', 'withStatus'),
         ];
+    }
+
+    /**
+     * Entries the authenticated user has marked with one of the given statuses.
+     */
+    public function scopeWithStatus(Builder $query, string ...$statuses): void
+    {
+        $query->whereHas('statuses', function (Builder $query) use ($statuses) {
+            $query->where('user_id', Auth::id())->whereIn('status', $statuses);
+        });
     }
 
     public static function getAllowedSorts(): array

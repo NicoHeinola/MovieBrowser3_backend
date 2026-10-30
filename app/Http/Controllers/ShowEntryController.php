@@ -12,17 +12,32 @@ use App\Http\Requests\ShowEntry\UpdateShowEntryRequest;
 use App\Http\Resources\ShowEntry\ShowEntryResource;
 use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
+use Closure;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
 use Symfony\Component\HttpFoundation\Response;
 
 class ShowEntryController extends Controller
 {
-    public function index(Show $show): JsonResponse
+    /**
+     * @return array<int|string, string|Closure>
+     */
+    private function relations(Request $request): array
+    {
+        return [
+            'show.titles',
+            'episodes',
+            'statuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id),
+        ];
+    }
+
+    public function index(Show $show, Request $request): JsonResponse
     {
         $show->loadMissing('titles');
 
-        $entries = QueryBuilder::for($show->entries()->with('episodes'))
+        $entries = QueryBuilder::for($show->entries()->with(['episodes', 'statuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id)]))
             ->allowedFilters(...ShowEntry::getAllowedFilters())
             ->allowedSorts(...ShowEntry::getAllowedSorts())
             ->jsonPaginate();
@@ -34,12 +49,12 @@ class ShowEntryController extends Controller
     {
         $entry = $action->handle($show, CreateShowEntryData::from($request->validated()));
 
-        return ShowEntryResource::make($entry->load('show.titles', 'episodes'))->response()->setStatusCode(201);
+        return ShowEntryResource::make($entry->load($this->relations($request)))->response()->setStatusCode(201);
     }
 
-    public function show(ShowEntry $entry): JsonResponse
+    public function show(ShowEntry $entry, Request $request): JsonResponse
     {
-        return ShowEntryResource::make($entry->load('show.titles', 'episodes'))->response();
+        return ShowEntryResource::make($entry->load($this->relations($request)))->response();
     }
 
     public function update(ShowEntry $entry, UpdateShowEntryRequest $request, UpdateShowEntryAction $action): JsonResponse
@@ -49,7 +64,7 @@ class ShowEntryController extends Controller
             'show_entry' => $entry,
         ]));
 
-        return ShowEntryResource::make($updatedEntry->load('show.titles', 'episodes'))->response();
+        return ShowEntryResource::make($updatedEntry->load($this->relations($request)))->response();
     }
 
     public function destroy(ShowEntry $entry, DeleteShowEntryAction $action): Response

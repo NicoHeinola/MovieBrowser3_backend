@@ -14,23 +14,33 @@ use App\Http\Requests\Show\UpdateShowRequest;
 use App\Http\Resources\Show\DeleteShowsResponseResource;
 use App\Http\Resources\Show\ShowResource;
 use App\Models\Show\Show;
+use Closure;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
 use Symfony\Component\HttpFoundation\Response;
 
 class ShowController extends Controller
 {
-    private const array RELATIONS = [
-        'categories',
-        'titles',
-        'entries.episodes',
-        'incomingLinks.sourceShow.titles',
-        'outgoingLinks.targetShow.titles',
-    ];
-
-    public function index(): JsonResponse
+    /**
+     * @return array<int|string, string|Closure>
+     */
+    private function relations(Request $request): array
     {
-        $shows = QueryBuilder::for(Show::query()->with(self::RELATIONS))
+        return [
+            'categories',
+            'titles',
+            'entries.episodes',
+            'entries.statuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id),
+            'incomingLinks.sourceShow.titles',
+            'outgoingLinks.targetShow.titles',
+        ];
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $shows = QueryBuilder::for(Show::query()->with($this->relations($request)))
             ->allowedFilters(...Show::getAllowedFilters())
             ->allowedSorts(...Show::getAllowedSorts())
             ->jsonPaginate();
@@ -42,12 +52,12 @@ class ShowController extends Controller
     {
         $show = $createShowAction->handle(CreateShowData::from($request->validated()));
 
-        return ShowResource::make($show->load(self::RELATIONS))->response()->setStatusCode(201);
+        return ShowResource::make($show->load($this->relations($request)))->response()->setStatusCode(201);
     }
 
-    public function show(Show $show): JsonResponse
+    public function show(Show $show, Request $request): JsonResponse
     {
-        return ShowResource::make($show->load(self::RELATIONS))->response();
+        return ShowResource::make($show->load($this->relations($request)))->response();
     }
 
     public function update(Show $show, UpdateShowRequest $request, UpdateShowAction $updateShowAction): JsonResponse
@@ -57,7 +67,7 @@ class ShowController extends Controller
             'show' => $show,
         ]));
 
-        return ShowResource::make($updatedShow->load(self::RELATIONS))->response();
+        return ShowResource::make($updatedShow->load($this->relations($request)))->response();
     }
 
     public function destroy(Show $show, DeleteShowAction $deleteShowAction): Response
