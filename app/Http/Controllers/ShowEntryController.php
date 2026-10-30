@@ -29,7 +29,7 @@ class ShowEntryController extends Controller
         return [
             'show.titles',
             'episodes',
-            'statuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id),
+            'watchStatuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id),
         ];
     }
 
@@ -37,7 +37,7 @@ class ShowEntryController extends Controller
     {
         $show->loadMissing('titles');
 
-        $entries = QueryBuilder::for($show->entries()->with(['episodes', 'statuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id)]))
+        $entries = QueryBuilder::for($show->entries()->with(['episodes', 'watchStatuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id)]))
             ->allowedFilters(...ShowEntry::getAllowedFilters())
             ->allowedSorts(...ShowEntry::getAllowedSorts())
             ->jsonPaginate();

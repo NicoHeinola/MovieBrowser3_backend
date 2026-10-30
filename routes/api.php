@@ -7,7 +7,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShowCategoryController;
 use App\Http\Controllers\ShowController;
 use App\Http\Controllers\ShowEntryController;
-use App\Http\Controllers\ShowEntryStatusController;
+use App\Http\Controllers\ShowEntryWatchStatusController;
 use App\Http\Controllers\ShowLinkController;
 use App\Http\Controllers\ShowSectionController;
 use App\Http\Controllers\ShowTitleController;
@@ -29,7 +29,7 @@ Route::prefix('v1')->group(function (): void {
         Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
         Route::apiResource('show-sections', ShowSectionController::class)->only(['index', 'show']);
-        Route::apiSingleton('show-entries.status', ShowEntryStatusController::class)->only(['update', 'destroy'])->destroyable();
+        Route::apiSingleton('show-entries.watch-status', ShowEntryWatchStatusController::class)->only(['update', 'destroy'])->destroyable();
 
         Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->only(['index', 'show']);
         Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->only(['index', 'show']);

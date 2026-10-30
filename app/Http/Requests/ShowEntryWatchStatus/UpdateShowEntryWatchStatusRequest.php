@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Requests\ShowEntryStatus;
+namespace App\Http\Requests\ShowEntryWatchStatus;
 
-use App\Enums\ShowWatchStatus;
+use App\Enums\WatchStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
-class UpdateShowEntryStatusRequest extends FormRequest
+class UpdateShowEntryWatchStatusRequest extends FormRequest
 {
     /**
      * @return array<string, list<string|Enum>>
@@ -15,7 +15,7 @@ class UpdateShowEntryStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', 'string', Rule::enum(ShowWatchStatus::class)],
+            'status' => ['required', 'string', Rule::enum(WatchStatus::class)],
         ];
     }
 }

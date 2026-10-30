@@ -4,7 +4,7 @@ namespace App\Models\ShowEntry\Relations;
 
 use App\Models\Episode\Episode;
 use App\Models\Show\Show;
-use App\Models\ShowEntryStatus\ShowEntryStatus;
+use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -18,9 +18,9 @@ trait HasShowEntryRelations
     /**
      * Watch statuses of every user (at most one per user); constrain by user_id when loading for a specific user.
      */
-    public function statuses(): HasMany
+    public function watchStatuses(): HasMany
     {
-        return $this->hasMany(ShowEntryStatus::class);
+        return $this->hasMany(ShowEntryWatchStatus::class);
     }
 
     public function episodes(): HasMany

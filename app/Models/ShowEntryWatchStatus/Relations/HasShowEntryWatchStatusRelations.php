@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Models\ShowEntryStatus\Relations;
+namespace App\Models\ShowEntryWatchStatus\Relations;
 
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\User\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-trait HasShowEntryStatusRelations
+trait HasShowEntryWatchStatusRelations
 {
     public function showEntry(): BelongsTo
     {

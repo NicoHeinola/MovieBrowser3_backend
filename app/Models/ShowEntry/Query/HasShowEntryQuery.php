@@ -15,16 +15,16 @@ trait HasShowEntryQuery
             AllowedFilter::custom('show_id', new MetadataFilter),
             AllowedFilter::custom('type', new MetadataFilter),
             AllowedFilter::custom('name', new MetadataFilter),
-            AllowedFilter::scope('status', 'withStatus'),
+            AllowedFilter::scope('watch_status', 'withWatchStatus'),
         ];
     }
 
     /**
      * Entries the authenticated user has marked with one of the given statuses.
      */
-    public function scopeWithStatus(Builder $query, string ...$statuses): void
+    public function scopeWithWatchStatus(Builder $query, string ...$statuses): void
     {
-        $query->whereHas('statuses', function (Builder $query) use ($statuses) {
+        $query->whereHas('watchStatuses', function (Builder $query) use ($statuses) {
             $query->where('user_id', Auth::id())->whereIn('status', $statuses);
         });
     }

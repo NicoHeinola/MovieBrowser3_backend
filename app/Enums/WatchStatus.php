@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum ShowWatchStatus: string
+enum WatchStatus: string
 {
     case Watching = 'watching';
     case Completed = 'completed';

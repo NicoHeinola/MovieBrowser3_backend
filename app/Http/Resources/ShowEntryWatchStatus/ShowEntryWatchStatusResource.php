@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Resources\ShowEntryStatus;
+namespace App\Http\Resources\ShowEntryWatchStatus;
 
-use App\Models\ShowEntryStatus\ShowEntryStatus;
+use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-/** @mixin ShowEntryStatus */
-class ShowEntryStatusResource extends JsonResource
+/** @mixin ShowEntryWatchStatus */
+class ShowEntryWatchStatusResource extends JsonResource
 {
     /**
      * @return array<string, mixed>

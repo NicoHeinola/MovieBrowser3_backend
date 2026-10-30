@@ -3,7 +3,7 @@
 namespace App\Http\Resources\ShowEntry;
 
 use App\Http\Resources\Episode\EpisodeResource;
-use App\Http\Resources\ShowEntryStatus\ShowEntryStatusResource;
+use App\Http\Resources\ShowEntryWatchStatus\ShowEntryWatchStatusResource;
 use App\Models\ShowEntry\ShowEntry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -22,7 +22,7 @@ class ShowEntryResource extends JsonResource
             'type' => $this->type,
             'name' => $this->name,
             'sort_order' => $this->sort_order,
-            'status' => ShowEntryStatusResource::make($this->whenLoaded('statuses', fn () => $this->statuses->first())),
+            'watch_status' => ShowEntryWatchStatusResource::make($this->whenLoaded('watchStatuses', fn () => $this->watchStatuses->first())),
             'episodes' => EpisodeResource::collection($this->whenLoaded('episodes')),
         ];
     }

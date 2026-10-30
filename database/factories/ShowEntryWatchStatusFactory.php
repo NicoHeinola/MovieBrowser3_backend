@@ -2,18 +2,18 @@
 
 namespace Database\Factories;
 
-use App\Enums\ShowWatchStatus;
+use App\Enums\WatchStatus;
 use App\Models\ShowEntry\ShowEntry;
-use App\Models\ShowEntryStatus\ShowEntryStatus;
+use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\User\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<ShowEntryStatus>
+ * @extends Factory<ShowEntryWatchStatus>
  */
-class ShowEntryStatusFactory extends Factory
+class ShowEntryWatchStatusFactory extends Factory
 {
-    protected $model = ShowEntryStatus::class;
+    protected $model = ShowEntryWatchStatus::class;
 
     /**
      * @return array<string, mixed>
@@ -23,7 +23,7 @@ class ShowEntryStatusFactory extends Factory
         return [
             'show_entry_id' => ShowEntry::factory(),
             'user_id' => User::factory(),
-            'status' => fake()->randomElement(ShowWatchStatus::cases()),
+            'status' => fake()->randomElement(WatchStatus::cases()),
         ];
     }
 }

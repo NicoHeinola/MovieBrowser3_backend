@@ -32,7 +32,7 @@ class ShowController extends Controller
             'categories',
             'titles',
             'entries.episodes',
-            'entries.statuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id),
+            'entries.watchStatuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id),
             'incomingLinks.sourceShow.titles',
             'outgoingLinks.targetShow.titles',
         ];
