@@ -291,3 +291,19 @@ test('update title validates field types', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['title', 'is_primary']);
 });
+
+test('cannot unset the only primary title', function () {
+    actingAsAdmin();
+
+    $show = Show::factory()->create();
+    $primary = ShowTitle::factory()->for($show)->primary()->create();
+
+    patchJson("/api/v1/titles/{$primary->id}", ['is_primary' => false])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['is_primary']);
+
+    assertDatabaseHas('show_titles', [
+        'id' => $primary->id,
+        'is_primary' => true,
+    ]);
+});
