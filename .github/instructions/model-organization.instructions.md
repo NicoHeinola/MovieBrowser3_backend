@@ -11,5 +11,5 @@ applyTo: "app/Models/**/*.php"
 - Base models should compose those traits and own casts, fillable behavior, and factory wiring.
 - Relations traits should contain Eloquent relationship methods only.
 - Query traits should contain reusable Eloquent scope methods and expose reusable Spatie Query Builder filters, sorts, and query configuration rather than parse request input or shape API responses.
-- Prefer `AllowedFilter::custom` with `MetadataFilter` over built-in filter types like `partial` or `exact`. `MetadataFilter` supports operator prefixes (`like:`, `eq:`, `null`, etc.) and relation properties via dot notation (e.g., `titles.title`), keeping filter behavior consistent across all columns.
+- Prefer `AllowedFilter::custom` with `MetadataFilter` over built-in filter types like `partial` or `exact`. `MetadataFilter` supports operator prefixes (`like:`, `eq:`, `null`, etc.) and relation properties via dot notation (e.g., `titles.title`), keeping filter behavior consistent across all columns. Filter values are not split on commas (`filter_value_splitting_enabled` is off in `config/query-builder.php`), so pass multiple values as `filter[col][]=a&filter[col][]=b`; each value is applied as an AND condition.
 - Scope handles (e.g., `scopeSearch`) should be placed in the query trait to consolidate all query-related logic.

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Category\Category;
 use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
 use App\Models\Show\Show;
@@ -331,4 +332,35 @@ test('an admin can update a show without affecting its titles', function () {
         'title' => 'Still Here',
         'is_primary' => true,
     ]);
+});
+
+test('filter values containing commas are matched literally', function () {
+    actingAsAdmin();
+
+    $show = Show::factory()->create();
+    ShowTitle::factory()->for($show)->primary()->create(['title' => 'Love, Death & Robots']);
+    $otherShow = Show::factory()->create();
+    ShowTitle::factory()->for($otherShow)->primary()->create(['title' => 'Love']);
+
+    getJson('/api/v1/shows?filter[title]='.urlencode('eq:Love, Death & Robots'))
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $show->id);
+});
+
+test('multiple filter values can be passed as an array', function () {
+    actingAsAdmin();
+
+    $action = Category::factory()->create(['value' => 'action']);
+    $comedy = Category::factory()->create(['value' => 'comedy']);
+
+    $both = Show::factory()->create();
+    $both->categories()->attach([$action->id, $comedy->id]);
+    $actionOnly = Show::factory()->create();
+    $actionOnly->categories()->attach($action->id);
+
+    getJson('/api/v1/shows?filter[categories.value][]=action&filter[categories.value][]=comedy')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $both->id);
 });

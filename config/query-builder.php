@@ -23,6 +23,13 @@ return [
     'delimiter' => ',',
 
     /*
+     * Whether filter values should be split by the configured delimiter.
+     * Disabled so values like "Love, Death & Robots" match literally;
+     * pass multiple values as ?filter[name][]=John&filter[name][]=Jane instead.
+     */
+    'filter_value_splitting_enabled' => false,
+
+    /*
      * Related model aggregates are included using the relationship name suffixed with these strings.
      * For example: GET /users?include=postsCount or GET /users?include=postsViewsSum
      */
