@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Episode;
 
+use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Models\Episode\Episode;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -21,7 +22,7 @@ class EpisodeResource extends JsonResource
             'name' => $this->name,
             'filename' => $this->filename,
             'sequence_number' => $this->sequence_number,
-            'file_path' => $this->file_path,
+            'file_path' => ResolveEpisodeVideoPathAction::run($this->resource),
         ];
     }
 }

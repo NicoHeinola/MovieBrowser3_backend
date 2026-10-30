@@ -1,5 +1,7 @@
 <?php
 
+use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
+use App\Actions\Show\DeleteShowsAction;
 use App\Models\Category\Category;
 use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
@@ -7,6 +9,7 @@ use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowTitle\ShowTitle;
 use App\Models\User\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 use function Pest\Laravel\assertDatabaseHas;
@@ -363,4 +366,56 @@ test('multiple filter values can be passed as an array', function () {
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $both->id);
+});
+
+test('listing shows looks up the video base path only once', function () {
+    actingAsAdmin();
+
+    Show::factory()->count(3)->create()->each(function (Show $show): void {
+        ShowTitle::factory()->for($show)->primary()->create();
+        ShowEntry::factory()->for($show)->count(2)->create()->each(
+            fn (ShowEntry $entry) => Episode::factory()->for($entry, 'entry')->count(2)->create()
+        );
+    });
+
+    DB::enableQueryLog();
+
+    getJson('/api/v1/shows')->assertOk();
+
+    $settingQueries = collect(DB::getQueryLog())
+        ->filter(fn (array $query): bool => str_contains($query['query'], '"settings"'))
+        ->count();
+
+    expect($settingQueries)->toBe(1);
+});
+
+test('bulk show deletion keeps video files when the transaction rolls back', function () {
+    $videoBasePath = videoBasePathForTests();
+    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+
+    $deletedShow = Show::factory()->create();
+    $failingShow = Show::factory()->create();
+    $entry = ShowEntry::factory()->for($deletedShow)->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create([
+        'name' => 'Episode 1',
+        'filename' => 'episode_1.mkv',
+    ]);
+
+    $videoPath = ResolveEpisodeVideoPathAction::run($episode);
+    File::ensureDirectoryExists(dirname($videoPath));
+    File::put($videoPath, 'video');
+
+    Show::deleting(function (Show $show) use ($failingShow): void {
+        if ($show->is($failingShow)) {
+            throw new RuntimeException('Simulated failure');
+        }
+    });
+
+    expect(fn () => app(DeleteShowsAction::class)->handle([$deletedShow->id, $failingShow->id]))
+        ->toThrow(RuntimeException::class);
+
+    expect(File::exists($videoPath))->toBeTrue();
+    assertDatabaseHas('shows', ['id' => $deletedShow->id]);
+
+    File::deleteDirectory($videoBasePath);
 });

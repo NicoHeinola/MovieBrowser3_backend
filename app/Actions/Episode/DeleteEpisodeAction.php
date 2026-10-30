@@ -2,25 +2,22 @@
 
 namespace App\Actions\Episode;
 
-use App\Actions\Episode\VideoFile\DeleteVideoFileAction;
 use App\Models\Episode\Episode;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class DeleteEpisodeAction
 {
     use AsAction;
 
-    public function __construct(private readonly DeleteVideoFileAction $deleteVideoFileAction) {}
+    public function __construct(private readonly DeleteEpisodeVideosAction $deleteEpisodeVideosAction) {}
 
     public function handle(Episode $episode): void
     {
-        if ($episode->filename !== '') {
-            $this->deleteVideoFileAction->handle(
-                $episode->videoPath(),
-                $episode->videoBasePath(),
-            );
-        }
+        DB::transaction(function () use ($episode): void {
+            $this->deleteEpisodeVideosAction->handle([$episode]);
 
-        $episode->delete();
+            $episode->delete();
+        });
     }
 }

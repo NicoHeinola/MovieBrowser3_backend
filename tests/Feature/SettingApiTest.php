@@ -186,3 +186,83 @@ test('changing an absolute video base path relocates episode files on disk', fun
     File::deleteDirectory($oldBasePath);
     File::deleteDirectory($newBasePath);
 });
+
+test('changing an empty video base path relocates files from the default location', function () {
+    actingAsAdmin();
+
+    $storagePath = dirname(__DIR__, 2).'/storage/app/testing-storage';
+    $newBasePath = dirname(__DIR__, 2).'/storage/app/testing-video-new';
+
+    File::deleteDirectory($storagePath);
+    File::deleteDirectory($newBasePath);
+
+    app()->useStoragePath($storagePath);
+
+    Setting::query()->whereKey('video_base_path')->update(['value' => '']);
+
+    $show = Show::factory()->create();
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create([
+        'name' => 'Episode 1',
+        'filename' => 'episode_1.mkv',
+    ]);
+
+    $oldPath = "{$storagePath}/app/videos/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $newPath = "{$newBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+
+    File::ensureDirectoryExists(dirname($oldPath));
+    File::put($oldPath, 'video-1');
+
+    patchJson('/api/v1/settings/video_base_path', ['value' => $newBasePath])
+        ->assertOk();
+
+    expect(File::exists($oldPath))->toBeFalse();
+    expect(File::exists($newPath))->toBeTrue();
+
+    File::deleteDirectory($storagePath);
+    File::deleteDirectory($newBasePath);
+});
+
+test('changing the video base path keeps the old base folder and its parents', function () {
+    actingAsAdmin();
+
+    $parentPath = dirname(__DIR__, 2).'/storage/app/testing-video-parent';
+    $oldBasePath = "{$parentPath}/old";
+    $newBasePath = dirname(__DIR__, 2).'/storage/app/testing-video-new';
+
+    File::deleteDirectory($parentPath);
+    File::deleteDirectory($newBasePath);
+
+    Setting::query()->whereKey('video_base_path')->update(['value' => $oldBasePath]);
+
+    $show = Show::factory()->create();
+    $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create([
+        'name' => 'Episode 1',
+        'filename' => 'episode_1.mkv',
+    ]);
+
+    $oldPath = "{$oldBasePath}/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    File::ensureDirectoryExists(dirname($oldPath));
+    File::put($oldPath, 'video-1');
+
+    patchJson('/api/v1/settings/video_base_path', ['value' => $newBasePath])
+        ->assertOk();
+
+    expect(File::exists($oldPath))->toBeFalse();
+    expect(File::isDirectory($oldBasePath))->toBeTrue();
+
+    File::deleteDirectory($parentPath);
+    File::deleteDirectory($newBasePath);
+});
+
+test('windows absolute video base paths are accepted', function (string $path) {
+    actingAsAdmin();
+
+    patchJson('/api/v1/settings/video_base_path', ['value' => $path])
+        ->assertOk()
+        ->assertJsonPath('value', $path);
+})->with([
+    'backslash' => 'C:\\Videos',
+    'forward slash' => 'C:/Videos',
+]);

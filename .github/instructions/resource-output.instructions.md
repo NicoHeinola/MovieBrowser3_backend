@@ -12,3 +12,4 @@ applyTo: "app/Http/Resources/**/*.php"
 - Keep success payloads lean and avoid generic `message` fields unless the API contract explicitly needs them.
 - Keep resources presentation-focused; do not move validation, persistence, or action logic into them.
 - Keep top-level resources unwrapped by default and only introduce an envelope when the API contract explicitly needs one.
+- When an output field is derived by application logic rather than a column, call the owning action from the resource (e.g. `'file_path' => ResolveEpisodeVideoPathAction::run($this->resource)`) instead of adding a model accessor.

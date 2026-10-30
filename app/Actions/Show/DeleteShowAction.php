@@ -2,33 +2,25 @@
 
 namespace App\Actions\Show;
 
-use App\Actions\Episode\VideoFile\DeleteVideoFileAction;
+use App\Actions\Episode\DeleteEpisodeVideosAction;
 use App\Models\Show\Show;
+use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class DeleteShowAction
 {
     use AsAction;
 
-    public function __construct(private readonly DeleteVideoFileAction $deleteVideoFileAction) {}
+    public function __construct(private readonly DeleteEpisodeVideosAction $deleteEpisodeVideosAction) {}
 
     public function handle(Show $show): void
     {
-        $show->loadMissing('entries.episodes');
+        $show->loadMissing('titles', 'entries.episodes');
 
-        foreach ($show->entries as $entry) {
-            foreach ($entry->episodes as $episode) {
-                if ($episode->filename === '') {
-                    continue;
-                }
+        DB::transaction(function () use ($show): void {
+            $this->deleteEpisodeVideosAction->handle($show->entries->flatMap->episodes);
 
-                $this->deleteVideoFileAction->handle(
-                    $episode->videoPath(),
-                    $episode->videoBasePath(),
-                );
-            }
-        }
-
-        $show->delete();
+            $show->delete();
+        });
     }
 }

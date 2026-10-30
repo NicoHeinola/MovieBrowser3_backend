@@ -4,6 +4,7 @@ namespace App\Actions\Episode\VideoFile;
 
 use App\Models\Episode\Episode;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -11,17 +12,20 @@ class StoreVideoFileAction
 {
     use AsAction;
 
+    public function __construct(private readonly ResolveEpisodeVideoPathAction $resolveEpisodeVideoPathAction) {}
+
     public function handle(Episode $episode, UploadedFile $file, ?string $filename = null): Episode
     {
-        $resolvedFilename = basename($filename ?? $file->getClientOriginalName());
-        $storedFilename = $episode->videoFilename(filename: $resolvedFilename);
-        $targetDirectory = $episode->videoDirectoryPath();
+        return DB::transaction(function () use ($episode, $file, $filename): Episode {
+            $resolvedFilename = basename($filename ?? $file->getClientOriginalName());
+            $targetPath = $this->resolveEpisodeVideoPathAction->handle($episode, filename: $resolvedFilename);
 
-        File::ensureDirectoryExists($targetDirectory);
-        $file->move($targetDirectory, $storedFilename);
+            File::ensureDirectoryExists(dirname($targetPath));
+            $file->move(dirname($targetPath), basename($targetPath));
 
-        $episode->update(['filename' => $resolvedFilename]);
+            $episode->update(['filename' => $resolvedFilename]);
 
-        return $episode->fresh();
+            return $episode->fresh();
+        });
     }
 }

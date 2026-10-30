@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
 use App\Models\Show\Show;
@@ -87,7 +88,7 @@ test('authenticated users can view a single episode with file_path', function ()
         ->assertJsonPath('file_path', "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
 });
 
-test('preloaded episode file_path values do not trigger extra queries', function () {
+test('resolving preloaded episode video paths does not trigger extra queries', function () {
     global $videoBasePath;
     Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
 
@@ -116,7 +117,7 @@ test('preloaded episode file_path values do not trigger extra queries', function
 
     $paths = $loadedShow->entries
         ->flatMap(fn (ShowEntry $loadedEntry) => $loadedEntry->episodes)
-        ->map(fn (Episode $loadedEpisode) => $loadedEpisode->file_path)
+        ->map(fn (Episode $loadedEpisode) => ResolveEpisodeVideoPathAction::run($loadedEpisode))
         ->values()
         ->all();
 
@@ -127,8 +128,8 @@ test('preloaded episode file_path values do not trigger extra queries', function
         "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeOne->id}_Episode 1.mkv",
         "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeTwo->id}_Episode 2.mkv",
     ]);
-    // Accessing file_path currently performs one settings lookup per episode.
-    expect($queryLog)->toHaveCount(2);
+    // The video base path is resolved once and reused for every episode.
+    expect($queryLog)->toHaveCount(1);
 });
 
 test('an admin can create an episode', function () {

@@ -14,3 +14,4 @@ applyTo: "app/Actions/**/*.php"
 - Collection actions may compose single-record actions when that keeps bulk behavior consistent.
 - For partial model updates backed by `Optional` DTO fields, prefer passing DTO output into `fill(...)->save()` through the model's fillable allowlist instead of rebuilding attribute arrays field by field.
 - Example: if an update DTO maps output names to snake_case, use `$data->episode->fill(Arr::only($data->all(), $data->episode->getFillable()))->save();` and keep only side-effect logic in action body.
+- Read-only helper actions are fine for logic that must not live on models (see the model-organization rules). `ResolveVideoBasePathAction` memoizes with `once()` from a static method so every instance shares the value; actions that change that setting call `Once::flush()`.

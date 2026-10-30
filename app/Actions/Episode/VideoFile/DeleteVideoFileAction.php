@@ -9,15 +9,18 @@ class DeleteVideoFileAction
 {
     use AsAction;
 
-    public function __construct(private readonly PruneEmptyDirectoriesAction $pruneEmptyDirectoriesAction) {}
+    public function __construct(
+        private readonly PruneEmptyDirectoriesAction $pruneEmptyDirectoriesAction,
+        private readonly ResolveVideoBasePathAction $resolveVideoBasePathAction,
+    ) {}
 
-    public function handle(string $path, string $pruneStopAt): void
+    public function handle(string $path, ?string $pruneStopAt = null): void
     {
         File::delete($path);
 
         $this->pruneEmptyDirectoriesAction->handle(
             dirname($path),
-            $pruneStopAt,
+            $pruneStopAt ?? $this->resolveVideoBasePathAction->handle(),
         );
     }
 }

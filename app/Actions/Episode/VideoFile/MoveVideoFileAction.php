@@ -9,9 +9,12 @@ class MoveVideoFileAction
 {
     use AsAction;
 
-    public function __construct(private readonly PruneEmptyDirectoriesAction $pruneEmptyDirectoriesAction) {}
+    public function __construct(
+        private readonly PruneEmptyDirectoriesAction $pruneEmptyDirectoriesAction,
+        private readonly ResolveVideoBasePathAction $resolveVideoBasePathAction,
+    ) {}
 
-    public function handle(string $fromPath, string $toPath, string $pruneStopAt): void
+    public function handle(string $fromPath, string $toPath, ?string $pruneStopAt = null): void
     {
         if ($fromPath === $toPath) {
             return;
@@ -27,7 +30,7 @@ class MoveVideoFileAction
 
         $this->pruneEmptyDirectoriesAction->handle(
             dirname($fromPath),
-            $pruneStopAt,
+            $pruneStopAt ?? $this->resolveVideoBasePathAction->handle(),
         );
     }
 }

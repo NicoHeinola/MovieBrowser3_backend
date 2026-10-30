@@ -2,15 +2,14 @@
 
 namespace App\Http\Requests\Setting;
 
-use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
-use Closure;
+use App\Rules\AbsolutePath;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateSettingRequest extends FormRequest
 {
     /**
-     * @return array<string, list<string>>
+     * @return array<string, list<mixed>>
      */
     public function rules(): array
     {
@@ -33,11 +32,7 @@ class UpdateSettingRequest extends FormRequest
                 $rules['value'] = [
                     'required',
                     'string',
-                    static function (string $attribute, mixed $value, Closure $fail): void {
-                        if (!Episode::pathIsAbsolute((string) $value)) {
-                            $fail('The video base path must be an absolute path.');
-                        }
-                    },
+                    new AbsolutePath,
                 ];
             }
         }
