@@ -2,12 +2,15 @@
 
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Actions\EpisodePlayback\OpenVlcPlaylistAction;
+use App\Dtos\EpisodePlayback\VlcConnectionData;
 use App\Exceptions\VlcLaunchException;
+use App\Jobs\TrackVlcPlaybackJob;
 use App\Models\Episode\Episode;
 use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
+use Illuminate\Support\Facades\Queue;
 
 use function Pest\Laravel\assertDatabaseCount;
 use function Pest\Laravel\assertDatabaseHas;
@@ -15,6 +18,14 @@ use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\withToken;
+
+// The tracking job must not run for real; the tests only check that it is queued.
+beforeEach(fn () => Queue::fake());
+
+function fakeVlcConnection(): VlcConnectionData
+{
+    return new VlcConnectionData(port: 45678, password: 'secret');
+}
 
 function actingAsPlaybackUser(): User
 {
@@ -46,6 +57,7 @@ test('episode playback requires authentication', function () {
 });
 
 test('a regular user can play an episode with its whole entry as the playlist', function () {
+    config(['vlc.track_interval_seconds' => 45]);
     $user = actingAsPlaybackUser();
     $entry = ShowEntry::factory()->create();
     [$first, $second, $third] = playableEpisodes($entry, 3);
@@ -54,7 +66,7 @@ test('a regular user can play an episode with its whole entry as the playlist', 
         ResolveEpisodeVideoPathAction::run($first),
         ResolveEpisodeVideoPathAction::run($second),
         ResolveEpisodeVideoPathAction::run($third),
-    ], 1);
+    ], 1)->andReturn(fakeVlcConnection());
 
     postJson("/api/v1/episodes/{$second->id}/playback")
         ->assertCreated()
@@ -69,6 +81,9 @@ test('a regular user can play an episode with its whole entry as the playlist', 
         'show_entry_id' => $entry->id,
         'episode_id' => $second->id,
     ]);
+    Queue::assertPushed(TrackVlcPlaybackJob::class, fn (TrackVlcPlaybackJob $job): bool => $job->user->is($user)
+        && $job->vlc->port === 45678
+        && $job->delay === 45);
 });
 
 test('episodes without a video file are left out of the playlist', function () {
@@ -82,7 +97,7 @@ test('episodes without a video file are left out of the playlist', function () {
     OpenVlcPlaylistAction::mock()->shouldReceive('handle')->once()->with([
         ResolveEpisodeVideoPathAction::run($second),
         ResolveEpisodeVideoPathAction::run($third),
-    ], 1);
+    ], 1)->andReturn(fakeVlcConnection());
 
     postJson("/api/v1/episodes/{$third->id}/playback")->assertCreated();
 
@@ -95,7 +110,7 @@ test('playing another entry of the same show replaces the progress', function ()
     [$season1Episode] = playableEpisodes(ShowEntry::factory()->create(['show_id' => $show->id]), 1);
     $season2 = ShowEntry::factory()->create(['show_id' => $show->id]);
     [$season2Episode] = playableEpisodes($season2, 1);
-    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->twice();
+    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->twice()->andReturn(fakeVlcConnection());
 
     postJson("/api/v1/episodes/{$season1Episode->id}/playback")->assertCreated();
     postJson("/api/v1/episodes/{$season2Episode->id}/playback")->assertCreated();
@@ -114,7 +129,7 @@ test('replaying the same episode bumps the progress timestamp', function () {
     [$episode] = playableEpisodes(ShowEntry::factory()->create(), 1);
     $progress = ShowWatchProgress::factory()->create(['user_id' => $user->id, 'episode_id' => $episode->id]);
     $progress->forceFill(['updated_at' => now()->subDay()])->saveQuietly();
-    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->once();
+    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->once()->andReturn(fakeVlcConnection());
 
     postJson("/api/v1/episodes/{$episode->id}/playback")->assertCreated();
 
@@ -126,7 +141,7 @@ test('progress is tracked per user', function () {
     $entry = ShowEntry::factory()->create();
     [$first, $second] = playableEpisodes($entry, 2);
     ShowWatchProgress::factory()->create(['user_id' => $other->id, 'episode_id' => $first->id]);
-    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->once();
+    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->once()->andReturn(fakeVlcConnection());
 
     $user = actingAsPlaybackUser();
     postJson("/api/v1/episodes/{$second->id}/playback")->assertCreated();
@@ -157,6 +172,8 @@ test('a failed VLC launch keeps the previous progress', function () {
     postJson("/api/v1/episodes/{$second->id}/playback")
         ->assertStatus(503)
         ->assertJsonPath('message', 'VLC did not start.');
+
+    Queue::assertNothingPushed();
 
     assertDatabaseHas('show_watch_progress', ['user_id' => $user->id, 'episode_id' => $first->id]);
 });

@@ -11,6 +11,7 @@ test('write actions run inside a database transaction', function () {
         'Episode/DeleteEpisodeVideosAction.php',
         'Episode/RelocateEpisodeVideosAction.php',
         'EpisodePlayback/OpenVlcPlaylistAction.php',
+        'EpisodePlayback/RequestVlcStatusAction.php',
         'Show/RelocateShowVideosAction.php',
     ];
 

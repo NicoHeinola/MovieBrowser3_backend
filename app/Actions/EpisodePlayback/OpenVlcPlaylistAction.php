@@ -2,60 +2,142 @@
 
 namespace App\Actions\EpisodePlayback;
 
+use App\Dtos\EpisodePlayback\VlcConnectionData;
 use App\Exceptions\VlcLaunchException;
 use App\Models\Setting\Setting;
-use Illuminate\Process\Exceptions\ProcessTimedOutException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Sleep;
+use Illuminate\Support\Str;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class OpenVlcPlaylistAction
 {
     use AsAction;
 
-    private const int CONNECT_TIMEOUT_MS = 10000;
+    // VLC usually answers within a second; a cold start on Windows gets up to 10 seconds (100 x 100 ms).
+    private const int STARTUP_ATTEMPTS = 100;
 
-    private const int CONNECT_RETRY_MS = 100;
+    private const int STARTUP_ATTEMPT_DELAY_MS = 100;
 
-    private const string POWERSHELL = '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe';
+    // VLC's web interface port. It must stay outside Linux's ephemeral range (40525-44620 here): with WSL mirrored
+    // networking that range belongs to Linux, so a Windows vlc.exe cannot listen on it. It also stays below Windows'
+    // own dynamic range (49152 and up).
+    private const int PORT_RANGE_START = 47000;
+
+    private const int PORT_RANGE_END = 47999;
+
+    public function __construct(
+        private readonly RequestVlcStatusAction $requestVlcStatusAction,
+    ) {}
 
     /**
-     * Opens a new VLC window whose playlist holds every path in order and starts playing the one at $startIndex.
-     * VLC has no CLI flag for a start item, so the playlist is built over its RC interface: `add` appends and plays,
-     * `enqueue` only appends.
+     * Opens a new VLC window whose playlist holds every path in order and plays the one at $startIndex.
      *
-     * A Windows `vlc.exe` (run from WSL) gets Windows paths, and its RC port is reached from the Windows side through
-     * PowerShell, since WSL in NAT mode cannot connect to Windows' localhost.
+     * VLC has no command-line flag for a start item, so it is started with its web interface and the playlist is
+     * built through that: `in_enqueue` appends a file, `in_play` appends it and starts playing it.
      *
      * @param  list<string>  $paths
+     * @return VlcConnectionData How to reach this VLC window afterwards, e.g. to track what it is playing.
      */
-    public function handle(array $paths, int $startIndex): void
+    public function handle(array $paths, int $startIndex): VlcConnectionData
+    {
+        $binary = $this->resolveBinary();
+        $vlc = new VlcConnectionData($this->findFreePort(), Str::random(32));
+
+        $this->launch($binary, $vlc);
+        $this->waitUntilReady($vlc);
+
+        foreach ($paths as $index => $path) {
+            $status = $this->requestVlcStatusAction->handle($vlc, [
+                'command' => $index === $startIndex ? 'in_play' : 'in_enqueue',
+                'input' => $this->isWindowsBinary($binary) ? $this->toWindowsPath($path) : $path,
+            ]);
+
+            if ($status === null) {
+                throw new VlcLaunchException('VLC was closed before the playlist was built.');
+            }
+        }
+
+        return $vlc;
+    }
+
+    /**
+     * The VLC executable comes from the vlc_media_player_path setting, or `vlc` on the PATH when it is empty.
+     */
+    private function resolveBinary(): string
     {
         $binary = Setting::query()->whereKey('vlc_media_player_path')->value('value') ?: 'vlc';
-        $isWindows = str_ends_with(strtolower($binary), '.exe');
 
         if (str_contains($binary, '/') && !is_file($binary)) {
             throw new VlcLaunchException("VLC was not found at {$binary}. Check the vlc_media_player_path setting.");
         }
 
-        $commands = collect($paths)
-            ->map(fn (string $path): string => $isWindows ? $this->toWindowsPath($path) : $path)
-            ->map(fn (string $path, int $index): string => ($index === $startIndex ? 'add ' : 'enqueue ').$path."\n")
-            ->implode('');
+        return $binary;
+    }
 
-        $port = $this->findFreePort();
-
-        // Detached through nohup so VLC outlives the request.
+    /**
+     * Starts VLC with its web interface on localhost only. It runs detached (nohup, in the background) so the window
+     * stays open after this request finishes.
+     */
+    private function launch(string $binary, VlcConnectionData $vlc): void
+    {
         $result = Process::run([
-            'sh', '-c', 'nohup "$@" >/dev/null 2>&1 &', 'sh',
-            $binary, '--extraintf', 'rc', '--rc-host', "127.0.0.1:{$port}",
-            ...($isWindows ? ['--rc-quiet'] : []),
+            'sh', '-c', 'nohup "$@" </dev/null >/dev/null 2>&1 &', 'sh',
+            $binary,
+            '--extraintf', 'http',
+            '--http-host', '127.0.0.1',
+            '--http-port', (string) $vlc->port,
+            '--http-password', $vlc->password,
         ]);
 
         if ($result->failed()) {
             throw new VlcLaunchException("VLC could not be started: {$result->errorOutput()}");
         }
+    }
 
-        $isWindows ? $this->sendFromWindows($port, $commands) : $this->send($port, $commands);
+    /**
+     * VLC needs a moment before its web interface answers; keep asking until it does.
+     */
+    private function waitUntilReady(VlcConnectionData $vlc): void
+    {
+        for ($attempt = 0; $attempt < self::STARTUP_ATTEMPTS; $attempt++) {
+            if ($this->requestVlcStatusAction->handle($vlc) !== null) {
+                return;
+            }
+
+            Sleep::for(self::STARTUP_ATTEMPT_DELAY_MS)->milliseconds();
+        }
+
+        throw new VlcLaunchException('VLC did not start. Check the vlc_media_player_path setting.');
+    }
+
+    /**
+     * Picks a random port from the VLC port range that nothing listens on yet. It only tries to connect: opening the
+     * port here, even for a moment, keeps a Windows vlc.exe from listening on it under WSL mirrored networking.
+     * Random order keeps a still-open VLC window from an earlier playback out of the way.
+     */
+    private function findFreePort(): int
+    {
+        foreach (Arr::shuffle(range(self::PORT_RANGE_START, self::PORT_RANGE_END)) as $port) {
+            $connection = @stream_socket_client("tcp://127.0.0.1:{$port}", $errorCode, $errorMessage, 0.2);
+
+            if ($connection === false) {
+                return $port;
+            }
+
+            fclose($connection);
+        }
+
+        throw new VlcLaunchException('No free port for the VLC web interface.');
+    }
+
+    /**
+     * A Windows vlc.exe started from WSL cannot open Linux paths, so its files need their Windows form.
+     */
+    private function isWindowsBinary(string $binary): bool
+    {
+        return str_ends_with(strtolower($binary), '.exe');
     }
 
     private function toWindowsPath(string $path): string
@@ -67,79 +149,5 @@ class OpenVlcPlaylistAction
         }
 
         return trim($result->output());
-    }
-
-    private function findFreePort(): int
-    {
-        $server = stream_socket_server('tcp://127.0.0.1:0');
-
-        if ($server === false) {
-            throw new VlcLaunchException('No free port for the VLC remote control interface.');
-        }
-
-        $port = (int) substr(strrchr(stream_socket_get_name($server, false), ':'), 1);
-        fclose($server);
-
-        return $port;
-    }
-
-    private function send(int $port, string $commands): void
-    {
-        $deadline = hrtime(true) + self::CONNECT_TIMEOUT_MS * 1_000_000;
-
-        do {
-            $socket = @stream_socket_client("tcp://127.0.0.1:{$port}", $errorCode, $errorMessage, 1);
-
-            if ($socket !== false) {
-                fwrite($socket, $commands);
-                fclose($socket);
-
-                return;
-            }
-
-            usleep(self::CONNECT_RETRY_MS * 1000);
-        } while (hrtime(true) < $deadline);
-
-        throw new VlcLaunchException('VLC did not start. Check the vlc_media_player_path setting.');
-    }
-
-    /**
-     * The commands travel as base64 so paths with non-ASCII characters survive the console encoding. Windows VLC
-     * drops every line after the first when they arrive together, so each one waits for its `<cmd>: returned` reply.
-     */
-    private function sendFromWindows(int $port, string $commands): void
-    {
-        $encoded = base64_encode($commands);
-        $timeout = self::CONNECT_TIMEOUT_MS;
-        $retry = self::CONNECT_RETRY_MS;
-
-        $script = <<<PS
-            \$deadline = (Get-Date).AddMilliseconds({$timeout})
-            while (\$true) {
-                try { \$client = [System.Net.Sockets.TcpClient]::new('127.0.0.1', {$port}); break }
-                catch { if ((Get-Date) -gt \$deadline) { exit 1 }; Start-Sleep -Milliseconds {$retry} }
-            }
-            \$stream = \$client.GetStream()
-            \$stream.ReadTimeout = {$timeout}
-            \$reader = [System.IO.StreamReader]::new(\$stream, [System.Text.Encoding]::UTF8)
-            \$commands = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{$encoded}'))
-            foreach (\$command in \$commands.Split("`n", [System.StringSplitOptions]::RemoveEmptyEntries)) {
-                \$bytes = [System.Text.Encoding]::UTF8.GetBytes(\$command + "`n")
-                \$stream.Write(\$bytes, 0, \$bytes.Length)
-                do { \$line = \$reader.ReadLine() } until (\$line -eq \$null -or \$line -match ': returned')
-                if (\$line -eq \$null) { exit 1 }
-            }
-            \$client.Close()
-            PS;
-
-        try {
-            $result = Process::timeout(30)->run([self::POWERSHELL, '-NoProfile', '-NonInteractive', '-Command', $script]);
-        } catch (ProcessTimedOutException) {
-            throw new VlcLaunchException('VLC did not start. Check the vlc_media_player_path setting.');
-        }
-
-        if ($result->failed()) {
-            throw new VlcLaunchException('VLC did not start. Check the vlc_media_player_path setting.');
-        }
     }
 }

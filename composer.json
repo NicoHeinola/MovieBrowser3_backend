@@ -48,7 +48,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "@php artisan serve"
+            "npx concurrently -c \"#93c5fd,#c4b5fd\" \"$PHP_BINARY artisan serve --port=8765 @additional_args\" \"$PHP_BINARY artisan queue:listen --tries=1\" --names=server,queue --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi",

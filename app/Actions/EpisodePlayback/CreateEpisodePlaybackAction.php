@@ -3,6 +3,8 @@
 namespace App\Actions\EpisodePlayback;
 
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
+use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
+use App\Jobs\TrackVlcPlaybackJob;
 use App\Models\Episode\Episode;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
@@ -17,37 +19,40 @@ class CreateEpisodePlaybackAction
     public function __construct(
         private readonly ResolveEpisodeVideoPathAction $resolveEpisodeVideoPathAction,
         private readonly OpenVlcPlaylistAction $openVlcPlaylistAction,
+        private readonly UpdateShowWatchProgressAction $updateShowWatchProgressAction,
     ) {}
 
     /**
-     * Opens every playable episode of the episode's entry in VLC starting at this one, then saves it as the user's
-     * progress for its show. VLC opens before the transaction so its slow startup holds no lock, and a failed launch
-     * leaves the previous progress untouched.
+     * Plays the episode in VLC with the rest of its entry in the playlist, remembers it as the user's progress and
+     * starts following the VLC window so later episodes played there are remembered too.
+     *
+     * VLC opens before the transaction so its slow startup holds no lock, and a failed launch saves no progress.
      */
     public function handle(Episode $episode, User $user): ShowWatchProgress
     {
-        $entry = $episode->entry;
+        [$paths, $startIndex] = $this->buildPlaylist($episode);
+        $vlc = $this->openVlcPlaylistAction->handle($paths, $startIndex);
 
-        $playlist = $entry->episodes
-            ->map(fn (Episode $entryEpisode): array => [$entryEpisode->id, $this->resolveEpisodeVideoPathAction->handle($entryEpisode)])
-            ->filter(fn (array $item): bool => File::isFile($item[1]))
-            ->values();
+        return DB::transaction(function () use ($episode, $user, $vlc): ShowWatchProgress {
+            $progress = $this->updateShowWatchProgressAction->handle($episode, $user);
 
-        $this->openVlcPlaylistAction->handle(
-            $playlist->pluck(1)->all(),
-            $playlist->search(fn (array $item): bool => $item[0] === $episode->id),
-        );
-
-        return DB::transaction(function () use ($entry, $episode, $user): ShowWatchProgress {
-            $progress = ShowWatchProgress::query()->updateOrCreate(
-                ['show_id' => $entry->show_id, 'user_id' => $user->id],
-                ['show_entry_id' => $entry->id, 'episode_id' => $episode->id],
-            );
-
-            // Replaying the same episode changes no column, but it still counts as the latest watch.
-            $progress->touch();
+            TrackVlcPlaybackJob::queueNextCheck($user, $vlc)->afterCommit();
 
             return $progress;
         });
+    }
+
+    /**
+     * Every episode of the entry that has a video file, in order, plus where the clicked episode sits in that list.
+     *
+     * @return array{list<string>, int}
+     */
+    private function buildPlaylist(Episode $episode): array
+    {
+        $paths = $episode->entry->episodes
+            ->mapWithKeys(fn (Episode $entryEpisode): array => [$entryEpisode->id => $this->resolveEpisodeVideoPathAction->handle($entryEpisode)])
+            ->filter(fn (string $path): bool => File::isFile($path));
+
+        return [$paths->values()->all(), $paths->keys()->search($episode->id)];
     }
 }
