@@ -18,8 +18,8 @@ class UpdateWebsiteAction
         return DB::transaction(function () use ($data): Website {
             $data->website->fill(Arr::only($data->all(), $data->website->getFillable()))->save();
 
-            if (!$data->tags instanceof Optional) {
-                SyncWebsiteTagsAction::run($data->website, $data->tags);
+            if (!$data->tagIds instanceof Optional) {
+                $data->website->tags()->sync($data->tagIds);
             }
 
             return $data->website->fresh('tags');

@@ -17,6 +17,7 @@ class WebsiteTagResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'websites_count' => $this->whenCounted('websites'),
         ];
     }
 }

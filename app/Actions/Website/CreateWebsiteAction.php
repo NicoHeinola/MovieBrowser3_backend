@@ -21,7 +21,7 @@ class CreateWebsiteAction
                 'description' => $data->description,
             ]);
 
-            SyncWebsiteTagsAction::run($website, $data->tags);
+            $website->tags()->sync($data->tagIds);
 
             return $website->load('tags');
         });

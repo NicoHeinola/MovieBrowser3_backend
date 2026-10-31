@@ -17,8 +17,8 @@ class StoreWebsiteRequest extends FormRequest
             'title' => ['nullable', 'string', 'max:255'],
             'icon' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
-            'tags' => ['sometimes', 'array', 'max:50'],
-            'tags.*' => ['required', 'string', 'max:100', 'distinct:ignore_case'],
+            'tag_ids' => ['sometimes', 'array', 'max:50'],
+            'tag_ids.*' => ['required', 'integer', 'distinct', Rule::exists('website_tags', 'id')],
         ];
     }
 }

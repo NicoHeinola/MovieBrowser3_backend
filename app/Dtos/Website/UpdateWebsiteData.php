@@ -12,7 +12,7 @@ use Spatie\LaravelData\Optional;
 class UpdateWebsiteData extends Data
 {
     /**
-     * @param  array<int, string>|Optional  $tags
+     * @param  array<int, int>|Optional  $tagIds
      */
     public function __construct(
         public Website $website,
@@ -20,6 +20,6 @@ class UpdateWebsiteData extends Data
         public string|Optional|null $title,
         public string|Optional|null $icon,
         public string|Optional|null $description,
-        public array|Optional $tags,
+        public array|Optional $tagIds,
     ) {}
 }

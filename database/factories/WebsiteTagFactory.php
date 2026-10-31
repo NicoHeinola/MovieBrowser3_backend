@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Website\Website;
 use App\Models\WebsiteTag\WebsiteTag;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -14,13 +13,12 @@ class WebsiteTagFactory extends Factory
     protected $model = WebsiteTag::class;
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, string>
      */
     public function definition(): array
     {
         return [
-            'website_id' => Website::factory(),
-            'name' => fake()->unique()->word(),
+            'name' => fake()->unique()->words(2, true),
         ];
     }
 }

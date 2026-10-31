@@ -3,12 +3,14 @@
 namespace App\Models\WebsiteTag\Relations;
 
 use App\Models\Website\Website;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/** @mixin Model */
 trait HasWebsiteTagRelations
 {
-    public function website(): BelongsTo
+    public function websites(): BelongsToMany
     {
-        return $this->belongsTo(Website::class);
+        return $this->belongsToMany(Website::class)->withTimestamps();
     }
 }
