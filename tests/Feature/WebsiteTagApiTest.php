@@ -71,6 +71,38 @@ test('website tags can be filtered by name and sorted', function () {
         ->assertJsonPath('data.*.name', ['tools', 'subtitles', 'anime subs']);
 });
 
+test('website tags can be searched by every word of the name ignoring case', function () {
+    actingAsAdmin();
+
+    $docs = WebsiteTag::factory()->create(['name' => 'Docs']);
+    $apiDocs = WebsiteTag::factory()->create(['name' => 'API docs']);
+    WebsiteTag::factory()->create(['name' => 'tools']);
+    $percent = WebsiteTag::factory()->create(['name' => '100% free']);
+    WebsiteTag::factory()->create(['name' => '1000 free']);
+    $underscore = WebsiteTag::factory()->create(['name' => 'snake_case']);
+    WebsiteTag::factory()->create(['name' => 'snakeXcase']);
+
+    getJson('/api/v1/website-tags?filter[search]=doc&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$docs->id, $apiDocs->id]);
+
+    getJson('/api/v1/website-tags?filter[search]='.urlencode(' DOCS  api '))
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$apiDocs->id]);
+
+    getJson('/api/v1/website-tags?filter[search]='.urlencode('100%'))
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$percent->id]);
+
+    getJson('/api/v1/website-tags?filter[search]=snake_case')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$underscore->id]);
+
+    getJson('/api/v1/website-tags?filter[search]=%20')
+        ->assertOk()
+        ->assertJsonCount(7, 'data');
+});
+
 test('an admin can create a website tag', function () {
     actingAsAdmin();
 
