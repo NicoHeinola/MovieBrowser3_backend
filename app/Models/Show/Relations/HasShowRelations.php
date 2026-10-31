@@ -6,6 +6,7 @@ use App\Models\Category\Category;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowLink\ShowLink;
 use App\Models\ShowTitle\ShowTitle;
+use App\Models\ShowWatchProgress\ShowWatchProgress;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -24,6 +25,14 @@ trait HasShowRelations
     public function entries(): HasMany
     {
         return $this->hasMany(ShowEntry::class)->chaperone('show')->orderBy('sort_order');
+    }
+
+    /**
+     * Watch progress of every user (at most one per user); constrain by user_id when loading for a specific user.
+     */
+    public function watchProgress(): HasMany
+    {
+        return $this->hasMany(ShowWatchProgress::class);
     }
 
     /**

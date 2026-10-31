@@ -108,8 +108,8 @@ test('a user can delete their own status only', function () {
 test('entry payloads include only the current users status', function () {
     $other = User::factory()->create();
     $show = Show::factory()->create();
-    $season1 = ShowEntry::factory()->create(['show_id' => $show->id]);
-    $season2 = ShowEntry::factory()->create(['show_id' => $show->id]);
+    $season1 = ShowEntry::factory()->create(['show_id' => $show->id, 'sort_order' => 1]);
+    $season2 = ShowEntry::factory()->create(['show_id' => $show->id, 'sort_order' => 2]);
     ShowEntryWatchStatus::factory()->create(['show_entry_id' => $season1->id, 'user_id' => $other->id, 'status' => 'dropped']);
 
     $admin = actingAsAdmin();

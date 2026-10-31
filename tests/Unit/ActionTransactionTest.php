@@ -5,11 +5,12 @@ use Symfony\Component\Finder\Finder;
 test('write actions run inside a database transaction', function () {
     $actionsPath = dirname(__DIR__, 2).'/app/Actions';
 
-    // Filesystem-only helpers run inside their caller's transaction; login must not hold one open during its delay.
+    // Filesystem and VLC helpers write no rows and run inside their caller's transaction; login must not hold one open during its delay.
     $exempt = [
         'Auth/LoginUserAction.php',
         'Episode/DeleteEpisodeVideosAction.php',
         'Episode/RelocateEpisodeVideosAction.php',
+        'EpisodePlayback/OpenVlcPlaylistAction.php',
         'Show/RelocateShowVideosAction.php',
     ];
 

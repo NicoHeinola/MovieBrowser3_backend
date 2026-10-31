@@ -26,13 +26,37 @@ test('show endpoints require authentication', function () {
     deleteJson('/api/v1/shows', ['ids' => [1]])->assertUnauthorized();
 });
 
-test('show endpoints forbid authenticated non-admin users', function () {
+test('authenticated non-admin users can read shows', function () {
     $user = User::factory()->create();
+    $show = Show::factory()->create();
+
+    withToken($user->createToken('test-token')->plainTextToken);
+
+    getJson('/api/v1/shows')
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $show->id);
+
+    getJson("/api/v1/shows/{$show->id}")
+        ->assertOk()
+        ->assertJsonPath('id', $show->id);
+});
+
+test('show write endpoints forbid authenticated non-admin users', function () {
+    $user = User::factory()->create();
+    $show = Show::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
 
     withToken($token);
 
-    getJson('/api/v1/shows')
+    postJson('/api/v1/shows', [])
+        ->assertForbidden()
+        ->assertJsonPath('message', 'Forbidden.');
+
+    patchJson("/api/v1/shows/{$show->id}", [])
+        ->assertForbidden()
+        ->assertJsonPath('message', 'Forbidden.');
+
+    deleteJson("/api/v1/shows/{$show->id}")
         ->assertForbidden()
         ->assertJsonPath('message', 'Forbidden.');
 

@@ -6,6 +6,7 @@ use App\Http\Resources\Category\CategoryResource;
 use App\Http\Resources\ShowEntry\ShowEntryResource;
 use App\Http\Resources\ShowLink\ShowLinkResource;
 use App\Http\Resources\ShowTitle\ShowTitleResource;
+use App\Http\Resources\ShowWatchProgress\ShowWatchProgressResource;
 use App\Models\Show\Show;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -27,6 +28,7 @@ class ShowResource extends JsonResource
             'categories' => CategoryResource::collection($this->whenLoaded('categories')),
             'titles' => ShowTitleResource::collection($this->whenLoaded('titles')),
             'entries' => ShowEntryResource::collection($this->whenLoaded('entries')),
+            'watch_progress' => ShowWatchProgressResource::make($this->whenLoaded('watchProgress', fn () => $this->watchProgress->first())),
             'incoming_links' => ShowLinkResource::collection($this->whenLoaded('incomingLinks')),
             'outgoing_links' => ShowLinkResource::collection($this->whenLoaded('outgoingLinks')),
         ];

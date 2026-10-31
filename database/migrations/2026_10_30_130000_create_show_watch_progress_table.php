@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('show_watch_progress', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('show_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('show_entry_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('episode_id')->nullable()->constrained()->nullOnDelete();
+            $table->timestamps();
+
+            $table->unique(['show_id', 'user_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('show_watch_progress');
+    }
+};

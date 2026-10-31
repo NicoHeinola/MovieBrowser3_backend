@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\EpisodeController;
+use App\Http\Controllers\EpisodePlaybackController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShowCategoryController;
 use App\Http\Controllers\ShowController;
@@ -29,7 +30,9 @@ Route::prefix('v1')->group(function (): void {
         Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
         Route::apiResource('show-sections', ShowSectionController::class)->only(['index', 'show']);
+        Route::apiResource('shows', ShowController::class)->only(['index', 'show']);
         Route::apiSingleton('show-entries.watch-status', ShowEntryWatchStatusController::class)->only(['update', 'destroy'])->destroyable();
+        Route::apiSingleton('episodes.playback', EpisodePlaybackController::class)->creatable()->only(['store']);
 
         Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->only(['index', 'show']);
         Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->only(['index', 'show']);
@@ -46,7 +49,7 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('shows/{show}/categories/{category}', [ShowCategoryController::class, 'destroy'])->name('shows.categories.destroy');
 
         Route::delete('shows', [ShowController::class, 'destroyMany'])->name('shows.destroy-many');
-        Route::apiResource('shows', ShowController::class);
+        Route::apiResource('shows', ShowController::class)->except(['index', 'show']);
 
         Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->except(['index', 'show']);
         Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->except(['index', 'show']);

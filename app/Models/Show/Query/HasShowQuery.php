@@ -3,8 +3,10 @@
 namespace App\Models\Show\Query;
 
 use App\Models\Show\Query\Filters\MetadataFilter;
+use App\Models\Show\Query\Sorts\LastWatchedSort;
 use App\Models\Show\Query\Sorts\RandomSort;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\AllowedSort;
 
@@ -22,6 +24,7 @@ trait HasShowQuery
             AllowedFilter::scope('search', 'search'),
             AllowedFilter::custom('title', new MetadataFilter, 'titles.title'),
             AllowedFilter::custom('categories.value', new MetadataFilter, 'categories.value'),
+            AllowedFilter::scope('has_watch_progress', 'withWatchProgress'),
         ];
     }
 
@@ -29,6 +32,16 @@ trait HasShowQuery
     {
         $query->whereHas('titles', function (Builder $query) use ($value) {
             $query->where('title', 'like', "%{$value}%");
+        });
+    }
+
+    /**
+     * Shows the authenticated user has (or, with false, has not) started playing.
+     */
+    public function scopeWithWatchProgress(Builder $query, bool $has = true): void
+    {
+        $query->{$has ? 'whereHas' : 'whereDoesntHave'}('watchProgress', function (Builder $query) {
+            $query->where('user_id', Auth::id());
         });
     }
 
@@ -45,6 +58,7 @@ trait HasShowQuery
             'created_at',
             'updated_at',
             AllowedSort::custom('random', new RandomSort),
+            AllowedSort::custom('last_watched_at', new LastWatchedSort),
         ];
     }
 }
