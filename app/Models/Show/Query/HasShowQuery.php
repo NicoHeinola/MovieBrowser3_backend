@@ -25,6 +25,7 @@ trait HasShowQuery
             AllowedFilter::custom('title', new MetadataFilter, 'titles.title'),
             AllowedFilter::custom('categories.value', new MetadataFilter, 'categories.value'),
             AllowedFilter::scope('has_watch_progress', 'withWatchProgress'),
+            AllowedFilter::scope('watch_status', 'withWatchStatus'),
         ];
     }
 
@@ -42,6 +43,16 @@ trait HasShowQuery
     {
         $query->{$has ? 'whereHas' : 'whereDoesntHave'}('watchProgress', function (Builder $query) {
             $query->where('user_id', Auth::id());
+        });
+    }
+
+    /**
+     * Shows with at least one entry the authenticated user has marked with one of the given statuses.
+     */
+    public function scopeWithWatchStatus(Builder $query, string ...$statuses): void
+    {
+        $query->whereHas('entries.watchStatuses', function (Builder $query) use ($statuses) {
+            $query->where('user_id', Auth::id())->whereIn('status', $statuses);
         });
     }
 

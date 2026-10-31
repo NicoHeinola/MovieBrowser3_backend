@@ -148,3 +148,33 @@ test('entries can be filtered by the current users status', function () {
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $watching->id);
 });
+
+test('shows can be filtered by the current users entry statuses', function () {
+    $user = actingAsRegularUser();
+    $watching = Show::factory()->create();
+    $mixed = Show::factory()->create();
+    $onHold = Show::factory()->create();
+    $otherUsers = Show::factory()->create();
+    Show::factory()->create();
+
+    foreach ([[$watching, 'watching'], [$mixed, 'completed'], [$mixed, 'watching'], [$onHold, 'on_hold']] as [$show, $status]) {
+        $entry = ShowEntry::factory()->create(['show_id' => $show->id]);
+        ShowEntryWatchStatus::factory()->create(['show_entry_id' => $entry->id, 'user_id' => $user->id, 'status' => $status]);
+    }
+
+    // Another user's status must not count.
+    $otherEntry = ShowEntry::factory()->create(['show_id' => $otherUsers->id]);
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $otherEntry->id, 'user_id' => User::factory(), 'status' => 'watching']);
+
+    getJson('/api/v1/shows?filter[watch_status]=watching&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$watching->id, $mixed->id]);
+
+    getJson('/api/v1/shows?filter[watch_status][]=completed&filter[watch_status][]=on_hold&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$mixed->id, $onHold->id]);
+
+    getJson('/api/v1/shows?filter[watch_status]=dropped')
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+});
