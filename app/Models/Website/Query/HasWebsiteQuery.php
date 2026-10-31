@@ -14,6 +14,7 @@ trait HasWebsiteQuery
     public static function getAllowedFilters(): array
     {
         return [
+            AllowedFilter::scope('search', 'search'),
             AllowedFilter::custom('url', new MetadataFilter),
             AllowedFilter::custom('title', new MetadataFilter),
             AllowedFilter::custom('description', new MetadataFilter),
@@ -21,6 +22,28 @@ trait HasWebsiteQuery
             AllowedFilter::scope('tags.id', 'withTags'),
             AllowedFilter::scope('exclude_tags', 'withoutTags'),
         ];
+    }
+
+    /**
+     * Websites where every word of the term appears, ignoring case, in the title, url, description or a tag name.
+     */
+    public function scopeSearch(Builder $query, string ...$terms): void
+    {
+        $words = preg_split('/\s+/', implode(' ', $terms), -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($words as $word) {
+            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($word)).'%';
+
+            $query->where(function (Builder $query) use ($pattern) {
+                foreach (['websites.title', 'websites.url', 'websites.description'] as $column) {
+                    $query->orWhereRaw("lower({$column}) like ? escape '!'", [$pattern]);
+                }
+
+                $query->orWhereHas('tags', function (Builder $query) use ($pattern) {
+                    $query->whereRaw("lower(website_tags.name) like ? escape '!'", [$pattern]);
+                });
+            });
+        }
     }
 
     /**

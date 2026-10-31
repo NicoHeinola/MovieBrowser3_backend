@@ -221,3 +221,81 @@ test('a website url can be up to 2048 characters', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['url']);
 });
+
+test('websites can be searched across title, url, description and tags', function () {
+    actingAsAdmin();
+
+    $subs = WebsiteTag::factory()->create(['name' => 'Subtitles']);
+    $byTitle = Website::factory()->create(['title' => 'Anime Tracker', 'url' => 'https://a.example.com', 'description' => null]);
+    $byUrl = Website::factory()->create(['title' => 'Other', 'url' => 'https://ANIME.example.com', 'description' => null]);
+    $byDescription = Website::factory()->create(['title' => 'Notes', 'url' => 'https://c.example.com', 'description' => 'Find anime releases']);
+    $byTag = Website::factory()->create(['title' => 'Subs', 'url' => 'https://d.example.com', 'description' => null]);
+    $byTag->tags()->attach($subs);
+    $unrelated = Website::factory()->create(['title' => 'Weather', 'url' => 'https://e.example.com', 'description' => null]);
+
+    getJson('/api/v1/websites?filter[search]=anime&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$byTitle->id, $byUrl->id, $byDescription->id]);
+
+    getJson('/api/v1/websites?filter[search]=SUBTITLE')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$byTag->id]);
+
+    getJson('/api/v1/websites?filter[search]='.urlencode('  anime   tracker ').'')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$byTitle->id]);
+
+    getJson('/api/v1/websites?filter[search]='.urlencode('anime weather'))
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+
+    getJson('/api/v1/websites?filter[search]=%20%20')
+        ->assertOk()
+        ->assertJsonCount(5, 'data');
+
+    getJson('/api/v1/websites?filter[search]=')
+        ->assertOk()
+        ->assertJsonCount(5, 'data');
+
+    expect($unrelated->exists)->toBeTrue();
+});
+
+test('website search treats like wildcards literally', function () {
+    actingAsAdmin();
+
+    $percent = Website::factory()->create(['title' => '100% free', 'description' => null]);
+    Website::factory()->create(['title' => '1000 free', 'description' => null]);
+    $underscore = Website::factory()->create(['title' => 'snake_case', 'description' => null]);
+    Website::factory()->create(['title' => 'snakeXcase', 'description' => null]);
+
+    getJson('/api/v1/websites?filter[search]='.urlencode('100%'))
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$percent->id]);
+
+    getJson('/api/v1/websites?filter[search]=snake_case')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$underscore->id]);
+});
+
+test('website search combines with tag filters, sorts and pagination', function () {
+    actingAsAdmin();
+
+    $tools = WebsiteTag::factory()->create(['name' => 'tools']);
+    $nsfw = WebsiteTag::factory()->create(['name' => 'nsfw']);
+    $first = Website::factory()->create(['title' => 'Anime B']);
+    $first->tags()->attach($tools);
+    $second = Website::factory()->create(['title' => 'Anime A']);
+    $second->tags()->attach($tools);
+    $excluded = Website::factory()->create(['title' => 'Anime C']);
+    $excluded->tags()->attach([$tools->id, $nsfw->id]);
+    Website::factory()->create(['title' => 'Anime untagged']);
+
+    getJson("/api/v1/websites?filter[search]=anime&filter[tags.id]={$tools->id}&filter[exclude_tags]={$nsfw->id}&sort=title")
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$second->id, $first->id]);
+
+    getJson("/api/v1/websites?filter[search]=anime&filter[tags.id]={$tools->id}&sort=title&page[size]=1&page[number]=2")
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$first->id])
+        ->assertJsonPath('meta.total', 3);
+});
