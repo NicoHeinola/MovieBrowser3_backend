@@ -299,3 +299,22 @@ test('website search combines with tag filters, sorts and pagination', function 
         ->assertJsonPath('data.*.id', [$first->id])
         ->assertJsonPath('meta.total', 3);
 });
+
+test('websites sorted by title fall back to the hostname when untitled', function () {
+    actingAsAdmin();
+
+    $apple = Website::factory()->create(['title' => 'Apple', 'url' => 'https://y.example.com']);
+    $github = Website::factory()->create(['title' => null, 'url' => 'https://WWW.github.com/x']);
+    $banana = Website::factory()->create(['title' => 'banana', 'url' => 'https://z.example.com']);
+    $cherry = Website::factory()->create(['title' => null, 'url' => 'http://cherry.example.com']);
+    $delta = Website::factory()->create(['title' => '', 'url' => 'https://Delta.example.com']);
+    $hulu = Website::factory()->create(['title' => 'hulu', 'url' => 'https://a.example.com']);
+
+    getJson('/api/v1/websites?sort=title')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$apple->id, $banana->id, $cherry->id, $delta->id, $github->id, $hulu->id]);
+
+    getJson('/api/v1/websites?sort=-title')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$hulu->id, $github->id, $delta->id, $cherry->id, $banana->id, $apple->id]);
+});

@@ -3,8 +3,10 @@
 namespace App\Models\Website\Query;
 
 use App\Models\Show\Query\Filters\MetadataFilter;
+use App\Models\Website\Query\Sorts\TitleOrUrlSort;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
 
 trait HasWebsiteQuery
 {
@@ -69,10 +71,10 @@ trait HasWebsiteQuery
     }
 
     /**
-     * @return array<int, string>
+     * @return array<int, string|AllowedSort>
      */
     public static function getAllowedSorts(): array
     {
-        return ['id', 'url', 'title', 'created_at', 'updated_at'];
+        return ['id', 'url', 'created_at', 'updated_at', AllowedSort::custom('title', new TitleOrUrlSort)];
     }
 }
