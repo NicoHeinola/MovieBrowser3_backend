@@ -392,6 +392,34 @@ test('multiple filter values can be passed as an array', function () {
         ->assertJsonPath('data.0.id', $both->id);
 });
 
+test('shows can exclude category values', function () {
+    actingAsAdmin();
+
+    $horror = Category::factory()->create(['value' => 'horror']);
+    $romance = Category::factory()->create(['value' => 'romance']);
+    $action = Category::factory()->create(['value' => 'action']);
+
+    $horrorAction = Show::factory()->create();
+    $horrorAction->categories()->attach([$horror->id, $action->id]);
+    $romanceShow = Show::factory()->create();
+    $romanceShow->categories()->attach($romance->id);
+    $actionOnly = Show::factory()->create();
+    $actionOnly->categories()->attach($action->id);
+    $uncategorized = Show::factory()->create();
+
+    getJson('/api/v1/shows?filter[exclude_categories]=horror&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$romanceShow->id, $actionOnly->id, $uncategorized->id]);
+
+    getJson('/api/v1/shows?filter[exclude_categories][]=horror&filter[exclude_categories][]=romance&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$actionOnly->id, $uncategorized->id]);
+
+    getJson('/api/v1/shows?filter[categories.value]=action&filter[exclude_categories]=horror')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$actionOnly->id]);
+});
+
 test('listing shows looks up the video base path only once', function () {
     actingAsAdmin();
 

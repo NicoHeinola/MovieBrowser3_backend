@@ -26,6 +26,8 @@ trait HasShowQuery
             AllowedFilter::custom('categories.value', new MetadataFilter, 'categories.value'),
             AllowedFilter::scope('has_watch_progress', 'withWatchProgress'),
             AllowedFilter::scope('watch_status', 'withWatchStatus'),
+            AllowedFilter::scope('exclude_categories', 'withoutCategories'),
+            AllowedFilter::scope('exclude_watch_status', 'withoutWatchStatus'),
         ];
     }
 
@@ -52,6 +54,26 @@ trait HasShowQuery
     public function scopeWithWatchStatus(Builder $query, string ...$statuses): void
     {
         $query->whereHas('entries.watchStatuses', function (Builder $query) use ($statuses) {
+            $query->where('user_id', Auth::id())->whereIn('status', $statuses);
+        });
+    }
+
+    /**
+     * Shows with none of the given category values.
+     */
+    public function scopeWithoutCategories(Builder $query, string ...$values): void
+    {
+        $query->whereDoesntHave('categories', function (Builder $query) use ($values) {
+            $query->whereIn('value', $values);
+        });
+    }
+
+    /**
+     * Shows with no entry the authenticated user has marked with one of the given statuses.
+     */
+    public function scopeWithoutWatchStatus(Builder $query, string ...$statuses): void
+    {
+        $query->whereDoesntHave('entries.watchStatuses', function (Builder $query) use ($statuses) {
             $query->where('user_id', Auth::id())->whereIn('status', $statuses);
         });
     }
