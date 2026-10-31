@@ -420,6 +420,27 @@ test('shows can exclude category values', function () {
         ->assertJsonPath('data.*.id', [$actionOnly->id]);
 });
 
+test('shows can be sorted by primary title', function () {
+    actingAsAdmin();
+
+    $banana = Show::factory()->create();
+    ShowTitle::factory()->for($banana)->primary()->create(['title' => 'banana']);
+    ShowTitle::factory()->for($banana)->create(['title' => 'Aaa alternative']);
+    $apple = Show::factory()->create();
+    ShowTitle::factory()->for($apple)->primary()->create(['title' => 'Apple']);
+    $cherry = Show::factory()->create();
+    ShowTitle::factory()->for($cherry)->primary()->create(['title' => 'Cherry']);
+    $untitled = Show::factory()->create();
+
+    getJson('/api/v1/shows?sort=title')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$apple->id, $banana->id, $cherry->id, $untitled->id]);
+
+    getJson('/api/v1/shows?sort=-title')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$cherry->id, $banana->id, $apple->id, $untitled->id]);
+});
+
 test('listing shows looks up the video base path only once', function () {
     actingAsAdmin();
 

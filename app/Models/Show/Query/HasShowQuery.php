@@ -4,6 +4,7 @@ namespace App\Models\Show\Query;
 
 use App\Models\Show\Query\Filters\MetadataFilter;
 use App\Models\Show\Query\Sorts\LastWatchedSort;
+use App\Models\Show\Query\Sorts\PrimaryTitleSort;
 use App\Models\Show\Query\Sorts\RandomSort;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
@@ -92,6 +93,7 @@ trait HasShowQuery
             'updated_at',
             AllowedSort::custom('random', new RandomSort),
             AllowedSort::custom('last_watched_at', new LastWatchedSort),
+            AllowedSort::custom('title', new PrimaryTitleSort),
         ];
     }
 }
