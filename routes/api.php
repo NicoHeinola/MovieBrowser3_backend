@@ -12,6 +12,7 @@ use App\Http\Controllers\ShowEntryWatchStatusController;
 use App\Http\Controllers\ShowLinkController;
 use App\Http\Controllers\ShowSectionController;
 use App\Http\Controllers\ShowTitleController;
+use App\Http\Controllers\ShowWatchProgressStreamController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,7 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('shows', ShowController::class)->only(['index', 'show']);
         Route::apiSingleton('show-entries.watch-status', ShowEntryWatchStatusController::class)->only(['update', 'destroy'])->destroyable();
         Route::apiSingleton('episodes.playback', EpisodePlaybackController::class)->creatable()->only(['store']);
+        Route::get('watch-progress/stream', [ShowWatchProgressStreamController::class, 'show'])->name('watch-progress.stream');
 
         Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->only(['index', 'show']);
         Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->only(['index', 'show']);

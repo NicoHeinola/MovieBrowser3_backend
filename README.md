@@ -28,6 +28,7 @@ Authorization: Bearer <token>
 - `POST /api/v1/auth/login`
 - `GET /api/v1/auth/me`
 - `POST /api/v1/auth/logout`
+- `GET /api/v1/watch-progress/stream` (server-sent `watch-progress` events with the user's changed `ShowWatchProgress`)
 
 ## Test
 
