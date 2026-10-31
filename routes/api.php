@@ -65,7 +65,6 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('websites', WebsiteController::class);
         Route::apiResource('website-tags', WebsiteTagController::class);
 
-        Route::post('users', [UserController::class, 'store'])->name('users.store');
-        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::apiResource('users', UserController::class)->except(['update']);
     });
 });

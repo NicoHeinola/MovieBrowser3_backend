@@ -6,6 +6,16 @@ use App\Models\User\User;
 
 class UserPolicy
 {
+    public function viewAny(User $actor): bool
+    {
+        return $actor->is_admin;
+    }
+
+    public function view(User $actor, User $subject): bool
+    {
+        return $actor->is_admin;
+    }
+
     public function create(User $actor): bool
     {
         return $actor->is_admin;

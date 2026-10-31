@@ -12,10 +12,30 @@ use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User\User;
 use Illuminate\Http\JsonResponse;
+use Spatie\QueryBuilder\QueryBuilder;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserController extends Controller
 {
+    public function index(): JsonResponse
+    {
+        $this->authorize('viewAny', User::class);
+
+        $users = QueryBuilder::for(User::query())
+            ->allowedFilters(...User::getAllowedFilters())
+            ->allowedSorts(...User::getAllowedSorts())
+            ->jsonPaginate();
+
+        return UserResource::collection($users)->response();
+    }
+
+    public function show(User $user): JsonResponse
+    {
+        $this->authorize('view', $user);
+
+        return UserResource::make($user)->response();
+    }
+
     public function store(StoreUserRequest $request, CreateUserAction $createUserAction): JsonResponse
     {
         $this->authorize('create', User::class);
