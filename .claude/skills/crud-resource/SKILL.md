@@ -13,7 +13,7 @@ Build a full vertical slice for a domain `X` (StudlyCase, e.g. `ShowSection`; ta
 
 ## Workflow
 
-1. **Migration**: `database/migrations/YYYY_MM_DD_HHMMSS_create_xs_table.php`, an anonymous class. Use `foreignId(...)->constrained()->cascadeOnDelete()` and explicit `nullable()`, plus a unique/index where needed. Make the timestamp sort after the latest existing migration.
+1. **Migration**: `database/migrations/YYYY_MM_DD_HHMMSS_create_xs_table.php`, an anonymous class. Use `foreignId(...)->constrained()->cascadeOnDelete()` and explicit `nullable()`, plus a unique/index where needed. Make the timestamp sort after the latest existing migration. One migration creates or changes one table only; a child table gets its own migration.
 2. **Model**: `app/Models/X/X.php`, plus the `Query/HasXQuery.php` and `Relations/HasXRelations.php` traits. Add the inverse relation to the related model's Relations trait.
 3. **Factory**: `database/factories/XFactory.php` with `protected $model = X::class;`. Related models go in as `Related::factory()`. If local data needs it, add a seeder and register it in `DatabaseSeeder`.
 4. **DTOs**: `app/Dtos/X/CreateXData.php` and `UpdateXData.php`.

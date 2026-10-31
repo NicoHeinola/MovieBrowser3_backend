@@ -14,6 +14,7 @@ use App\Http\Controllers\ShowSectionController;
 use App\Http\Controllers\ShowTitleController;
 use App\Http\Controllers\ShowWatchProgressStreamController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WebsiteController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -59,6 +60,8 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('shows.titles', ShowTitleController::class)->shallow()->except(['index', 'show']);
 
         Route::patch('settings/{setting}', [SettingController::class, 'update'])->name('settings.update');
+
+        Route::apiResource('websites', WebsiteController::class);
 
         Route::post('users', [UserController::class, 'store'])->name('users.store');
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
