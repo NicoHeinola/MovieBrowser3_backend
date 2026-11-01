@@ -246,6 +246,16 @@ add_media_dir() {
     MEDIA_DIRS+=("$dir")
 }
 
+# Every install uses the Docker Compose project "moviebrowser3", so a second install on this machine would take over
+# (and `down` would remove) the first one's containers
+check_other_install() {
+    local project=${COMPOSE_PROJECT_NAME:-moviebrowser3} others
+    others=$(docker ps -a --filter "label=com.docker.compose.project=$project" \
+        --format '{{.Label "com.docker.compose.project.working_dir"}}' | sort -u | grep -vxF "$INSTALL_DIR" || true)
+    [[ -z "$others" ]] ||
+        fail "Another MovieBrowser3 install has containers on this machine: $others. Stop it first ($others/moviebrowser3 stop), then re-run."
+}
+
 # Clones a repo, or fast-forwards it, and prints which commit it moved from and to
 sync_repo() {
     local name=$1 url=$2 dir=$3 old new
@@ -391,11 +401,14 @@ start_stack() {
             [[ "$TTY" == false ]] || read -r -e -i admin -p "Admin username: " username </dev/tty
         fi
         [[ -n "$password" ]] || ask_secret password "Admin password"
-        admin_env=(-e "ADMIN_USER_USERNAME=$username" -e "ADMIN_USER_PASSWORD=$password")
+        # `-e NAME` without a value takes it from this environment, so the password stays out of the process list
+        export ADMIN_USER_USERNAME=$username ADMIN_USER_PASSWORD=$password
+        admin_env=(-e ADMIN_USER_USERNAME -e ADMIN_USER_PASSWORD)
     fi
 
     info "Running migrations"
     docker compose run --rm "${admin_env[@]}" backend php artisan migrate --force
+    unset ADMIN_USER_USERNAME ADMIN_USER_PASSWORD
 
     info "Starting MovieBrowser3"
     publish_frontend
@@ -471,6 +484,7 @@ hand_over_if_installer_changed() {
 main() {
     check_host
     configure
+    check_other_install
     info "Installing into $INSTALL_DIR"
     mkdir -p "$INSTALL_DIR"
     BACKEND_FROM=""

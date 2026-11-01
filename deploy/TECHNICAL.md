@@ -21,7 +21,7 @@ Every service uses the host network, because VLC's web interface and the bridge 
 `install.sh` is the only code path; `moviebrowser3 update` runs it from the backend clone with `--update`. It works through `curl | bash`, so prompts read `/dev/tty`. Each run:
 
 1. Checks for WSL2, mirrored networking (warns only), git, Docker, Docker Compose and python3.
-2. Asks for the settings (below), unless `--update`, `--resume` or no terminal.
+2. Asks for the settings (below), unless `--update`, `--resume` or no terminal. It then refuses to go on while containers of the Compose project `moviebrowser3` belong to another install folder: every install shares that project, so a second one would take over the first one's containers.
 3. Clones the backend into `<install folder>/MovieBrowser3_backend`, or follows a changed repo URL and runs `git pull --ff-only`. It prints the old and new commit.
 4. Writes `.env` (below).
 5. If the pull brought a different `install.sh`, it hands over to it with `--resume`: the same answers, no prompts, and the backend's old commit carried in `MOVIEBROWSER3_BACKEND_FROM`. Installer changes apply on the update that brings them. The very first update after this feature exists still runs the old installer.
@@ -30,7 +30,7 @@ Every service uses the host network, because VLC's web interface and the bridge 
 8. Writes `compose.override.yml` with the media folders.
 9. Builds the frontend: `npm ci && npm run build` in `node:24-alpine`, as the host user, with no Node on the host. The clone's git-ignored `dist/` is copied to `web/next`.
 10. Builds the backend image.
-11. Runs the migrations in a one-off container (`docker compose run --rm backend php artisan migrate --force`). Containers never migrate on start. When the admin seed migration hasn't run on this database yet (a new or recreated one), it asks for the admin username and password and passes them to that run only. So the password is never stored, and the seed never falls back to its `admin` / `password` default.
+11. Runs the migrations in a one-off container (`docker compose run --rm backend php artisan migrate --force`). Containers never migrate on start. When the admin seed migration hasn't run on this database yet (a new or recreated one), it asks for the admin username and password and passes them to that run only, through the environment (`-e NAME`), so they don't show in the process list. So the password is never stored, and the seed never falls back to its `admin` / `password` default.
 12. Swaps `web/next` in as `web/current`, recreates the backend so its mount picks it up, and starts the rest.
 13. Registers the VLC bridge when it differs from the last one registered (below).
 14. On WSL, writes `windows/update_movie_browser_3.bat`: `wsl.exe -d <distro> -e bash -lc "<install folder>/moviebrowser3 update"`, then `pause`.
@@ -67,7 +67,7 @@ When settings change between versions:
 | --- | --- |
 | `MovieBrowser3_backend/`, `MovieBrowser3_frontend/` | The clones. Don't edit them: local commits block the fast-forward. To recover, `git -C <clone> reset --hard origin/main`. |
 | `.env` | Settings, secrets and installer answers. Compose, the containers and the bridge read it. |
-| `compose.yml` | The stack, copied from the backend clone on every run. |
+| `compose.yml` | The stack, copied from the backend clone on every run. `backend` and `queue` use the locally built `moviebrowser3-backend:local` with `pull_policy: never`. |
 | `compose.override.yml` | Media folder mounts, rewritten on every run. |
 | `web/current/` | The frontend being served. `web/next/` exists only during an update. |
 | `data/postgres/` | The database. |
