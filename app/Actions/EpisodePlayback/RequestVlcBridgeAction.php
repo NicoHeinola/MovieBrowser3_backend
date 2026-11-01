@@ -36,6 +36,11 @@ class RequestVlcBridgeAction
             throw new VlcLaunchException($response->json('message') ?? 'The VLC bridge rejected the request.');
         }
 
+        // An older bridge doesn't know this endpoint yet; an update re-registers the new one
+        if ($response->status() === 404) {
+            throw new VlcLaunchException('The VLC bridge is out of date. Run moviebrowser3 update.');
+        }
+
         if ($response->failed()) {
             throw new VlcLaunchException("The VLC bridge answered {$response->status()}. Check VLC_BRIDGE_TOKEN.");
         }

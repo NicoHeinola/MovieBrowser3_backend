@@ -12,9 +12,12 @@ test('write actions run inside a database transaction', function () {
         'Dashboard/GetDashboardStatsAction.php',
         'Episode/DeleteEpisodeVideosAction.php',
         'Episode/RelocateEpisodeVideosAction.php',
+        'EpisodePlayback/CheckVlcBinaryAction.php',
         'EpisodePlayback/OpenVlcPlaylistAction.php',
         'EpisodePlayback/RequestVlcBridgeAction.php',
         'EpisodePlayback/RequestVlcStatusAction.php',
+        'Setup/CheckSetupSettingsAction.php',
+        'Setup/GetSetupStatusAction.php',
         'Show/RelocateShowVideosAction.php',
         'ShowWatchProgress/StreamShowWatchProgressAction.php',
     ];

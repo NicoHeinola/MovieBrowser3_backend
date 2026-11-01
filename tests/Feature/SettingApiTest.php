@@ -17,7 +17,7 @@ test('any user can list settings', function () {
 
     $response = getJson('/api/v1/settings')
         ->assertOk()
-        ->assertJsonCount(4 + 2, 'data'); // 4 seeded + 2 factory
+        ->assertJsonCount(5 + 2, 'data'); // 5 seeded + 2 factory
 
     $data = $response->json('data');
     $keys = collect($data)->pluck('key')->all();

@@ -27,10 +27,10 @@ return DB::transaction(function () use ($data): X {
 - Defer irreversible side effects with `DB::afterCommit`. Actions that delete rows owning video files resolve the paths through `DeleteEpisodeVideosAction` inside the transaction; it defers the removal so a rollback keeps the files.
 - Exempt (write no rows of their own, run inside a caller's transaction, or must not hold one open):
   - `Episode/VideoFile/*`, `Relocate*VideosAction`, `DeleteEpisodeVideosAction`
-  - `EpisodePlayback/OpenVlcPlaylistAction`, `EpisodePlayback/RequestVlcStatusAction`, `EpisodePlayback/RequestVlcBridgeAction`
+  - `EpisodePlayback/OpenVlcPlaylistAction`, `EpisodePlayback/RequestVlcStatusAction`, `EpisodePlayback/RequestVlcBridgeAction`, `EpisodePlayback/CheckVlcBinaryAction`
   - `CreateEpisodePlaybackAction`: opens VLC before its transaction so the slow launch holds no lock and a failed launch saves no progress
   - `LoginUserAction`: its anti-brute-force delay must not hold a transaction; the token write goes through `IssueAuthTokenAction`
-  - read-only `ShowWatchProgress/StreamShowWatchProgressAction` (polls for up to an hour) and `Dashboard/GetDashboardStatsAction`
+  - read-only `ShowWatchProgress/StreamShowWatchProgressAction` (polls for up to an hour), `Dashboard/GetDashboardStatsAction`, `Setup/GetSetupStatusAction` and `Setup/CheckSetupSettingsAction`
 
 ## Helpers
 

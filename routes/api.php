@@ -6,6 +6,9 @@ use App\Http\Controllers\DashboardStatsController;
 use App\Http\Controllers\EpisodeController;
 use App\Http\Controllers\EpisodePlaybackController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SetupCheckController;
+use App\Http\Controllers\SetupCompletionController;
+use App\Http\Controllers\SetupController;
 use App\Http\Controllers\ShowCategoryController;
 use App\Http\Controllers\ShowController;
 use App\Http\Controllers\ShowEntryController;
@@ -69,5 +72,10 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('users', UserController::class)->except(['update']);
 
         Route::apiSingleton('dashboard-stats', DashboardStatsController::class)->only(['show']);
+
+        Route::apiSingleton('setup', SetupController::class)->only(['show']);
+        // Not resources: a dry run of setup values, and marking the first-login setup done
+        Route::post('setup/checks', [SetupCheckController::class, 'store'])->name('setup.checks.store');
+        Route::post('setup/complete', [SetupCompletionController::class, 'store'])->name('setup.complete.store');
     });
 });

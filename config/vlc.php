@@ -34,4 +34,21 @@ return [
 
     'bridge_token' => (string) env('VLC_BRIDGE_TOKEN', ''),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Usual VLC Locations
+    |--------------------------------------------------------------------------
+    |
+    | Where the first-login setup wizard looks for VLC, in order: a Windows
+    | install seen from WSL, then Linux.
+    |
+    */
+
+    'detect_paths' => [
+        '/mnt/c/Program Files/VideoLAN/VLC/vlc.exe',
+        '/mnt/c/Program Files (x86)/VideoLAN/VLC/vlc.exe',
+        '/usr/bin/vlc',
+        'vlc',
+    ],
+
 ];

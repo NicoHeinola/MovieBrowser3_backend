@@ -135,9 +135,13 @@ When it's done it prints the app's address, `http://localhost:8780`, and where i
 ## 7. First Login
 
 1. Open http://localhost:8780 in your browser and log in with the admin username and password.
-2. Go to **Admin → Settings** and set:
-   - **video_base_path**: where new videos are stored, inside one of your media folders, e.g. `/mnt/g/New_Vid/MovieBrowser3`.
-   - **vlc_media_player_path**: `/mnt/c/Program Files/VideoLAN/VLC/vlc.exe`, or wherever VLC is.
+2. A setup wizard opens. It asks for two things and suggests an answer for each:
+   - **Video folder**: where new videos are stored. It must be inside one of your media folders, e.g. `/mnt/g/New_Vid/MovieBrowser3`.
+   - **VLC**: where VLC is, usually `/mnt/c/Program Files/VideoLAN/VLC/vlc.exe`. The wizard finds it by itself when it's installed in the usual place.
+
+   The wizard checks both before saving and says what's wrong if something doesn't work.
+
+To change them later, go to **Admin → Settings**, or reopen the wizard with **Admin → Settings → Run setup again**.
 
 ## Everyday Use
 

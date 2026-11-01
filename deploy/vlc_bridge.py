@@ -7,6 +7,7 @@ only, checks a shared bearer token, and only ever starts a binary named vlc or v
 
     POST /launch         {"binary": str, "port": int, "password": str}  -> 204
     POST /windows-paths  {"paths": [str, ...]}                          -> 200 {"paths": [str, ...]}
+    POST /check-binary   {"binary": str}                                -> 204 when it's a VLC that exists
 
 Bad or missing token: 403. Invalid input: 422 {"message"}. Anything else: 404.
 
@@ -91,6 +92,10 @@ def launch(body):
     )
 
 
+def check_binary(body):
+    resolve_binary(body.get("binary"))
+
+
 def windows_paths(body):
     paths = body.get("paths")
     if not isinstance(paths, list) or not all(isinstance(path, str) and path for path in paths):
@@ -105,7 +110,7 @@ def windows_paths(body):
     return {"paths": converted}
 
 
-ROUTES = {"/launch": launch, "/windows-paths": windows_paths}
+ROUTES = {"/launch": launch, "/windows-paths": windows_paths, "/check-binary": check_binary}
 
 
 class Handler(BaseHTTPRequestHandler):

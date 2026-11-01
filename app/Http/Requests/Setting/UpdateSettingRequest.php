@@ -35,6 +35,11 @@ class UpdateSettingRequest extends FormRequest
                     new AbsolutePath,
                 ];
             }
+
+            // Read back as a date by the setup wizard; empty means "not set up"
+            if ($setting->key === 'setup_completed_at') {
+                $rules['value'] = ['nullable', 'date'];
+            }
         }
 
         return $rules;
