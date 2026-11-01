@@ -114,7 +114,9 @@ test('an admin can list and fetch shows with titles', function () {
         ->assertOk()
         ->assertJsonPath('id', $show->id)
         ->assertJsonPath('titles.0.title', 'The Bear')
-        ->assertJsonCount(2, 'titles');
+        ->assertJsonCount(2, 'titles')
+        ->assertJsonPath('created_at', $show->created_at->toJSON())
+        ->assertJsonPath('updated_at', $show->updated_at->toJSON());
 });
 
 test('an admin can sort shows by random', function () {

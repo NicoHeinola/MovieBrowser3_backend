@@ -31,6 +31,8 @@ class ShowResource extends JsonResource
             'watch_progress' => ShowWatchProgressResource::make($this->whenLoaded('watchProgress', fn () => $this->watchProgress->first())),
             'incoming_links' => ShowLinkResource::collection($this->whenLoaded('incomingLinks')),
             'outgoing_links' => ShowLinkResource::collection($this->whenLoaded('outgoingLinks')),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }
