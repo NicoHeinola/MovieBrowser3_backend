@@ -1,0 +1,70 @@
+# MovieBrowser3 production stack. install.sh copies this from the backend clone into ~/prod_codes/MovieBrowser3,
+# next to .env, compose.override.yml (the media folders) and the two clones the images build from.
+# The backend serves the API and the built frontend on WEB_PORT. Ports stay clear of dev: frontend 3010,
+# backend 8765, dev db 7563.
+name: moviebrowser3
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+# backend and queue share the image and settings. Both need the host network: VLC's web interface and the VLC
+# bridge listen on the host's 127.0.0.1 only.
+x-backend: &backend
+  image: moviebrowser3-backend:local
+  network_mode: host
+  # The host user, so video files the backend moves or uploads stay owned by them
+  user: "${APP_UID:-1000}:${APP_GID:-1000}"
+  env_file: .env
+  environment:
+    VLC_LAUNCHER: bridge
+  volumes:
+    - ./storage/app:/app/storage/app
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+  logging: *logging
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-moviebrowser3}
+      POSTGRES_USER: ${DB_USERNAME:-moviebrowser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env}
+    ports:
+      - "127.0.0.1:${DB_PORT:-7564}:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    logging: *logging
+
+  backend:
+    <<: *backend
+    # queue runs the same image; `docker compose build` builds it once, here
+    build: ./MovieBrowser3_backend
+    volumes:
+      - ./storage/app:/app/storage/app
+      # The built frontend; install.sh swaps in a new build after the migrations
+      - ./web/current:/app/frontend:ro
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(@file_get_contents(\"http://127.0.0.1:\".getenv(\"WEB_PORT\").\"/up\") === false ? 1 : 0);'"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+
+  queue:
+    <<: *backend
+    command: ["php", "artisan", "queue:work", "--tries=1"]
+    # The FrankenPHP base image's healthcheck probes a web server the worker doesn't run
+    healthcheck:
+      disable: true
+

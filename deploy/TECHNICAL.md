@@ -1,0 +1,119 @@
+# MovieBrowser3 Deploy: Technical Details
+
+How the production deploy works. For installing it, see [README.md](README.md).
+
+## Architecture
+
+MovieBrowser3 runs in Docker on WSL2 (Docker Engine inside WSL, mirrored networking) or on plain Linux. It's built on the same machine from clones of GitHub `main`: no registry, no CI. A small host-side VLC bridge does the one thing a container can't: start VLC.
+
+```text
+browser ─▶ backend (FrankenPHP)  127.0.0.1:8780   /api/*, /up → Laravel; everything else → the built frontend
+           queue (queue:work)
+           db (Postgres 17)      127.0.0.1:7564
+backend / queue ── POST /launch, /windows-paths ─▶ VLC bridge  127.0.0.1:8767 ─▶ vlc.exe
+backend / queue ── status.json ─▶ VLC web interface  127.0.0.1:47000-47999
+```
+
+Every service uses the host network, because VLC's web interface and the bridge listen on the host's 127.0.0.1 only. The ports stay clear of dev (frontend 3010, backend 8765, dev db 7563). With network access on (`WEB_BIND=0.0.0.0`), only the app port opens to the LAN; the database and the bridge stay on 127.0.0.1.
+
+## Install and Update
+
+`install.sh` is the only code path; `moviebrowser3 update` runs it from the backend clone with `--update`. It works through `curl | bash`, so prompts read `/dev/tty`. Each run:
+
+1. Checks for WSL2, mirrored networking (warns only), git, Docker, Docker Compose and python3.
+2. Asks for the settings (below), unless `--update`, `--resume` or no terminal.
+3. Clones the backend into `<install folder>/MovieBrowser3_backend`, or follows a changed repo URL and runs `git pull --ff-only`. It prints the old and new commit.
+4. Writes `.env` (below).
+5. If the pull brought a different `install.sh`, it hands over to it with `--resume`: the same answers, no prompts, and the backend's old commit carried in `MOVIEBROWSER3_BACKEND_FROM`. Installer changes apply on the update that brings them. The very first update after this feature exists still runs the old installer.
+6. Clones or pulls the frontend into `<install folder>/MovieBrowser3_frontend`.
+7. Copies `compose.yml`, the bridge, the `moviebrowser3` command and the task script from the backend clone, and links `moviebrowser3` into `~/.local/bin`.
+8. Writes `compose.override.yml` with the media folders.
+9. Builds the frontend: `npm ci && npm run build` in `node:24-alpine`, as the host user, with no Node on the host. The clone's git-ignored `dist/` is copied to `web/next`.
+10. Builds the backend image.
+11. Runs the migrations in a one-off container (`docker compose run --rm backend php artisan migrate --force`). Containers never migrate on start. When the admin seed migration hasn't run on this database yet (a new or recreated one), it asks for the admin username and password and passes them to that run only. So the password is never stored, and the seed never falls back to its `admin` / `password` default.
+12. Swaps `web/next` in as `web/current`, recreates the backend so its mount picks it up, and starts the rest.
+13. Registers the VLC bridge when it differs from the last one registered (below).
+14. On WSL, writes `windows/update_movie_browser_3.bat`: `wsl.exe -d <distro> -e bash -lc "<install folder>/moviebrowser3 update"`, then `pause`.
+
+A failed pull, build or migration stops the run before step 12, so the previous frontend and containers keep running. `install.sh` runs everything from `main()`, which bash parses in full first, so a `git pull` that replaces the file mid-run is safe.
+
+## Settings
+
+| Prompt | Saved as | Default |
+| --- | --- | --- |
+| Install folder (no spaces) | `~/.config/moviebrowser3/install-dir` | `~/prod_codes/MovieBrowser3` |
+| Backend and frontend repo | `MOVIEBROWSER3_BACKEND_REPO`, `MOVIEBROWSER3_FRONTEND_REPO` | the GitHub repos |
+| Media folders, one per prompt | `MOVIEBROWSER3_MEDIA_DIRS` (`:`-separated) | none |
+| App port | `WEB_PORT`, `APP_URL` | 8780 |
+| Reachable from the network? | `WEB_BIND` (`0.0.0.0` or `127.0.0.1`) | no |
+| Database port, VLC bridge port | `DB_PORT`, `VLC_BRIDGE_PORT`, `VLC_BRIDGE_URL` | 7564, 8767 |
+| Admin username and password | not saved | `admin` |
+
+Each prompt is prefilled with the saved answer (`read -e -i`, so Tab completes paths). `MOVIEBROWSER3_DIR`, `MOVIEBROWSER3_BACKEND_REPO`, `MOVIEBROWSER3_FRONTEND_REPO`, `MOVIEBROWSER3_MEDIA_DIRS`, `MOVIEBROWSER3_ADMIN_USERNAME` and `MOVIEBROWSER3_ADMIN_PASSWORD` override the saved answers, e.g. for automation without a terminal. `moviebrowser3` finds its install folder from its own resolved path, whatever `MOVIEBROWSER3_DIR` says.
+
+### `.env`
+
+[`.env.production`](.env.production) is the template and the only place defaults live. The first run copies it (mode 600) and fills the secrets (`APP_KEY`, `DB_PASSWORD`, `VLC_BRIDGE_TOKEN`) and the host user (`APP_UID`, `APP_GID`). Every run then rewrites only the answered keys. Other keys, and manual edits, stay. After editing `.env`, run `moviebrowser3 start`.
+
+When settings change between versions:
+
+- **New setting:** add it to `.env.production`. Every run adds keys that `.env` lacks, with their defaults.
+- **Renamed, removed, or a default that must change on existing installs:** add a numbered line to [`env-migrations`](env-migrations) (`rename OLD NEW`, `remove KEY`, `set KEY value`), and change `.env.production` the same way. Each line runs once per install; `.env` remembers the last one applied in `MOVIEBROWSER3_ENV_MIGRATION`. A new install starts from the template and skips them all. Never edit or renumber a line that's on `main`.
+- A changed default in `.env.production` alone doesn't reach existing installs, because the installer can't tell an old default from a manual edit.
+
+## Files in the Install Folder
+
+| File | |
+| --- | --- |
+| `MovieBrowser3_backend/`, `MovieBrowser3_frontend/` | The clones. Don't edit them: local commits block the fast-forward. To recover, `git -C <clone> reset --hard origin/main`. |
+| `.env` | Settings, secrets and installer answers. Compose, the containers and the bridge read it. |
+| `compose.yml` | The stack, copied from the backend clone on every run. |
+| `compose.override.yml` | Media folder mounts, rewritten on every run. |
+| `web/current/` | The frontend being served. `web/next/` exists only during an update. |
+| `data/postgres/` | The database. |
+| `storage/app/` | Laravel's local storage, including `storage/app/videos` while `video_base_path` is empty. |
+| `vlc_bridge.py`, `windows/` | The bridge, its task script and the update `.bat`. |
+| `.bridge-installed` | Checksum of the bridge files and port that were last registered. |
+
+Logs go through Docker's `json-file` driver, capped at 3 × 10 MB per service.
+
+## Media Folders
+
+Each media folder is mounted into `backend` and `queue` at the same path as on the host (`/mnt/g/New_Vid:/mnt/g/New_Vid`), so the full paths stored in the database work in the containers and for VLC. They're read-write, because the backend stores, moves and deletes episode files.
+
+Windows drives appear as `/mnt/<letter>` (drvfs). WSL only mounts drives present when it starts, and the bridge task keeps WSL running, so an external disk plugged in later needs `sudo mount -t drvfs G: /mnt/g` (or an `/etc/fstab` line with `nofail`, see README step 5). Containers only see mounts that existed when they started, so run `moviebrowser3 restart` afterwards. The installer warns when a `/mnt/<letter>` folder's drive isn't mounted. A disk with a Linux filesystem mounts with `wsl --mount \\.\PHYSICALDRIVE<n> --partition <p>` from an administrator PowerShell, under `/mnt/wsl/`.
+
+## Serving
+
+One FrankenPHP container (classic mode) serves everything on `WEB_PORT`:
+
+- `/api/*` and `/up` go to Laravel (`php_server`), uncompressed so the watch-progress stream isn't held back.
+- Every other path serves `web/current`, mounted read-only at `/app/frontend`. Unknown paths get `index.html`, so routes like `/shows/12` load the app.
+- `/assets/*` has hashed names and is cached for a year. Everything else is `no-cache`, so a new build shows on the next load. Frontend files are compressed with zstd or gzip.
+- The site address matches any Host header, so localhost, 127.0.0.1 and LAN names all work.
+
+FrankenPHP runs `PHP_THREADS` threads (default 24), and each open watch-progress stream holds one. `max_execution_time` is 0, output buffering is off, and uploads have no size cap or timeout. The entrypoint caches config, routes and events, but not views: a clone has no `resources/views`. It doesn't run `artisan optimize`, because laravel-data's step writes to the database cache before the first migration. `backend` and `queue` run as the host user, so files they write on the media folders stay yours.
+
+## VLC Bridge
+
+`vlc_bridge.py` (Python 3 standard library) listens on `127.0.0.1:${VLC_BRIDGE_PORT}` and needs `Authorization: Bearer ${VLC_BRIDGE_TOKEN}`, both read from the `.env` next to it:
+
+- `POST /launch {"binary", "port", "password"}` starts VLC detached, with its web interface on that port. It returns 204, or 422 when the binary is missing or isn't named `vlc` / `vlc.exe`. The bridge never starts anything else.
+- `POST /windows-paths {"paths": [...]}` returns `{"paths": [...]}` converted with `wslpath -w`, or 422.
+- A bad token gets 403, anything else 404.
+
+The backend uses it when `VLC_LAUNCHER=bridge`, which `compose.yml` sets. In dev it stays `local` and starts VLC itself.
+
+**WSL.** `windows/register-vlc-bridge.ps1` registers the "MovieBrowser3 VLC bridge" task. At logon it runs `conhost.exe --headless wsl.exe -d <distro> -e python3 <install folder>/vlc_bridge.py`, with no window. Started through `wsl.exe`, the bridge has Windows interop, so VLC appears on the desktop. It also keeps WSL, and with it Docker, running. Remove the task with `powershell.exe -File register-vlc-bridge.ps1 -Unregister`.
+
+**Linux.** The bridge runs as the `moviebrowser3-vlc-bridge` user service. VLC needs the graphical session, so if it doesn't appear, run `systemctl --user import-environment DISPLAY WAYLAND_DISPLAY` from the desktop session and restart the service.
+
+The installer registers and restarts the bridge only when the checksum of `vlc_bridge.py`, the task script and the port differs from `.bridge-installed`, which it writes after registering succeeds. A failed update therefore retries the registration next time.
+
+## Troubleshooting
+
+- **"can't be fast-forwarded":** the clone has local commits or changes. Check `git -C <clone> status`, then `git -C <clone> reset --hard origin/main`.
+- **Playback answers 503 "The VLC bridge … did not answer":** the bridge isn't running. On Windows, run the task from Task Scheduler. On Linux, check `systemctl --user status moviebrowser3-vlc-bridge`.
+- **VLC opens, but the playing episode is never tracked:** mirrored networking is off. Set `networkingMode=mirrored` under `[wsl2]` in `%UserProfile%\.wslconfig`, then run `wsl --shutdown`.
+- **Videos are missing:** the disk isn't mounted in WSL, or it was mounted after the containers started. Mount it, then `moviebrowser3 restart`.
+- **One-off commands:** `moviebrowser3 artisan <command>`, e.g. `moviebrowser3 artisan migrate:status`.

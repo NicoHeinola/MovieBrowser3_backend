@@ -1,0 +1,35 @@
+{
+	admin off
+	auto_https off
+
+	frankenphp {
+		# Each open watch-progress stream holds one thread for up to an hour
+		num_threads {$PHP_THREADS}
+	}
+}
+
+# Any Host, so localhost, 127.0.0.1 and LAN names all work; WEB_BIND decides who can connect
+http://:{$WEB_PORT} {
+	bind {$WEB_BIND}
+
+	# Laravel. No encode here: compression would hold back the watch-progress stream.
+	@laravel path /api/* /up
+	handle @laravel {
+		root * /app/public
+		php_server
+	}
+
+	# The built frontend (mounted at /app/frontend). Unknown paths get index.html for history-mode routes.
+	handle {
+		root * /app/frontend
+		encode zstd gzip
+
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@notAssets not path /assets/*
+		header @notAssets Cache-Control "no-cache"
+
+		try_files {path} /index.html
+		file_server
+	}
+}

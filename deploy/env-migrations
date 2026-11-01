@@ -1,0 +1,11 @@
+# One-time changes to an existing install's .env, for when .env.production renames, drops or must change a setting.
+# install.sh applies each line newer than MOVIEBROWSER3_ENV_MIGRATION (saved in .env) once, in order. A new install
+# starts from .env.production and skips them all. Never edit or renumber a line once it's on main; add a new one.
+#
+#   <number> rename OLD_KEY NEW_KEY   keep the saved value under the new name (if both exist, OLD_KEY is dropped)
+#   <number> remove KEY               drop a setting that's gone
+#   <number> set KEY value            overwrite a saved value, e.g. when a default must change on existing installs
+#
+# Change .env.production in the same commit, so new installs get the same result.
+#
+# Keys that .env.production adds don't need a line: every run adds missing keys with their defaults.
