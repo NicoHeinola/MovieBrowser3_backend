@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardStatsController;
 use App\Http\Controllers\EpisodeController;
 use App\Http\Controllers\EpisodePlaybackController;
 use App\Http\Controllers\SettingController;
@@ -66,5 +67,7 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('website-tags', WebsiteTagController::class);
 
         Route::apiResource('users', UserController::class)->except(['update']);
+
+        Route::apiSingleton('dashboard-stats', DashboardStatsController::class)->only(['show']);
     });
 });
