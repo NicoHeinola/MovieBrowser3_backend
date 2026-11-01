@@ -21,6 +21,7 @@ class UpdateWebsiteRequest extends FormRequest
             'title' => ['sometimes', 'nullable', 'string', 'max:255'],
             'icon' => ['sometimes', 'nullable', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'is_favorite' => ['sometimes', 'boolean'],
             'tag_ids' => ['sometimes', 'array', 'max:50'],
             'tag_ids.*' => ['required', 'integer', 'distinct', Rule::exists('website_tags', 'id')],
         ];

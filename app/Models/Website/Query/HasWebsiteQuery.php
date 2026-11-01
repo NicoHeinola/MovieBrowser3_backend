@@ -20,6 +20,7 @@ trait HasWebsiteQuery
             AllowedFilter::custom('url', new MetadataFilter),
             AllowedFilter::custom('title', new MetadataFilter),
             AllowedFilter::custom('description', new MetadataFilter),
+            AllowedFilter::custom('is_favorite', new MetadataFilter),
             AllowedFilter::custom('tags.name', new MetadataFilter),
             AllowedFilter::scope('tags.id', 'withTags'),
             AllowedFilter::scope('exclude_tags', 'withoutTags'),

@@ -71,6 +71,7 @@ test('an admin can create a website with tags', function () {
         ->assertCreated()
         ->assertJsonPath('url', 'https://example.com')
         ->assertJsonPath('title', 'Example')
+        ->assertJsonPath('is_favorite', false)
         ->assertJsonPath('tags.*.name', ['subtitles', 'tools']);
 
     assertDatabaseHas('website_website_tag', ['website_id' => $response->json('id'), 'website_tag_id' => $tools->id]);
@@ -113,6 +114,38 @@ test('a partial website update keeps omitted fields and tags', function () {
         ->assertJsonPath('title', null)
         ->assertJsonPath('icon', 'globe')
         ->assertJsonPath('tags.*.name', ['keep']);
+});
+
+test('an admin can favorite a website and list only the favorites', function () {
+    actingAsAdmin();
+
+    $favorite = Website::factory()->favorite()->create();
+    $website = Website::factory()->create();
+
+    $createdId = postJson('/api/v1/websites', ['url' => 'https://new.example.com', 'is_favorite' => true])
+        ->assertCreated()
+        ->assertJsonPath('is_favorite', true)
+        ->json('id');
+
+    patchJson("/api/v1/websites/{$website->id}", ['is_favorite' => true])
+        ->assertOk()
+        ->assertJsonPath('is_favorite', true);
+
+    patchJson("/api/v1/websites/{$website->id}", ['title' => 'Renamed'])
+        ->assertOk()
+        ->assertJsonPath('is_favorite', true);
+
+    patchJson("/api/v1/websites/{$favorite->id}", ['is_favorite' => false])
+        ->assertOk()
+        ->assertJsonPath('is_favorite', false);
+
+    getJson('/api/v1/websites?filter[is_favorite]=1&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$website->id, $createdId]);
+
+    getJson('/api/v1/websites?filter[is_favorite]=0')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$favorite->id]);
 });
 
 test('an admin can delete a website and keep its tags', function () {
@@ -188,6 +221,9 @@ test('store website validates input', function () {
     postJson('/api/v1/websites', ['url' => 'https://new.example.com', 'tag_ids' => [$tag->id, $tag->id]])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['tag_ids.0', 'tag_ids.1']);
+    postJson('/api/v1/websites', ['url' => 'https://new.example.com', 'is_favorite' => 'yes'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['is_favorite']);
 });
 
 test('update website validates input', function () {
@@ -205,6 +241,9 @@ test('update website validates input', function () {
     patchJson("/api/v1/websites/{$website->id}", ['tag_ids' => [999]])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['tag_ids.0']);
+    patchJson("/api/v1/websites/{$website->id}", ['is_favorite' => null])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['is_favorite']);
 
     patchJson("/api/v1/websites/{$website->id}", ['url' => 'https://own.example.com'])
         ->assertOk()

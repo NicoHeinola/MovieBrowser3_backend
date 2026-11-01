@@ -19,6 +19,7 @@ class CreateWebsiteAction
                 'title' => $data->title,
                 'icon' => $data->icon,
                 'description' => $data->description,
+                'is_favorite' => $data->isFavorite,
             ]);
 
             $website->tags()->sync($data->tagIds);

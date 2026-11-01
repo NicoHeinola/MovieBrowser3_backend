@@ -21,6 +21,7 @@ class WebsiteResource extends JsonResource
             'title' => $this->title,
             'icon' => $this->icon,
             'description' => $this->description,
+            'is_favorite' => $this->is_favorite,
             'tags' => WebsiteTagResource::collection($this->whenLoaded('tags')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

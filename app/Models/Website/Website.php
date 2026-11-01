@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['url', 'title', 'icon', 'description'])]
+#[Fillable(['url', 'title', 'icon', 'description', 'is_favorite'])]
 class Website extends Model
 {
     /** @use HasFactory<WebsiteFactory> */
@@ -17,6 +17,10 @@ class Website extends Model
 
     use HasWebsiteQuery;
     use HasWebsiteRelations;
+
+    protected $casts = [
+        'is_favorite' => 'boolean',
+    ];
 
     protected static function newFactory(): WebsiteFactory
     {

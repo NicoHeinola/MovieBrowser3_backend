@@ -20,6 +20,7 @@ class UpdateWebsiteData extends Data
         public string|Optional|null $title,
         public string|Optional|null $icon,
         public string|Optional|null $description,
+        public bool|Optional $isFavorite,
         public array|Optional $tagIds,
     ) {}
 }

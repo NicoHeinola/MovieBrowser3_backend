@@ -14,6 +14,7 @@ class CreateWebsiteData extends Data
         public ?string $title = null,
         public ?string $icon = null,
         public ?string $description = null,
+        public bool $isFavorite = false,
         public array $tagIds = [],
     ) {}
 }

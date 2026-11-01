@@ -13,7 +13,7 @@ class WebsiteFactory extends Factory
     protected $model = Website::class;
 
     /**
-     * @return array<string, string|null>
+     * @return array<string, string|bool|null>
      */
     public function definition(): array
     {
@@ -22,6 +22,14 @@ class WebsiteFactory extends Factory
             'title' => fake()->words(3, true),
             'icon' => null,
             'description' => fake()->boolean() ? fake()->sentence() : null,
+            'is_favorite' => false,
         ];
+    }
+
+    public function favorite(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_favorite' => true,
+        ]);
     }
 }
