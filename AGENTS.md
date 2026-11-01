@@ -54,8 +54,7 @@ Conventional Commits: `type(scope): short summary`.
 
 - **Rules** (`.claude/rules/*.md`): "files matching X should look like Y". Each rule has a `paths` list and the same globs in `applyTo` for Copilot.
 - **Skills** (`.claude/skills/<name>/SKILL.md`): reusable workflows such as building a CRUD resource, changing schema or writing tests.
-- **Agents** (`.claude/agents/*.md`): `feature-planner`, `feature-researcher` and `feature-reviewer` run planning, read-only research or review in an isolated context. Use them only when the user asks for delegation; do implementation work in the main session.
-- When a change introduces or removes a durable convention, ownership boundary, endpoint pattern or workflow, update the affected rules, skills or agents in the same change.
+- When a change introduces or removes a durable convention, ownership boundary, endpoint pattern or workflow, update the affected rules or skills in the same change.
 - Keep customizations concise. Record conventions, not feature behavior the code already shows. Do not add cross-file reference lists when the rules already load for matching files.
 
 ## Response Style
