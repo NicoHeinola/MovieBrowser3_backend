@@ -29,6 +29,7 @@ class OpenVlcPlaylistAction
 
     public function __construct(
         private readonly RequestVlcStatusAction $requestVlcStatusAction,
+        private readonly RequestVlcBridgeAction $requestVlcBridgeAction,
     ) {}
 
     /**
@@ -37,21 +38,25 @@ class OpenVlcPlaylistAction
      * VLC has no command-line flag for a start item, so it is started with its web interface and the playlist is
      * built through that: `in_enqueue` appends a file, `in_play` appends it and starts playing it.
      *
+     * With the `bridge` launcher (vlc.launcher) the host-side VLC bridge starts VLC and converts the paths, because a
+     * containerized backend can neither see vlc.exe nor run wslpath.
+     *
      * @param  list<string>  $paths
      * @return VlcConnectionData How to reach this VLC window afterwards, e.g. to track what it is playing.
      */
     public function handle(array $paths, int $startIndex): VlcConnectionData
     {
         $binary = $this->resolveBinary();
+        $inputs = $this->isWindowsBinary($binary) ? $this->toWindowsPaths($paths) : $paths;
         $vlc = new VlcConnectionData($this->findFreePort(), Str::random(32));
 
         $this->launch($binary, $vlc);
         $this->waitUntilReady($vlc);
 
-        foreach ($paths as $index => $path) {
+        foreach ($inputs as $index => $input) {
             $status = $this->requestVlcStatusAction->handle($vlc, [
                 'command' => $index === $startIndex ? 'in_play' : 'in_enqueue',
-                'input' => $this->isWindowsBinary($binary) ? $this->toWindowsPath($path) : $path,
+                'input' => $input,
             ]);
 
             if ($status === null) {
@@ -64,12 +69,13 @@ class OpenVlcPlaylistAction
 
     /**
      * The VLC executable comes from the vlc_media_player_path setting, or `vlc` on the PATH when it is empty.
+     * The bridge checks it on its own side, where the file is visible.
      */
     private function resolveBinary(): string
     {
         $binary = Setting::query()->whereKey('vlc_media_player_path')->value('value') ?: 'vlc';
 
-        if (str_contains($binary, '/') && !is_file($binary)) {
+        if (!$this->usesBridge() && str_contains($binary, '/') && !is_file($binary)) {
             throw new VlcLaunchException("VLC was not found at {$binary}. Check the vlc_media_player_path setting.");
         }
 
@@ -82,6 +88,16 @@ class OpenVlcPlaylistAction
      */
     private function launch(string $binary, VlcConnectionData $vlc): void
     {
+        if ($this->usesBridge()) {
+            $this->requestVlcBridgeAction->handle('launch', [
+                'binary' => $binary,
+                'port' => $vlc->port,
+                'password' => $vlc->password,
+            ]);
+
+            return;
+        }
+
         $result = Process::run([
             'sh', '-c', 'nohup "$@" </dev/null >/dev/null 2>&1 &', 'sh',
             $binary,
@@ -140,14 +156,29 @@ class OpenVlcPlaylistAction
         return str_ends_with(strtolower($binary), '.exe');
     }
 
-    private function toWindowsPath(string $path): string
+    /**
+     * @param  list<string>  $paths
+     * @return list<string>
+     */
+    private function toWindowsPaths(array $paths): array
     {
-        $result = Process::run(['wslpath', '-w', $path]);
-
-        if ($result->failed()) {
-            throw new VlcLaunchException("Could not convert {$path} to a Windows path: {$result->errorOutput()}");
+        if ($this->usesBridge()) {
+            return $this->requestVlcBridgeAction->handle('windows-paths', ['paths' => $paths])['paths'];
         }
 
-        return trim($result->output());
+        return array_map(function (string $path): string {
+            $result = Process::run(['wslpath', '-w', $path]);
+
+            if ($result->failed()) {
+                throw new VlcLaunchException("Could not convert {$path} to a Windows path: {$result->errorOutput()}");
+            }
+
+            return trim($result->output());
+        }, $paths);
+    }
+
+    private function usesBridge(): bool
+    {
+        return config('vlc.launcher') === 'bridge';
     }
 }

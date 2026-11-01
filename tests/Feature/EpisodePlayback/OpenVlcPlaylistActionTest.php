@@ -130,3 +130,69 @@ test('it fails when the launch command fails', function () {
 
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
 })->throws(VlcLaunchException::class, 'VLC could not be started: sh: not found');
+
+describe('with the bridge launcher', function () {
+    beforeEach(function () {
+        config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767', 'vlc.bridge_token' => 'bridge-token']);
+        Process::fake();
+    });
+
+    test('the bridge starts VLC and converts the paths for a Windows VLC', function () {
+        // The container cannot see the binary, so it is not checked here
+        Setting::query()->whereKey('vlc_media_player_path')->update(['value' => '/mnt/c/Program Files/VideoLAN/VLC/vlc.exe']);
+        Http::fake([
+            '127.0.0.1:8767/windows-paths' => Http::response(['paths' => ['G:\\videos\\ep 1.mkv', 'G:\\videos\\ep 2.mkv']]),
+            '127.0.0.1:8767/launch' => Http::response(status: 204),
+            '127.0.0.1:*' => Http::response(['state' => 'stopped']),
+        ]);
+
+        $vlc = app(OpenVlcPlaylistAction::class)->handle(['/mnt/g/videos/ep 1.mkv', '/mnt/g/videos/ep 2.mkv'], 1);
+
+        Http::assertSent(fn (Request $request): bool => $request->url() === 'http://127.0.0.1:8767/windows-paths'
+            && $request->hasHeader('Authorization', 'Bearer bridge-token')
+            && $request->data() === ['paths' => ['/mnt/g/videos/ep 1.mkv', '/mnt/g/videos/ep 2.mkv']]);
+        Http::assertSent(fn (Request $request): bool => $request->url() === 'http://127.0.0.1:8767/launch'
+            && $request->hasHeader('Authorization', 'Bearer bridge-token')
+            && $request->data() === [
+                'binary' => '/mnt/c/Program Files/VideoLAN/VLC/vlc.exe',
+                'port' => $vlc->port,
+                'password' => $vlc->password,
+            ]);
+        expect(sentVlcCommands())->toBe([
+            'in_enqueue G:\\videos\\ep 1.mkv',
+            'in_play G:\\videos\\ep 2.mkv',
+        ]);
+        Process::assertNothingRan();
+    });
+
+    test('a Linux VLC keeps its paths', function () {
+        Http::fake([
+            '127.0.0.1:8767/launch' => Http::response(status: 204),
+            '127.0.0.1:*' => Http::response(['state' => 'stopped']),
+        ]);
+
+        app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
+
+        Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/windows-paths'));
+        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/launch') && $request['binary'] === 'vlc');
+        expect(sentVlcCommands())->toBe(['in_play /videos/ep 1.mkv']);
+    });
+
+    test('it passes on why the bridge rejected the launch', function () {
+        Http::fake(['127.0.0.1:8767/launch' => Http::response(['message' => 'VLC was not found at /missing/vlc.'], 422)]);
+
+        app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
+    })->throws(VlcLaunchException::class, 'VLC was not found at /missing/vlc.');
+
+    test('it fails when the bridge rejects the token', function () {
+        Http::fake(['127.0.0.1:8767/launch' => Http::response(status: 403)]);
+
+        app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
+    })->throws(VlcLaunchException::class, 'The VLC bridge answered 403. Check VLC_BRIDGE_TOKEN.');
+
+    test('it fails when the bridge is not running', function () {
+        Http::fake(fn () => throw new ConnectionException('Connection refused'));
+
+        app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
+    })->throws(VlcLaunchException::class, 'The VLC bridge at http://127.0.0.1:8767 did not answer.');
+});

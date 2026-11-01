@@ -16,4 +16,22 @@ return [
 
     'track_interval_seconds' => max(5, (int) env('VLC_TRACK_INTERVAL_SECONDS', 30)),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Launcher
+    |--------------------------------------------------------------------------
+    |
+    | "local" starts VLC from this process and converts paths with wslpath.
+    | "bridge" asks the host-side VLC bridge (deploy/vlc_bridge.py) to do
+    | both, for a backend running in a container that cannot see vlc.exe.
+    | The bridge only listens on localhost and checks the shared token.
+    |
+    */
+
+    'launcher' => env('VLC_LAUNCHER', 'local') === 'bridge' ? 'bridge' : 'local',
+
+    'bridge_url' => rtrim((string) env('VLC_BRIDGE_URL', 'http://127.0.0.1:8767'), '/'),
+
+    'bridge_token' => (string) env('VLC_BRIDGE_TOKEN', ''),
+
 ];
