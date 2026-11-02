@@ -14,6 +14,7 @@ use App\Models\Setting\Setting;
 use App\Models\Show\Show;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Number;
 use RuntimeException;
 use Throwable;
@@ -26,6 +27,7 @@ class ImportLegacyShowsCommand extends Command
         {--only=* : Import only these MovieBrowser2 show ids}
         {--dry-run : Only check what would be imported}
         {--redo-incomplete : Delete imported shows that have fewer videos than the originals, and import them again}
+        {--copy-with-windows : Copy with Windows\' robocopy, much faster than WSL\'s /mnt; only when run in WSL itself, not in Docker}
         {--force : Skip the confirmation}';
 
     protected $description = 'Import shows from a MovieBrowser2 export, copying their videos. The originals are only read.';
@@ -54,6 +56,14 @@ class ImportLegacyShowsCommand extends Command
         // Docker is the WSL disk rather than the media drive
         if (!Setting::query()->whereKey('setup_completed_at')->value('value')) {
             $this->components->error('Finish the first-login setup in MovieBrowser3 first, so the videos are copied into your video folder.');
+
+            return self::FAILURE;
+        }
+
+        $copyWithWindows = (bool) $this->option('copy-with-windows');
+
+        if ($copyWithWindows && Process::run(['sh', '-c', 'command -v robocopy.exe'])->failed()) {
+            $this->components->error('robocopy.exe is not reachable. --copy-with-windows only works when this command runs in WSL itself, not in Docker.');
 
             return self::FAILURE;
         }
@@ -178,7 +188,7 @@ class ImportLegacyShowsCommand extends Command
                     if ($this->cancelled && $bar->getProgress() < $bar->getMaxSteps()) {
                         throw new RuntimeException('Cancelled.');
                     }
-                });
+                }, $copyWithWindows);
 
                 $bar->finish();
                 $this->newLine();

@@ -15,8 +15,10 @@ use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\User\User;
+use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Testing\PendingCommand;
 
 use function Pest\Laravel\artisan;
@@ -251,6 +253,46 @@ test('it refuses to run before the first-login setup picked a video folder', fun
 
 test('it fails cleanly on a file that is not there', function () {
     artisan('moviebrowser2:import-shows', ['file' => legacySourceRoot().'/nope.json'])->assertFailed();
+});
+
+test('--copy-with-windows copies through robocopy', function () {
+    $file = writeLegacyExport([legacyShow(1)]);
+    $before = legacySourceSnapshot();
+    // command -v finds robocopy, wslpath is the identity, robocopy is a plain copy of `{dir} {dir} {file}`
+    Process::fake(function (PendingProcess $process) {
+        if ($process->command[0] === 'wslpath') {
+            return Process::result(output: $process->command[2]."\n");
+        }
+
+        if ($process->command[0] === 'setsid') {
+            [, , , $fromDirectory, $toDirectory, $name] = $process->command;
+            File::copy("{$fromDirectory}/{$name}", "{$toDirectory}/{$name}");
+
+            return Process::result(exitCode: 1);
+        }
+
+        return Process::result();
+    });
+
+    importLegacyShows($file, ['--copy-with-windows' => true, '--force' => true])->assertSuccessful();
+
+    $episodes = Episode::query()->orderBy('sequence_number')->get();
+    expect(File::get(ResolveEpisodeVideoPathAction::run($episodes[0])))->toBe('original-101')
+        ->and(File::get(ResolveEpisodeVideoPathAction::run($episodes[1])))->toBe('original-102')
+        ->and(legacySourceSnapshot())->toBe($before);
+
+    Process::assertRanTimes(fn (PendingProcess $process): bool => $process->command[0] === 'setsid', 2);
+});
+
+test('--copy-with-windows refuses to start where robocopy is not reachable', function () {
+    Process::fake(['*' => Process::result(exitCode: 1)]);
+    $file = writeLegacyExport([legacyShow(1)]);
+
+    importLegacyShows($file, ['--copy-with-windows' => true, '--force' => true])
+        ->expectsOutputToContain('robocopy.exe is not reachable')
+        ->assertFailed();
+
+    assertDatabaseCount('shows', 0);
 });
 
 test('seasons of only movies or OVAs become movie and TV special entries, mixed ones stay seasons in watch order', function () {

@@ -4,6 +4,7 @@ namespace App\Actions\Episode\VideoFile;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 use Lorisleiva\Actions\Concerns\AsAction;
 use RuntimeException;
 
@@ -26,10 +27,13 @@ class CopyVideoFileAction
      * Copies a video and returns its size. The source is only ever read. The copy is written next to the target
      * as `.part` and renamed once its size matches, so a target never holds a half-written file. If the surrounding
      * transaction rolls back, the copy is deleted and the emptied target folders are pruned up to the base path.
+     *
+     * `$copyWithWindows` (WSL only) lets Windows' robocopy move the bytes, many times faster between Windows drives
+     * than WSL's /mnt bridge. Robocopy keeps the source's file name, so that name takes the place of `.part`.
      */
-    public function handle(string $fromPath, string $toPath): int
+    public function handle(string $fromPath, string $toPath, bool $copyWithWindows = false): int
     {
-        $partPath = "{$toPath}.part";
+        $partPath = $copyWithWindows ? dirname($toPath).'/'.basename($fromPath) : "{$toPath}.part";
 
         if (!File::isFile($fromPath)) {
             throw new RuntimeException("The video to copy does not exist: {$fromPath}");
@@ -57,7 +61,11 @@ class CopyVideoFileAction
 
         File::ensureDirectoryExists(dirname($toPath));
 
-        $this->copyInChunks($fromPath, $partPath);
+        if ($copyWithWindows) {
+            $this->copyWithRobocopy($fromPath, dirname($toPath));
+        } else {
+            $this->copyInChunks($fromPath, $partPath);
+        }
 
         clearstatcache(true, $partPath);
 
@@ -112,5 +120,34 @@ class CopyVideoFileAction
             fclose($from);
             fclose($to);
         }
+    }
+
+    private function copyWithRobocopy(string $fromPath, string $toDirectory): void
+    {
+        // setsid: Ctrl+C reaches only the import, which cancels after this copy instead of killing robocopy mid-file.
+        // /R:0 /W:0: robocopy otherwise retries a vanished drive a million times, 30 seconds apart.
+        $result = Process::forever()->run([
+            'setsid', '-w', 'robocopy.exe',
+            $this->windowsPath(dirname($fromPath)),
+            $this->windowsPath($toDirectory),
+            basename($fromPath),
+            '/J', '/R:0', '/W:0', '/NP', '/NJH', '/NJS', '/NDL',
+        ]);
+
+        // Robocopy's exit code is a bit mask: 8 and up is a failure, and 1 means a file was copied
+        if ($result->exitCode() >= 8 || ($result->exitCode() & 1) === 0) {
+            throw new RuntimeException("Robocopy could not copy {$fromPath} (exit code {$result->exitCode()}): ".trim($result->output().' '.$result->errorOutput()));
+        }
+    }
+
+    private function windowsPath(string $path): string
+    {
+        $result = Process::run(['wslpath', '-w', $path]);
+
+        if ($result->failed()) {
+            throw new RuntimeException("Could not convert {$path} to a Windows path: {$result->errorOutput()}");
+        }
+
+        return trim($result->output());
     }
 }

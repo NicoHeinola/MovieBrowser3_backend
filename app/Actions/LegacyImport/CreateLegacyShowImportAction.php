@@ -44,13 +44,14 @@ class CreateLegacyShowImportAction
      * one; any other video that can't be read, e.g. because the drive dropped out, fails the show.
      *
      * Any failure, including `$onFileCopied` throwing to cancel, rolls back the whole show and deletes its copies.
+     * `$copyWithWindows` copies through Windows' robocopy (see CopyVideoFileAction).
      *
      * @param  list<string>  $missingFiles
      * @param  (Closure(string $sourcePath, int $bytes): void)|null  $onFileCopied
      */
-    public function handle(LegacyShowData $legacyShow, ?string $sourceRoot = null, array $missingFiles = [], ?Closure $onFileCopied = null): LegacyShowImport
+    public function handle(LegacyShowData $legacyShow, ?string $sourceRoot = null, array $missingFiles = [], ?Closure $onFileCopied = null, bool $copyWithWindows = false): LegacyShowImport
     {
-        return DB::transaction(function () use ($legacyShow, $sourceRoot, $missingFiles, $onFileCopied): LegacyShowImport {
+        return DB::transaction(function () use ($legacyShow, $sourceRoot, $missingFiles, $onFileCopied, $copyWithWindows): LegacyShowImport {
             if (LegacyShowImport::query()->where('legacy_show_id', $legacyShow->id)->exists()) {
                 throw new RuntimeException("MovieBrowser2 show {$legacyShow->id} has already been imported.");
             }
@@ -107,7 +108,7 @@ class CreateLegacyShowImportAction
 
             // Files last, so a failed copy rolls back every row above; each copy deletes itself on rollback
             foreach ($copies as [$episode, $sourcePath]) {
-                $bytes = $this->copyVideoFileAction->handle($sourcePath, $this->resolveEpisodeVideoPathAction->handle($episode));
+                $bytes = $this->copyVideoFileAction->handle($sourcePath, $this->resolveEpisodeVideoPathAction->handle($episode), $copyWithWindows);
 
                 if ($onFileCopied !== null) {
                     $onFileCopied($sourcePath, $bytes);
