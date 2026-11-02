@@ -28,13 +28,21 @@ case "${1:-help}" in
         ;;
     import-moviebrowser2)
         shift
-        if [[ $# -ge 2 ]]; then
-            set -- "$(cd "$caller_dir" && readlink -f "$1")" "$(cd "$caller_dir" && readlink -f "$2")" "${@:3}"
-        fi
-        if [[ $# -lt 2 || ! -f $1 || ! -d $2 ]]; then
+        if [[ $# -lt 2 ]]; then
             echo "Usage: moviebrowser3 import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]" >&2
             exit 1
         fi
+        # A missing path is usually an external drive that isn't mounted, so say which one instead of the usage.
+        # The messages use the paths as typed: readlink -f prints nothing when the parent folder is missing too.
+        if [[ ! -f $(cd "$caller_dir" && readlink -f "$1") ]]; then
+            echo "Export not found: $1 (is the drive mounted? sudo mount /mnt/<letter>)" >&2
+            exit 1
+        fi
+        if [[ ! -d $(cd "$caller_dir" && readlink -f "$2") ]]; then
+            echo "MovieBrowser2 video folder not found: $2 (is the drive mounted? sudo mount /mnt/<letter>)" >&2
+            exit 1
+        fi
+        set -- "$(cd "$caller_dir" && readlink -f "$1")" "$(cd "$caller_dir" && readlink -f "$2")" "${@:3}"
         export_file=$1
         source_dir=$2
         shift 2
