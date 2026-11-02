@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Episode\VideoFile\CopyVideoFileAction;
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Actions\Episode\VideoFile\ResolveFreeDiskSpaceAction;
 use App\Actions\LegacyImport\CreateLegacyShowImportAction;
@@ -14,6 +15,7 @@ use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\User\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Testing\PendingCommand;
 
@@ -397,4 +399,26 @@ test('shows imported with fewer videos than the originals are reported, and redo
         ->and($episodes->map(fn (Episode $episode): string => File::get(ResolveEpisodeVideoPathAction::run($episode)))->sort()->values()->all())->toBe(['original-101', 'original-102'])
         ->and(LegacyShowImport::query()->count())->toBe(2)
         ->and(legacySourceSnapshot())->toBe($before);
+});
+
+test('it stops after three shows in a row fail instead of failing every show', function () {
+    $file = writeLegacyExport([legacyShow(1), legacyShow(2), legacyShow(3), legacyShow(4)]);
+    CreateLegacyShowImportAction::mock()->shouldReceive('handle')->andThrow(new RuntimeException('The video to copy does not exist'));
+
+    importLegacyShows($file, ['--force' => true])
+        ->expectsOutputToContain('[3/4] Show 3')
+        ->doesntExpectOutputToContain('[4/4] Show 4')
+        ->expectsOutputToContain('3 shows in a row failed')
+        ->expectsOutputToContain('Stopped. 1 shows were not started')
+        ->assertFailed();
+});
+
+test('a copy reads and writes the whole video in chunks', function () {
+    $source = putVideoFile(legacySourceRoot().'/big.mkv', str_repeat('0123456789abcdef', 1024 * 1024));
+    $target = videoBasePathForTests().'/1_Show/1_Season/1_Episode.mkv';
+
+    $bytes = DB::transaction(fn (): int => CopyVideoFileAction::run($source, $target));
+
+    expect($bytes)->toBe(16 * 1024 * 1024)
+        ->and(md5_file($target))->toBe(md5_file($source));
 });

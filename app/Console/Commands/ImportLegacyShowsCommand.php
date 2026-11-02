@@ -30,6 +30,9 @@ class ImportLegacyShowsCommand extends Command
 
     protected $description = 'Import shows from a MovieBrowser2 export, copying their videos. The originals are only read.';
 
+    /** Shows failing back to back mean the disk or the MovieBrowser2 folder is gone; stop instead of failing the rest */
+    private const MAX_FAILURES_IN_A_ROW = 3;
+
     private bool $cancelled = false;
 
     public function handle(
@@ -146,6 +149,7 @@ class ImportLegacyShowsCommand extends Command
         });
 
         $failures = [];
+        $failuresInARow = 0;
         $position = 0;
 
         foreach ($pending as $check) {
@@ -179,10 +183,17 @@ class ImportLegacyShowsCommand extends Command
                 $bar->finish();
                 $this->newLine();
                 $this->components->info("Imported as show {$import->show_id}.");
+                $failuresInARow = 0;
             } catch (Throwable $exception) {
                 $this->newLine();
                 $this->components->error("{$check->title} was not imported: {$exception->getMessage()}");
                 $failures[] = $check->title;
+
+                if (++$failuresInARow >= self::MAX_FAILURES_IN_A_ROW) {
+                    $this->newLine();
+                    $this->components->error(self::MAX_FAILURES_IN_A_ROW.' shows in a row failed, so the disk or the MovieBrowser2 folder is probably unreachable. Stopping.');
+                    $this->cancelled = true;
+                }
             }
         }
 

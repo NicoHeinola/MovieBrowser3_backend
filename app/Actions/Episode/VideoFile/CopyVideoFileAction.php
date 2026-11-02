@@ -14,6 +14,8 @@ class CopyVideoFileAction
     /** Space left free on the target disk after a copy, so a full disk fails the copy instead of the system */
     public const RESERVED_DISK_BYTES = 1024 ** 3;
 
+    private const CHUNK_BYTES = 8 * 1024 ** 2;
+
     public function __construct(
         private readonly PruneEmptyDirectoriesAction $pruneEmptyDirectoriesAction,
         private readonly ResolveFreeDiskSpaceAction $resolveFreeDiskSpaceAction,
@@ -55,9 +57,7 @@ class CopyVideoFileAction
 
         File::ensureDirectoryExists(dirname($toPath));
 
-        if (!File::copy($fromPath, $partPath)) {
-            throw new RuntimeException("Copying failed: {$fromPath}");
-        }
+        $this->copyInChunks($fromPath, $partPath);
 
         clearstatcache(true, $partPath);
 
@@ -70,5 +70,47 @@ class CopyVideoFileAction
         }
 
         return $size;
+    }
+
+    /**
+     * Plain reads and writes instead of PHP's copy(), which memory-maps the source in 512 MB chunks: over WSL's drvfs
+     * (Windows drives under /mnt) that failed with "Bad address" and took the drive mount down mid-import.
+     */
+    private function copyInChunks(string $fromPath, string $toPath): void
+    {
+        $from = @fopen($fromPath, 'rb');
+
+        if ($from === false) {
+            throw new RuntimeException("Could not open the video to copy: {$fromPath}");
+        }
+
+        $to = @fopen($toPath, 'xb');
+
+        if ($to === false) {
+            fclose($from);
+
+            throw new RuntimeException("Could not create the copy: {$toPath}");
+        }
+
+        try {
+            while (!feof($from)) {
+                $chunk = fread($from, self::CHUNK_BYTES);
+
+                if ($chunk === false) {
+                    throw new RuntimeException("Reading the video failed: {$fromPath}");
+                }
+
+                if ($chunk !== '' && fwrite($to, $chunk) !== strlen($chunk)) {
+                    throw new RuntimeException("Writing the copy failed: {$toPath}");
+                }
+            }
+
+            if (!fflush($to)) {
+                throw new RuntimeException("Writing the copy failed: {$toPath}");
+            }
+        } finally {
+            fclose($from);
+            fclose($to);
+        }
     }
 }
