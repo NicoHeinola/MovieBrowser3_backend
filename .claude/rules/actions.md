@@ -30,7 +30,7 @@ return DB::transaction(function () use ($data): X {
   - `EpisodePlayback/OpenVlcPlaylistAction`, `EpisodePlayback/RequestVlcStatusAction`, `EpisodePlayback/RequestVlcBridgeAction`, `EpisodePlayback/CheckVlcBinaryAction`
   - `CreateEpisodePlaybackAction`: opens VLC before its transaction so the slow launch holds no lock and a failed launch saves no progress
   - `LoginUserAction`: its anti-brute-force delay must not hold a transaction; the token write goes through `IssueAuthTokenAction`
-  - read-only `ShowWatchProgress/StreamShowWatchProgressAction` (polls for up to an hour), `Dashboard/GetDashboardStatsAction`, `Setup/GetSetupStatusAction` and `Setup/CheckSetupSettingsAction`
+  - read-only `ShowWatchProgress/StreamShowWatchProgressAction` (polls for up to an hour), `Dashboard/GetDashboardStatsAction`, `Setup/GetSetupStatusAction`, `Setup/CheckSetupSettingsAction`, `LegacyImport/CheckLegacyShowImportAction` and `LegacyImport/ResolveLegacyEpisodeSourcePathAction`
 
 ## Helpers
 

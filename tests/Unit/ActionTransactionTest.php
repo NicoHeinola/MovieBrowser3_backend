@@ -6,7 +6,7 @@ test('write actions run inside a database transaction', function () {
     $actionsPath = dirname(__DIR__, 2).'/app/Actions';
 
     // Filesystem and VLC helpers write no rows and run inside their caller's transaction; login must not hold one open during its delay,
-    // the read-only progress stream must not hold one open for its whole lifetime, and the dashboard stats only count rows.
+    // the read-only progress stream must not hold one open for its whole lifetime, and the dashboard stats and legacy import checks only read.
     $exempt = [
         'Auth/LoginUserAction.php',
         'Dashboard/GetDashboardStatsAction.php',
@@ -16,6 +16,8 @@ test('write actions run inside a database transaction', function () {
         'EpisodePlayback/OpenVlcPlaylistAction.php',
         'EpisodePlayback/RequestVlcBridgeAction.php',
         'EpisodePlayback/RequestVlcStatusAction.php',
+        'LegacyImport/CheckLegacyShowImportAction.php',
+        'LegacyImport/ResolveLegacyEpisodeSourcePathAction.php',
         'Setup/CheckSetupSettingsAction.php',
         'Setup/GetSetupStatusAction.php',
         'Show/RelocateShowVideosAction.php',

@@ -143,6 +143,28 @@ When it's done it prints the app's address, `http://localhost:8780`, and where i
 
 To change them later, go to **Admin → Settings**, or reopen the wizard with **Admin → Settings → Run setup again**.
 
+## Moving From MovieBrowser2
+
+MovieBrowser3 can import your MovieBrowser2 shows: titles, images, descriptions, categories, seasons, episodes and your watch statuses. It **copies** the videos into the video folder from step 7 and only reads the originals, so MovieBrowser2 keeps working. Websites aren't imported.
+
+1. Save the JSON from MovieBrowser2's export endpoint into one of your media folders, e.g. `/mnt/g/New_Vid/movies.json`. MovieBrowser3 can only see files there.
+2. Check first. This copies nothing; it lists missing videos and the size to copy, and checks there's enough free space:
+
+   ```bash
+   moviebrowser3 artisan moviebrowser2:import-shows /mnt/g/New_Vid/movies.json --dry-run
+   ```
+
+3. Import. It asks before it starts, then goes one show at a time:
+
+   ```bash
+   moviebrowser3 artisan moviebrowser2:import-shows /mnt/g/New_Vid/movies.json
+   ```
+
+- Copying a lot takes hours. Keep the Ubuntu window open. Ctrl+C stops after the current video and undoes the show in progress.
+- A show that fails is undone and the others carry on. Run the same command again to retry: shows already imported are skipped.
+- `--only=12 --only=15` imports just those MovieBrowser2 show ids, e.g. to try one first or when the disk is short on space.
+- Watch statuses go to the MovieBrowser3 user with the same username (ignoring upper and lower case).
+
 ## Everyday Use
 
 - After you restart the PC and log in to Windows, MovieBrowser3 starts by itself within a minute. You don't need to open Ubuntu.

@@ -28,3 +28,5 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+# MovieBrowser2 exports for moviebrowser2:import-shows hold the real library
+/movies*.json

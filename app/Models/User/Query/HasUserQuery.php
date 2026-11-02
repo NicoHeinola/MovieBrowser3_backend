@@ -2,6 +2,7 @@
 
 namespace App\Models\User\Query;
 
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\QueryBuilder\AllowedFilter;
 
 trait HasUserQuery
@@ -15,6 +16,11 @@ trait HasUserQuery
             'username',
             AllowedFilter::exact('is_admin'),
         ];
+    }
+
+    public function scopeUsernameIgnoringCase(Builder $query, string $username): void
+    {
+        $query->whereRaw('lower(username) = ?', [mb_strtolower($username)]);
     }
 
     /**
