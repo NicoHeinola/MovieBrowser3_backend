@@ -7,9 +7,11 @@ use App\Actions\Episode\VideoFile\ResolveFreeDiskSpaceAction;
 use App\Actions\Episode\VideoFile\ResolveVideoBasePathAction;
 use App\Actions\LegacyImport\CheckLegacyShowImportAction;
 use App\Actions\LegacyImport\CreateLegacyShowImportAction;
+use App\Actions\Show\DeleteShowAction;
 use App\Dtos\LegacyImport\LegacyShowData;
 use App\Dtos\LegacyImport\LegacyShowImportCheckData;
 use App\Models\Setting\Setting;
+use App\Models\Show\Show;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Number;
@@ -23,6 +25,7 @@ class ImportLegacyShowsCommand extends Command
         {--source-root= : MovieBrowser2\'s video folder, when it is not at the absolute paths in the export}
         {--only=* : Import only these MovieBrowser2 show ids}
         {--dry-run : Only check what would be imported}
+        {--redo-incomplete : Delete imported shows that have fewer videos than the originals, and import them again}
         {--force : Skip the confirmation}';
 
     protected $description = 'Import shows from a MovieBrowser2 export, copying their videos. The originals are only read.';
@@ -32,6 +35,7 @@ class ImportLegacyShowsCommand extends Command
     public function handle(
         CheckLegacyShowImportAction $checkLegacyShowImportAction,
         CreateLegacyShowImportAction $createLegacyShowImportAction,
+        DeleteShowAction $deleteShowAction,
         ResolveFreeDiskSpaceAction $resolveFreeDiskSpaceAction,
         ResolveVideoBasePathAction $resolveVideoBasePathAction,
     ): int {
@@ -61,7 +65,17 @@ class ImportLegacyShowsCommand extends Command
         $this->components->info("Checking {$legacyShows->count()} shows.");
 
         $checks = $legacyShows->map(fn (LegacyShowData $show): LegacyShowImportCheckData => $checkLegacyShowImportAction->handle($show, $sourceRoot));
-        $pending = $checks->whereNull('importedShowId');
+        $incomplete = $checks->filter(fn (LegacyShowImportCheckData $check): bool => $check->isIncomplete());
+        $redoIncomplete = (bool) $this->option('redo-incomplete');
+        $pending = $checks->filter(fn (LegacyShowImportCheckData $check): bool => $check->importedShowId === null || ($redoIncomplete && $check->isIncomplete()));
+
+        foreach ($incomplete as $check) {
+            $this->components->warn("{$check->title} was imported with {$check->importedVideoCount} of {$check->fileCount} videos.".($redoIncomplete ? ' It is deleted and imported again.' : ''));
+        }
+
+        if ($incomplete->isNotEmpty() && !$redoIncomplete) {
+            $this->components->warn('Run again with --redo-incomplete to delete those shows (only their MovieBrowser3 copies) and import them again.');
+        }
 
         foreach ($pending as $check) {
             foreach ($check->missingFiles as $missingFile) {
@@ -78,6 +92,7 @@ class ImportLegacyShowsCommand extends Command
         $freeBytes = $resolveFreeDiskSpaceAction->handle($basePath);
 
         $this->components->twoColumnDetail('Already imported, skipped', (string) ($checks->count() - $pending->count()));
+        $this->components->twoColumnDetail('Imported with videos missing', (string) $incomplete->count());
         $this->components->twoColumnDetail('Shows to import', (string) $pending->count());
         $this->components->twoColumnDetail('Videos to copy', (string) $pending->sum('fileCount'));
         $this->components->twoColumnDetail('Videos missing', (string) $pending->sum(fn (LegacyShowImportCheckData $check): int => count($check->missingFiles)));
@@ -110,7 +125,14 @@ class ImportLegacyShowsCommand extends Command
             return self::SUCCESS;
         }
 
-        if (!$this->option('force') && !$this->confirm("Import {$pending->count()} shows and copy their videos into {$basePath}?")) {
+        $redoCount = $pending->whereNotNull('importedShowId')->count();
+        $question = "Import {$pending->count()} shows and copy their videos into {$basePath}?";
+
+        if ($redoCount > 0) {
+            $question = "Delete {$redoCount} incompletely imported shows, then import {$pending->count()} shows and copy their videos into {$basePath}?";
+        }
+
+        if (!$this->option('force') && !$this->confirm($question)) {
             $this->components->info('Cancelled.');
 
             return self::SUCCESS;
@@ -140,7 +162,12 @@ class ImportLegacyShowsCommand extends Command
             $bar = $this->output->createProgressBar($check->fileCount);
 
             try {
-                $import = $createLegacyShowImportAction->handle($legacyShow, $sourceRoot, function () use ($bar): void {
+                // The delete removes only this show's MovieBrowser3 rows and copies; the originals are never referenced
+                if ($check->importedShowId !== null) {
+                    $deleteShowAction->handle(Show::query()->findOrFail($check->importedShowId));
+                }
+
+                $import = $createLegacyShowImportAction->handle($legacyShow, $sourceRoot, $check->missingFiles, function () use ($bar): void {
                     $bar->advance();
 
                     // After the show's last copy there is nothing left to save time on, so let it commit

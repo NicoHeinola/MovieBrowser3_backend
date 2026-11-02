@@ -326,7 +326,7 @@ test('a failure partway through a show rolls back its rows and copies but keeps 
     $copied = 0;
 
     expect(function () use ($show, &$copied): void {
-        CreateLegacyShowImportAction::run(LegacyShowData::from($show), legacySourceRoot(), function () use (&$copied): void {
+        CreateLegacyShowImportAction::run(LegacyShowData::from($show), legacySourceRoot(), onFileCopied: function () use (&$copied): void {
             $copied++;
 
             throw new RuntimeException('Cancelled.');
@@ -353,5 +353,48 @@ test('a show whose copy fails is reported and the rest still import', function (
 
     expect(File::get($blocker))->toBe('already-here')
         ->and(LegacyShowImport::query()->pluck('legacy_show_id')->all())->toBe([2])
+        ->and(legacySourceSnapshot())->toBe($before);
+});
+
+test('a video that vanishes after the check fails the show instead of importing the episode without it', function () {
+    $show = legacyShow(1);
+    // The check saw both videos; the drive drops out before the import reads the second
+    File::delete(legacySourceRoot().'/'.$show['seasons'][0]['episodes'][1]['file_path']['relative']);
+
+    expect(fn () => CreateLegacyShowImportAction::run(LegacyShowData::from($show), legacySourceRoot()))
+        ->toThrow(RuntimeException::class, 'does not exist');
+
+    assertDatabaseCount('shows', 0);
+    expect(File::isDirectory(videoBasePathForTests()) ? File::allFiles(videoBasePathForTests()) : [])->toBe([]);
+});
+
+test('shows imported with fewer videos than the originals are reported, and redone with --redo-incomplete', function () {
+    $file = writeLegacyExport([legacyShow(1), legacyShow(2)]);
+    importLegacyShows($file, ['--force' => true])->assertSuccessful();
+    $before = legacySourceSnapshot();
+
+    // What the drive dropping out left behind: a show whose episodes came in without their videos
+    $broken = LegacyShowImport::query()->where('legacy_show_id', 1)->sole()->show_id;
+    $brokenEpisodes = Episode::query()->whereHas('entry', fn ($query) => $query->where('show_id', $broken))->get();
+    $brokenEpisodes->each(fn (Episode $episode) => File::delete(ResolveEpisodeVideoPathAction::run($episode)));
+    Episode::query()->whereKey($brokenEpisodes->modelKeys())->update(['filename' => '']);
+
+    importLegacyShows($file, ['--force' => true])
+        ->expectsOutputToContain('Show 1 was imported with 0 of 2 videos.')
+        ->expectsOutputToContain('--redo-incomplete')
+        ->expectsOutputToContain('Nothing to import.')
+        ->assertSuccessful();
+
+    importLegacyShows($file, ['--redo-incomplete' => true])
+        ->expectsConfirmation('Delete 1 incompletely imported shows, then import 1 shows and copy their videos into '.videoBasePathForTests().'?', 'yes')
+        ->assertSuccessful();
+
+    $redone = LegacyShowImport::query()->where('legacy_show_id', 1)->sole()->show_id;
+    $episodes = Episode::query()->whereHas('entry', fn ($query) => $query->where('show_id', $redone))->get();
+
+    expect($redone)->not->toBe($broken)
+        ->and(Show::query()->whereKey($broken)->exists())->toBeFalse()
+        ->and($episodes->map(fn (Episode $episode): string => File::get(ResolveEpisodeVideoPathAction::run($episode)))->sort()->values()->all())->toBe(['original-101', 'original-102'])
+        ->and(LegacyShowImport::query()->count())->toBe(2)
         ->and(legacySourceSnapshot())->toBe($before);
 });

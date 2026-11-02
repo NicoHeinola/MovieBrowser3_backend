@@ -22,7 +22,6 @@ use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\User\User;
 use Closure;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Lorisleiva\Actions\Concerns\AsAction;
 use RuntimeException;
@@ -41,15 +40,17 @@ class CreateLegacyShowImportAction
     /**
      * Imports one MovieBrowser2 show and copies its videos; the originals are only read. Each season becomes an entry,
      * with its OVAs and movies kept in place, so the watch order stays. A season of only movies or only OVAs becomes a
-     * movie or TV special entry. Episodes whose video is missing are imported without one.
+     * movie or TV special entry. Only the videos in `$missingFiles` (what the check found missing) are imported without
+     * one; any other video that can't be read, e.g. because the drive dropped out, fails the show.
      *
      * Any failure, including `$onFileCopied` throwing to cancel, rolls back the whole show and deletes its copies.
      *
+     * @param  list<string>  $missingFiles
      * @param  (Closure(string $sourcePath, int $bytes): void)|null  $onFileCopied
      */
-    public function handle(LegacyShowData $legacyShow, ?string $sourceRoot = null, ?Closure $onFileCopied = null): LegacyShowImport
+    public function handle(LegacyShowData $legacyShow, ?string $sourceRoot = null, array $missingFiles = [], ?Closure $onFileCopied = null): LegacyShowImport
     {
-        return DB::transaction(function () use ($legacyShow, $sourceRoot, $onFileCopied): LegacyShowImport {
+        return DB::transaction(function () use ($legacyShow, $sourceRoot, $missingFiles, $onFileCopied): LegacyShowImport {
             if (LegacyShowImport::query()->where('legacy_show_id', $legacyShow->id)->exists()) {
                 throw new RuntimeException("MovieBrowser2 show {$legacyShow->id} has already been imported.");
             }
@@ -82,7 +83,8 @@ class CreateLegacyShowImportAction
 
                 foreach (collect($season->episodes)->sortBy([['number', 'asc'], ['id', 'asc']]) as $legacyEpisode) {
                     $sourcePath = $this->resolveLegacyEpisodeSourcePathAction->handle($legacyEpisode, $sourceRoot);
-                    $hasVideo = $sourcePath !== null && File::isFile($sourcePath);
+                    // Not File::isFile: a video that vanished since the check must fail the copy, not drop silently
+                    $hasVideo = $sourcePath !== null && !in_array($sourcePath, $missingFiles, true);
 
                     $episode = $entry->episodes()->create([
                         'name' => $this->episodeName($legacyEpisode),

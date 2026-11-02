@@ -5,6 +5,7 @@ namespace App\Actions\LegacyImport;
 use App\Dtos\LegacyImport\LegacyShowData;
 use App\Dtos\LegacyImport\LegacyShowImportCheckData;
 use App\Dtos\LegacyImport\LegacyUserShowStatusData;
+use App\Models\Episode\Episode;
 use App\Models\LegacyShowImport\LegacyShowImport;
 use App\Models\User\User;
 use Illuminate\Support\Facades\File;
@@ -51,10 +52,16 @@ class CheckLegacyShowImportAction
             ->values()
             ->all();
 
+        $importedShowId = LegacyShowImport::query()->where('legacy_show_id', $legacyShow->id)->value('show_id');
+
         return new LegacyShowImportCheckData(
             legacyShowId: $legacyShow->id,
             title: $legacyShow->title,
-            importedShowId: LegacyShowImport::query()->where('legacy_show_id', $legacyShow->id)->value('show_id'),
+            importedShowId: $importedShowId,
+            importedVideoCount: $importedShowId === null ? 0 : Episode::query()
+                ->whereHas('entry', fn ($query) => $query->where('show_id', $importedShowId))
+                ->where('filename', '!=', '')
+                ->count(),
             fileCount: $fileCount,
             totalBytes: $totalBytes,
             missingFiles: $missingFiles,

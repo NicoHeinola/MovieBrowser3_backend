@@ -164,6 +164,8 @@ MovieBrowser3 can import your MovieBrowser2 shows: titles, images, descriptions,
 - The MovieBrowser2 folder doesn't need to be a media folder: this command shows it to MovieBrowser3 read-only, for the import only, so the originals can't be changed.
 - Copying a lot takes hours. Keep the Ubuntu window open. Ctrl+C stops after the current video and undoes the show in progress.
 - A show that fails is undone and the others carry on. Run the same command again to retry: shows already imported are skipped.
+- If a video becomes unreadable during the import (an external disk dropping out), that show fails and is undone. Reconnect the disk, run `moviebrowser3 restart`, and run the command again.
+- The check also lists shows that were imported with fewer videos than the originals. Add `--redo-incomplete` to delete those shows (only their MovieBrowser3 copies) and import them again.
 - `--only=12 --only=15` imports just those MovieBrowser2 show ids, e.g. to try one first or when the disk is short on space.
 - Watch statuses go to the MovieBrowser3 user with the same username (ignoring upper and lower case).
 
