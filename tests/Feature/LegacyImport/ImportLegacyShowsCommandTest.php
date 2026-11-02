@@ -215,6 +215,16 @@ test('an episode whose video is missing is imported without one', function () {
     expect(Episode::query()->where('sequence_number', 3)->sole()->filename)->toBe('');
 });
 
+test('it refuses to start when none of the videos can be found', function () {
+    $file = writeLegacyExport([legacyShow(1)]);
+
+    importLegacyShows($file, ['--source-root' => legacySourceRoot().'/elsewhere', '--force' => true])
+        ->expectsOutputToContain('None of the videos were found')
+        ->assertFailed();
+
+    assertDatabaseCount('shows', 0);
+});
+
 test('it refuses to start without enough free space for the copies', function () {
     ResolveFreeDiskSpaceAction::mock()->shouldReceive('handle')->andReturn(10);
     $file = writeLegacyExport([legacyShow(1)]);

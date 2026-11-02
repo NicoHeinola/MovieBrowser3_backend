@@ -91,6 +91,13 @@ class ImportLegacyShowsCommand extends Command
             return self::SUCCESS;
         }
 
+        // Every video missing means MovieBrowser2's folder isn't visible here; importing would leave every episode without one
+        if ($pending->sum('fileCount') === 0 && $pending->sum(fn (LegacyShowImportCheckData $check): int => count($check->missingFiles)) > 0) {
+            $this->components->error('None of the videos were found. Check that the MovieBrowser2 video folder is mounted, or pass it with --source-root.');
+
+            return self::FAILURE;
+        }
+
         if ($freeBytes !== null && $freeBytes < $totalBytes + CopyVideoFileAction::RESERVED_DISK_BYTES) {
             $this->components->error('Not enough free space for the copies. Free some up, or import fewer shows at a time with --only.');
 

@@ -118,3 +118,4 @@ The installer registers and restarts the bridge only when the checksum of `vlc_b
 - **VLC opens, but the playing episode is never tracked:** mirrored networking is off. Set `networkingMode=mirrored` under `[wsl2]` in `%UserProfile%\.wslconfig`, then run `wsl --shutdown`.
 - **Videos are missing:** the disk isn't mounted in WSL, or it was mounted after the containers started. Mount it, then `moviebrowser3 restart`.
 - **One-off commands:** `moviebrowser3 artisan <command>`, e.g. `moviebrowser3 artisan migrate:status`.
+- **MovieBrowser2 import:** `moviebrowser3 import-moviebrowser2 <export .json> <folder>` runs `moviebrowser2:import-shows` in a one-off container with the export and the MovieBrowser2 folder mounted read-only (the folder at its host path, passed as `--source-root`), so it needn't be a media folder.

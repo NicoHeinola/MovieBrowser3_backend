@@ -4,6 +4,8 @@ set -euo pipefail
 
 # The install dir is where this script lives (~/.local/bin/moviebrowser3 links to it), whatever MOVIEBROWSER3_DIR says
 export MOVIEBROWSER3_DIR="$(dirname "$(readlink -f "$0")")"
+# Paths given as arguments are relative to where the command was run, not to the install dir
+caller_dir=$PWD
 cd "$MOVIEBROWSER3_DIR"
 
 case "${1:-help}" in
@@ -24,6 +26,25 @@ case "${1:-help}" in
         shift
         docker compose run --rm backend php artisan "$@"
         ;;
+    import-moviebrowser2)
+        shift
+        if [[ $# -ge 2 ]]; then
+            set -- "$(cd "$caller_dir" && readlink -f "$1")" "$(cd "$caller_dir" && readlink -f "$2")" "${@:3}"
+        fi
+        if [[ $# -lt 2 || ! -f $1 || ! -d $2 ]]; then
+            echo "Usage: moviebrowser3 import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]" >&2
+            exit 1
+        fi
+        export_file=$1
+        source_dir=$2
+        shift 2
+        # Both are mounted read-only for this run only, so nothing in the container can change the originals.
+        # The folder keeps its host path; --source-root finds each video by its path relative to it.
+        docker compose run --rm \
+            -v "$export_file:/tmp/moviebrowser2-export.json:ro" \
+            -v "$source_dir:$source_dir:ro" \
+            backend php artisan moviebrowser2:import-shows /tmp/moviebrowser2-export.json --source-root="$source_dir" "$@"
+        ;;
     *)
         cat <<USAGE
 Usage: moviebrowser3 <command>
@@ -34,6 +55,8 @@ Usage: moviebrowser3 <command>
   status            Show the services
   logs [service]    Follow the logs (db, backend, queue)
   artisan <args>    Run an artisan command in a one-off backend container
+  import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]
+                    Import MovieBrowser2 shows, copying the videos from the folder (mounted read-only)
 
 USAGE
         ;;
