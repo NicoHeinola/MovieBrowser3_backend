@@ -169,6 +169,33 @@ test('an admin can search shows by related title through query builder', functio
         ->assertJsonPath('data.0.titles.0.title', 'The Bear');
 });
 
+test('show search ignores case and matches % and _ literally', function () {
+    actingAsAdmin();
+
+    $bear = Show::factory()->create();
+    $percent = Show::factory()->create();
+    $snake = Show::factory()->create();
+
+    ShowTitle::factory()->for($bear)->primary()->create(['title' => 'The Bear']);
+    ShowTitle::factory()->for($percent)->primary()->create(['title' => '100% Love']);
+    ShowTitle::factory()->for($snake)->primary()->create(['title' => 'snake_case']);
+
+    getJson('/api/v1/shows?filter[search]=tHE bEAR')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $bear->id);
+
+    getJson('/api/v1/shows?filter[search]='.urlencode('100%'))
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $percent->id);
+
+    getJson('/api/v1/shows?filter[search]=e_c')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $snake->id);
+});
+
 test('an admin can filter shows with metadata operators', function () {
     actingAsAdmin();
 

@@ -2,6 +2,7 @@
 
 namespace App\Models\Website\Query;
 
+use App\Models\Query\CaseInsensitiveLike;
 use App\Models\Show\Query\Filters\MetadataFilter;
 use App\Models\Website\Query\Sorts\TitleOrUrlSort;
 use Illuminate\Database\Eloquent\Builder;
@@ -35,15 +36,13 @@ trait HasWebsiteQuery
         $words = preg_split('/\s+/', implode(' ', $terms), -1, PREG_SPLIT_NO_EMPTY);
 
         foreach ($words as $word) {
-            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($word)).'%';
-
-            $query->where(function (Builder $query) use ($pattern) {
+            $query->where(function (Builder $query) use ($word) {
                 foreach (['websites.title', 'websites.url', 'websites.description'] as $column) {
-                    $query->orWhereRaw("lower({$column}) like ? escape '!'", [$pattern]);
+                    CaseInsensitiveLike::where($query, $column, $word, 'or');
                 }
 
-                $query->orWhereHas('tags', function (Builder $query) use ($pattern) {
-                    $query->whereRaw("lower(website_tags.name) like ? escape '!'", [$pattern]);
+                $query->orWhereHas('tags', function (Builder $query) use ($word) {
+                    CaseInsensitiveLike::where($query, 'website_tags.name', $word);
                 });
             });
         }

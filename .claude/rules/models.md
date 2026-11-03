@@ -32,4 +32,5 @@ class X extends Model
 
 - Expose `getAllowedFilters()` and `getAllowedSorts()`; put scopes (`scopeSearch`, `scopeWithTags`) here too. Never parse request input or shape responses.
 - Filters use `AllowedFilter::custom('col', new MetadataFilter)` (`App\Models\Show\Query\Filters\MetadataFilter`) rather than `partial` or `exact`. It supports operator prefixes (`like:`, `eq:`, `null`) and relation dot notation (`titles.title`).
+- Text search scopes match with `App\Models\Query\CaseInsensitiveLike::where()` (lowercases both sides, escapes `%` and `_`), and ad-hoc `like` filters use `whereLike()`. Never `where($col, 'like', …)`: Postgres `like` is case-sensitive while the SQLite tests are not, so it passes tests and breaks in dev.
 - Filter values are not split on commas; multiple values use `filter[col][]=a&filter[col][]=b`, each applied as an AND condition.

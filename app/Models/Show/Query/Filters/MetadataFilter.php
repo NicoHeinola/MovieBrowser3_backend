@@ -66,7 +66,8 @@ class MetadataFilter implements Filter
                 'lt' => $query->where($column, '<', $actualValue),
                 'null' => $query->whereNull($column),
                 'not_null' => $query->whereNotNull($column),
-                'like' => $query->where($column, 'like', "%{$actualValue}%"),
+                // whereLike ignores case on every driver (ilike on Postgres, whose plain like is case-sensitive)
+                'like' => $query->whereLike($column, "%{$actualValue}%"),
                 default => $query->where($column, '=', $value),
             };
 

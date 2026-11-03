@@ -2,6 +2,7 @@
 
 namespace App\Models\Show\Query;
 
+use App\Models\Query\CaseInsensitiveLike;
 use App\Models\Show\Query\Filters\MetadataFilter;
 use App\Models\Show\Query\Sorts\LastWatchedSort;
 use App\Models\Show\Query\Sorts\PrimaryTitleSort;
@@ -32,10 +33,15 @@ trait HasShowQuery
         ];
     }
 
-    public function scopeSearch(Builder $query, string $value): void
+    /**
+     * Shows with a title containing the term, ignoring case.
+     */
+    public function scopeSearch(Builder $query, string ...$terms): void
     {
-        $query->whereHas('titles', function (Builder $query) use ($value) {
-            $query->where('title', 'like', "%{$value}%");
+        $term = implode(' ', $terms);
+
+        $query->whereHas('titles', function (Builder $query) use ($term) {
+            CaseInsensitiveLike::where($query, 'show_titles.title', $term);
         });
     }
 
