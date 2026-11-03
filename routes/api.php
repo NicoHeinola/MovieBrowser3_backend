@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppVersionController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardStatsController;
@@ -72,6 +73,7 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('users', UserController::class)->except(['update']);
 
         Route::apiSingleton('dashboard-stats', DashboardStatsController::class)->only(['show']);
+        Route::apiSingleton('app-version', AppVersionController::class)->only(['show']);
 
         Route::apiSingleton('setup', SetupController::class)->only(['show']);
         // Not resources: a dry run of setup values, and marking the first-login setup done

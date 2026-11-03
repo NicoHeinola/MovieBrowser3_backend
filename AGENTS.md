@@ -8,6 +8,7 @@ Guidance for AI coding agents (Claude Code and Copilot). File-specific rules liv
 - Use Composer, Artisan and Pest for project commands and validation.
 - Prefer extending existing namespaces and patterns before creating new top-level structure.
 - Preserve existing API response fields and status codes unless the task explicitly changes the contract.
+- Every new `env()` key gets a commented line in `.env.example` in the same change, and in `deploy/.env.production` when production should set it.
 
 ## Commands
 
