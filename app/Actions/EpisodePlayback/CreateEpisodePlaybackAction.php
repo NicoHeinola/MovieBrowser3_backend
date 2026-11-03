@@ -4,6 +4,7 @@ namespace App\Actions\EpisodePlayback;
 
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
+use App\Dtos\ShowWatchProgress\WatchPositionData;
 use App\Jobs\TrackVlcPlaybackJob;
 use App\Models\Episode\Episode;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
@@ -26,20 +27,42 @@ class CreateEpisodePlaybackAction
      * Plays the episode in VLC with the rest of its entry in the playlist, remembers it as the user's progress and
      * starts following the VLC window so later episodes played there are remembered too.
      *
+     * When the user's progress is already on this episode, VLC resumes at the saved position, unless $fromStart is set.
+     *
      * VLC opens before the transaction so its slow startup holds no lock, and a failed launch saves no progress.
      */
-    public function handle(Episode $episode, User $user): ShowWatchProgress
+    public function handle(Episode $episode, User $user, bool $fromStart = false): ShowWatchProgress
     {
-        [$paths, $startIndex] = $this->buildPlaylist($episode);
-        $vlc = $this->openVlcPlaylistAction->handle($paths, $startIndex);
+        $resume = $fromStart ? null : $this->resumableProgress($episode, $user);
+        $startSeconds = $resume?->position_seconds ?? 0;
 
-        return DB::transaction(function () use ($episode, $user, $vlc): ShowWatchProgress {
-            $progress = $this->updateShowWatchProgressAction->handle($episode, $user);
+        [$paths, $startIndex] = $this->buildPlaylist($episode);
+        $vlc = $this->openVlcPlaylistAction->handle($paths, $startIndex, $startSeconds);
+
+        return DB::transaction(function () use ($episode, $user, $vlc, $resume): ShowWatchProgress {
+            // A resumed episode keeps its position; anything else starts unknown until the tracking job reports it.
+            $progress = $this->updateShowWatchProgressAction->handle(
+                $episode,
+                $user,
+                $resume ? new WatchPositionData($resume->position_seconds, $resume->duration_seconds) : null,
+            );
 
             TrackVlcPlaybackJob::queueNextCheck($user, $vlc)->afterCommit();
 
             return $progress;
         });
+    }
+
+    /**
+     * The user's progress when it points into this episode, or null to start from the beginning.
+     */
+    private function resumableProgress(Episode $episode, User $user): ?ShowWatchProgress
+    {
+        return ShowWatchProgress::query()
+            ->where('user_id', $user->id)
+            ->where('episode_id', $episode->id)
+            ->where('position_seconds', '>', 0)
+            ->first();
     }
 
     /**

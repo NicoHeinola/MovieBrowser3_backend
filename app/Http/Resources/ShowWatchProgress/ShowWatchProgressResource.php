@@ -18,6 +18,8 @@ class ShowWatchProgressResource extends JsonResource
             'show_id' => $this->show_id,
             'show_entry_id' => $this->show_entry_id,
             'episode_id' => $this->episode_id,
+            'position_seconds' => $this->position_seconds,
+            'duration_seconds' => $this->duration_seconds,
             'updated_at' => $this->updated_at,
         ];
     }

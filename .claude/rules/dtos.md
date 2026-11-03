@@ -8,7 +8,7 @@ applyTo: 'app/Dtos/**/*.php'
 # DTO Rules
 
 - DTOs are `Spatie\LaravelData\Data` with constructor-promoted camelCase properties, no `@property` docblocks. Input mapping is snake_case → camelCase globally (`config/data.php`), so `XData::from($request->validated())` just works.
-- Use DTOs for grouped payloads at action boundaries, not for single models or a couple of obvious arguments.
+- Use DTOs for grouped payloads at action boundaries, not for single models or a couple of obvious arguments. Values that always travel together, especially same-typed nullable ones that are easy to swap positionally (`WatchPositionData`: position + duration seconds), get a small DTO even when there are only two.
 - Update DTOs hold the bound model plus `Type|Optional` fields and `#[MapOutputName(SnakeCaseMapper::class)]`, so omitted fields stay out of `fill()`.
 - Clearable nullable fields are `type|Optional|null`. A plain `?type` hydrates an omitted field as `null` and wipes it on PATCH.
 - Nested arrays use `DataCollectionOf` with accurate array annotations.

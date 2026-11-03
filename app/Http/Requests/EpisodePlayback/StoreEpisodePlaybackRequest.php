@@ -16,7 +16,9 @@ class StoreEpisodePlaybackRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [];
+        return [
+            'from_start' => ['sometimes', 'boolean'],
+        ];
     }
 
     /**

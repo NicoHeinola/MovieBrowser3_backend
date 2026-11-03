@@ -34,10 +34,12 @@ class OpenVlcPlaylistAction
     ) {}
 
     /**
-     * Opens a new VLC window whose playlist holds every path in order and plays the one at $startIndex.
+     * Opens a new VLC window whose playlist holds every path in order and plays the one at $startIndex, from
+     * $startSeconds into it.
      *
      * VLC has no command-line flag for a start item, so it is started with its web interface and the playlist is
-     * built through that: `in_enqueue` appends a file, `in_play` appends it and starts playing it.
+     * built through that: `in_enqueue` appends a file, `in_play` appends it and starts playing it. The start time is a
+     * `start-time` option on that one item, so the episodes after it still play from their beginning.
      *
      * With the `bridge` launcher (vlc.launcher) the host-side VLC bridge starts VLC and converts the paths, because a
      * containerized backend can neither see vlc.exe nor run wslpath.
@@ -45,7 +47,7 @@ class OpenVlcPlaylistAction
      * @param  list<string>  $paths
      * @return VlcConnectionData How to reach this VLC window afterwards, e.g. to track what it is playing.
      */
-    public function handle(array $paths, int $startIndex): VlcConnectionData
+    public function handle(array $paths, int $startIndex, int $startSeconds = 0): VlcConnectionData
     {
         $binary = $this->resolveBinary();
         $inputs = $this->isWindowsBinary($binary) ? $this->toWindowsPaths($paths) : $paths;
@@ -55,10 +57,11 @@ class OpenVlcPlaylistAction
         $this->waitUntilReady($vlc);
 
         foreach ($inputs as $index => $input) {
-            $status = $this->requestVlcStatusAction->handle($vlc, [
-                'command' => $index === $startIndex ? 'in_play' : 'in_enqueue',
-                'input' => $input,
-            ]);
+            $command = $index === $startIndex
+                ? array_filter(['command' => 'in_play', 'input' => $input, 'option' => $startSeconds > 0 ? "start-time={$startSeconds}" : null])
+                : ['command' => 'in_enqueue', 'input' => $input];
+
+            $status = $this->requestVlcStatusAction->handle($vlc, $command);
 
             if ($status === null) {
                 throw new VlcLaunchException('VLC was closed before the playlist was built.');

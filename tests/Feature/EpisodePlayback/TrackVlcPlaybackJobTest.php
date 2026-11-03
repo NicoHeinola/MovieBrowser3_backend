@@ -22,10 +22,12 @@ function runTrackVlcPlaybackJob(User $user): void
     app()->call([new TrackVlcPlaybackJob($user, new VlcConnectionData(45678, 'secret')), 'handle']);
 }
 
-function fakeVlcStatus(string $state, ?string $filename): void
+function fakeVlcStatus(string $state, ?string $filename, int $time = 0, int $length = 0): void
 {
     Http::fake(['127.0.0.1:*' => Http::response([
         'state' => $state,
+        'time' => $time,
+        'length' => $length,
         'information' => ['category' => ['meta' => array_filter(['filename' => $filename])]],
     ])]);
 }
@@ -51,6 +53,51 @@ test('the playing episode becomes the user progress', function () {
         'episode_id' => $episode->id,
     ]);
     assertTrackingContinues($user);
+});
+
+test('the playing position and length are saved with the progress', function () {
+    $user = User::factory()->create();
+    $episode = Episode::factory()->create();
+    fakeVlcStatus('playing', "{$episode->id}_{$episode->name}.mkv", time: 754, length: 1440);
+
+    runTrackVlcPlaybackJob($user);
+
+    assertDatabaseHas('show_watch_progress', [
+        'user_id' => $user->id,
+        'episode_id' => $episode->id,
+        'position_seconds' => 754,
+        'duration_seconds' => 1440,
+    ]);
+});
+
+test('a length VLC does not know yet is saved as unknown', function () {
+    $user = User::factory()->create();
+    $episode = Episode::factory()->create();
+    fakeVlcStatus('playing', "{$episode->id}_{$episode->name}.mkv", time: 3, length: 0);
+
+    runTrackVlcPlaybackJob($user);
+
+    assertDatabaseHas('show_watch_progress', [
+        'episode_id' => $episode->id,
+        'position_seconds' => 3,
+        'duration_seconds' => null,
+    ]);
+});
+
+test('a paused VLC keeps the saved position', function () {
+    $user = User::factory()->create();
+    $episode = Episode::factory()->create();
+    ShowWatchProgress::factory()->create([
+        'user_id' => $user->id,
+        'episode_id' => $episode->id,
+        'position_seconds' => 300,
+        'duration_seconds' => 1440,
+    ]);
+    fakeVlcStatus('paused', "{$episode->id}_{$episode->name}.mkv", time: 900, length: 1440);
+
+    runTrackVlcPlaybackJob($user);
+
+    assertDatabaseHas('show_watch_progress', ['episode_id' => $episode->id, 'position_seconds' => 300]);
 });
 
 test('moving to the next episode in VLC updates the progress', function () {

@@ -59,12 +59,13 @@ class StreamShowWatchProgressAction
     }
 
     /**
-     * What the client has been told about a show; a second save within the same second still differs by episode.
+     * What the client has been told about a show; a second save within the same second still differs by episode
+     * or position.
      *
-     * @return array{int, int|null, int|null}
+     * @return array{int, int|null, int|null, int|null}
      */
     private function version(ShowWatchProgress $progress): array
     {
-        return [$progress->show_entry_id, $progress->episode_id, $progress->updated_at?->getTimestamp()];
+        return [$progress->show_entry_id, $progress->episode_id, $progress->position_seconds, $progress->updated_at?->getTimestamp()];
     }
 }

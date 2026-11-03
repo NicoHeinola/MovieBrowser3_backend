@@ -12,7 +12,7 @@ class EpisodePlaybackController extends Controller
 {
     public function store(Episode $episode, StoreEpisodePlaybackRequest $request, CreateEpisodePlaybackAction $action): JsonResponse
     {
-        $progress = $action->handle($episode, $request->user());
+        $progress = $action->handle($episode, $request->user(), $request->boolean('from_start'));
 
         return ShowWatchProgressResource::make($progress)->response()->setStatusCode(201);
     }

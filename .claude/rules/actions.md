@@ -8,7 +8,7 @@ applyTo: 'app/Actions/**/*.php'
 # Action Rules
 
 - One use case per action, `Lorisleiva\Actions\Concerns\AsAction`, named `*Action` with CRUD verbs (`Create`, `Update`, `Delete`; not `Set` or `Clear`).
-- Explicit `handle()` signatures: models and scalars directly, a DTO only for grouped payloads. A child create takes the parent first: `handle(Show $show, CreateXData $data)`. Never pass request objects.
+- Explicit `handle()` signatures: models and scalars directly, a DTO for grouped payloads or values that always travel together (see the DTO rules). A child create takes the parent first: `handle(Show $show, CreateXData $data)`. Never pass request objects.
 - Return models, DTOs or simple values, never HTTP payloads. Actions must work from controllers, jobs, commands or tests.
 - Create uses `X::query()->create([...explicit snake_case keys...])`; delete calls `$x->delete()`. Partial updates fill through the fillable allowlist and return `fresh()`:
 

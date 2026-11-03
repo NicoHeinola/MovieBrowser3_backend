@@ -62,6 +62,36 @@ test('it starts VLC with its web interface and builds the playlist through it', 
         && $request->hasHeader('Authorization', 'Basic '.base64_encode(":{$vlc->password}")));
 });
 
+test('a start time only applies to the episode that plays first', function () {
+    useVlcBinary('vlc');
+    Process::fake();
+    Http::fake(['127.0.0.1:*' => Http::response(['state' => 'stopped'])]);
+
+    app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv', '/videos/ep 2.mkv', '/videos/ep 3.mkv'], 1, 754);
+
+    $options = Http::recorded()
+        ->map(fn (array $pair): array => $pair[0]->data())
+        ->filter(fn (array $query): bool => isset($query['command']))
+        ->mapWithKeys(fn (array $query): array => [$query['input'] => $query['option'] ?? null])
+        ->all();
+
+    expect($options)->toBe([
+        '/videos/ep 1.mkv' => null,
+        '/videos/ep 2.mkv' => 'start-time=754',
+        '/videos/ep 3.mkv' => null,
+    ]);
+});
+
+test('without a start time VLC gets no start-time option', function () {
+    useVlcBinary('vlc');
+    Process::fake();
+    Http::fake(['127.0.0.1:*' => Http::response(['state' => 'stopped'])]);
+
+    app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
+
+    Http::assertNotSent(fn (Request $request): bool => array_key_exists('option', $request->data()));
+});
+
 test('the port skips Linux\'s ephemeral range, where a Windows vlc.exe cannot listen under WSL mirrored networking', function () {
     useVlcBinary('vlc');
     Process::fake();

@@ -6,6 +6,7 @@ use App\Actions\Episode\VideoFile\ResolveEpisodeFromVideoFileAction;
 use App\Actions\EpisodePlayback\RequestVlcStatusAction;
 use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
+use App\Dtos\ShowWatchProgress\WatchPositionData;
 use App\Models\User\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\PendingDispatch;
@@ -13,8 +14,8 @@ use Illuminate\Foundation\Queue\Queueable;
 
 /**
  * Follows a VLC window opened by playback: every few seconds (config vlc.track_interval_seconds) it asks VLC which
- * file is playing and saves that episode as the user's progress, so moving to the next episode inside VLC is
- * remembered too. Stops once VLC is closed.
+ * file is playing and how far into it VLC is, and saves both as the user's progress, so moving to the next episode
+ * inside VLC is remembered too and the next playback can resume there. Stops once VLC is closed.
  */
 class TrackVlcPlaybackJob implements ShouldQueue
 {
@@ -58,7 +59,22 @@ class TrackVlcPlaybackJob implements ShouldQueue
             : null;
 
         if ($episode !== null) {
-            $updateShowWatchProgressAction->handle($episode, $this->user);
+            $updateShowWatchProgressAction->handle(
+                $episode,
+                $this->user,
+                new WatchPositionData(
+                    $this->seconds(data_get($status, 'time'), 0),
+                    $this->seconds(data_get($status, 'length'), 1),
+                ),
+            );
         }
+    }
+
+    /**
+     * VLC reports whole seconds, and 0 or -1 for a length it doesn't know yet; anything below $min is stored as unknown.
+     */
+    private function seconds(mixed $value, int $min): ?int
+    {
+        return is_numeric($value) && $value >= $min ? (int) $value : null;
     }
 }

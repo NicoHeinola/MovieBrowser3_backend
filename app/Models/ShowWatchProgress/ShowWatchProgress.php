@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['show_id', 'user_id', 'show_entry_id', 'episode_id'])]
+#[Fillable(['show_id', 'user_id', 'show_entry_id', 'episode_id', 'position_seconds', 'duration_seconds'])]
 class ShowWatchProgress extends Model
 {
     /** @use HasFactory<ShowWatchProgressFactory> */

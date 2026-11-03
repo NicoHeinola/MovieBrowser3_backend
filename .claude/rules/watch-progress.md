@@ -20,11 +20,11 @@ applyTo: 'app/**/ShowEntryWatchStatus/**,app/**/ShowWatchProgress/**,app/Http/Co
 
 ## Watch Progress
 
-- `show_watch_progress` holds one row per user and show: entry plus nullable episode (nulled when the episode is deleted). `ShowResource` exposes the current user's row as `watch_progress` (object or `null`). "Continue watching" is `filter[has_watch_progress]=1&sort=-last_watched_at`.
+- `show_watch_progress` holds one row per user and show: entry plus nullable episode (nulled when the episode is deleted), and nullable `position_seconds`/`duration_seconds` inside that episode. `ShowResource` exposes the current user's row as `watch_progress` (object or `null`). "Continue watching" is `filter[has_watch_progress]=1&sort=-last_watched_at`.
 
 ## Live Stream
 
 - `GET watch-progress/stream` is a server-sent events stream. `StreamShowWatchProgressAction` polls the user's rows every `watch_progress.stream_poll_seconds` (default 2, minimum 1), so writes from any source reach it without events.
-- It sends only rows changed after the stream opened, deduplicated per show by entry, episode and `updated_at` (whole seconds), and ends when the token is deleted or after `stream_lifetime_seconds` (default 3600, minimum 60).
+- It sends only rows changed after the stream opened, deduplicated per show by entry, episode, position and `updated_at` (whole seconds), and ends when the token is deleted or after `stream_lifetime_seconds` (default 3600, minimum 60).
 - The controller writes `retry: 3000`, then `event: watch-progress` / `id: <updated_at>` / `data: <ShowWatchProgressResource>`, and `: ping` after `stream_heartbeat_seconds` (default 25, minimum 1) without output. Each open stream holds one PHP server worker.
 - Tests use `Sleep::fake(syncWithCarbon: true)` with `Sleep::whenFakingSleep(...)` to write progress between polls and read `streamedContent()`.

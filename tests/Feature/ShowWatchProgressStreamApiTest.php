@@ -2,6 +2,7 @@
 
 use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
+use App\Dtos\ShowWatchProgress\WatchPositionData;
 use App\Jobs\TrackVlcPlaybackJob;
 use App\Models\Episode\Episode;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
@@ -51,12 +52,14 @@ function streamWatchProgress(): string
     return getJson('/api/v1/watch-progress/stream')->assertOk()->streamedContent();
 }
 
-function watchProgressEvent(Episode $episode, string $updatedAt): string
+function watchProgressEvent(Episode $episode, string $updatedAt, ?int $positionSeconds = null): string
 {
     $data = json_encode([
         'show_id' => $episode->entry->show_id,
         'show_entry_id' => $episode->show_entry_id,
         'episode_id' => $episode->id,
+        'position_seconds' => $positionSeconds,
+        'duration_seconds' => $positionSeconds === null ? null : 1440,
         'updated_at' => $updatedAt,
     ]);
 
@@ -121,6 +124,22 @@ test('a second save of the same episode within the same second is not sent again
     });
 
     expect(streamWatchProgress())->toBe("retry: 3000\n\n".watchProgressEvent($episode, '2026-10-31T20:14:02.000000Z'));
+});
+
+test('a new position within the same second is sent', function () {
+    $user = actingAsStreamUser();
+    $episode = Episode::factory()->create();
+
+    beforeStreamPoll(1, fn () => UpdateShowWatchProgressAction::run($episode, $user, new WatchPositionData(100, 1440)));
+    beforeStreamPoll(2, function () use ($episode, $user): void {
+        Carbon::setTestNow(now()->subSeconds(2));
+        UpdateShowWatchProgressAction::run($episode, $user, new WatchPositionData(130, 1440));
+        Carbon::setTestNow(now()->addSeconds(2));
+    });
+
+    expect(streamWatchProgress())->toBe("retry: 3000\n\n"
+        .watchProgressEvent($episode, '2026-10-31T20:14:02.000000Z', 100)
+        .watchProgressEvent($episode, '2026-10-31T20:14:02.000000Z', 130));
 });
 
 test('other users progress is not sent', function () {
