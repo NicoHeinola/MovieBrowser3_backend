@@ -37,6 +37,15 @@ tests/Feature/XApiTest.php
 - Every action that writes to the database wraps `handle()` in `DB::transaction`; `tests/Unit/ActionTransactionTest.php` enforces it.
 - Enums are string-backed and live in `app/Enums`.
 
+## Releases
+
+- Releases are annotated `vX.Y.Z` tags on `main`, each with a GitHub release. Installs check out the newest tag, never `main`.
+- The version lives in `VERSION`.
+- Size the version from the last release, and never step twice: a `fix` keeps the patch step, a `feat` raises it to the next minor, a breaking change (`!`) to the next major. The commit that needs the bigger step bumps `VERSION`; `tests/Unit/VersionTest.php` enforces it.
+- No backend changelog: user-visible backend changes get a line in the frontend changelog.
+- When a frontend release needs new API, release the backend first.
+- Releasing follows the `release` skill.
+
 ## Commit Messages
 
 Conventional Commits: `type(scope): short summary`.

@@ -4,7 +4,7 @@ How the production deploy works. For installing it, see [README.md](README.md).
 
 ## Architecture
 
-MovieBrowser3 runs in Docker on WSL2 (Docker Engine inside WSL, mirrored networking) or on plain Linux. It's built on the same machine from clones of GitHub `main`: no registry, no CI. A small host-side VLC bridge does the one thing a container can't: start VLC.
+MovieBrowser3 runs in Docker on WSL2 (Docker Engine inside WSL, mirrored networking) or on plain Linux. It's built on the same machine from clones of GitHub (the newest release tag of each): no registry, no CI. A small host-side VLC bridge does the one thing a container can't: start VLC.
 
 ```text
 browser ─▶ backend (FrankenPHP)  127.0.0.1:8780   /api/*, /up → Laravel; everything else → the built frontend
@@ -22,10 +22,10 @@ Every service uses the host network, because VLC's web interface and the bridge 
 
 1. Checks for WSL2, mirrored networking (warns only), git, Docker, Docker Compose and python3.
 2. Asks for the settings (below), unless `--update`, `--resume` or no terminal. It then refuses to go on while containers of the Compose project `moviebrowser3` belong to another install folder: every install shares that project, so a second one would take over the first one's containers.
-3. Clones the backend into `<install folder>/MovieBrowser3_backend`, or follows a changed repo URL and runs `git pull --ff-only`. It prints the old and new commit.
+3. Clones or fetches the backend into `<install folder>/MovieBrowser3_backend`, following a changed repo URL, and checks out its newest release tag (`vX.Y.Z`, detached). Commits on `main` after that tag are unreleased and never built. With no release tag yet, it checks out `main` and fast-forwards it. It prints the old and new version (the tag, or the short commit when it's between tags).
 4. Writes `.env` (below).
-5. If the pull brought a different `install.sh`, it hands over to it with `--resume`: the same answers, no prompts, and the backend's old commit carried in `MOVIEBROWSER3_BACKEND_FROM`. Installer changes apply on the update that brings them. The very first update after this feature exists still runs the old installer.
-6. Clones or pulls the frontend into `<install folder>/MovieBrowser3_frontend`.
+5. If the backend update brought a different `install.sh`, it hands over to it with `--resume`: the same answers, no prompts, and the backend's old version carried in `MOVIEBROWSER3_BACKEND_FROM`. Installer changes apply on the update that brings them. The very first update after this feature exists still runs the old installer.
+6. Clones or fetches the frontend into `<install folder>/MovieBrowser3_frontend` and checks out its newest release tag the same way, with the same `main` fallback. The two repos are versioned independently.
 7. Copies `compose.yml`, the bridge, the `moviebrowser3` command and the task script from the backend clone, and links `moviebrowser3` into `~/.local/bin`.
 8. Writes `compose.override.yml` with the media folders.
 9. Builds the frontend: `npm ci && npm run build` in `node:24-alpine`, as the host user, with no Node on the host. The clone's git-ignored `dist/` is copied to `web/next`.
@@ -35,7 +35,7 @@ Every service uses the host network, because VLC's web interface and the bridge 
 13. Registers the VLC bridge when it differs from the last one registered (below).
 14. On WSL, writes `windows/update_movie_browser_3.bat`: `wsl.exe -d <distro> -e bash -lc "<install folder>/moviebrowser3 update"`, then `pause`.
 
-A failed pull, build or migration stops the run before step 12, so the previous frontend and containers keep running. `install.sh` runs everything from `main()`, which bash parses in full first, so a `git pull` that replaces the file mid-run is safe.
+A failed fetch, checkout, build or migration stops the run before step 12, so the previous frontend and containers keep running. `install.sh` runs everything from `main()`, which bash parses in full first, so a backend checkout that replaces the file mid-run is safe.
 
 ## Settings
 
@@ -65,7 +65,7 @@ When settings change between versions:
 
 | File | |
 | --- | --- |
-| `MovieBrowser3_backend/`, `MovieBrowser3_frontend/` | The clones. Don't edit them: local commits block the fast-forward. To recover, `git -C <clone> reset --hard origin/main`. |
+| `MovieBrowser3_backend/`, `MovieBrowser3_frontend/` | The clones, each on its newest release tag. Don't edit them: local changes block the update. To recover one, `git -C <clone> reset --hard` (plus `clean -fd` for added files) and re-run. |
 | `.env` | Settings, secrets and installer answers. Compose, the containers and the bridge read it. |
 | `compose.yml` | The stack, copied from the backend clone on every run. `backend` and `queue` use the locally built `moviebrowser3-backend:local` with `pull_policy: never`. |
 | `compose.override.yml` | Media folder mounts, rewritten on every run. |
@@ -113,7 +113,8 @@ The installer registers and restarts the bridge only when the checksum of `vlc_b
 
 ## Troubleshooting
 
-- **"can't be fast-forwarded":** the clone has local commits or changes. Check `git -C <clone> status`, then `git -C <clone> reset --hard origin/main`.
+- **"can't check out release":** the clone has local changes. Check `git -C <clone> status`, then `git -C <clone> reset --hard`, plus `git -C <clone> clean -fd` if it lists added files, and re-run.
+- **"can't be fast-forwarded":** only while a repo has no release tag yet, when it follows `main`. The clone has local commits or changes: check `git -C <clone> status`, then `git -C <clone> reset --hard origin/main`.
 - **Playback answers 503 "The VLC bridge … did not answer":** the bridge isn't running. On Windows, run the task from Task Scheduler. On Linux, check `systemctl --user status moviebrowser3-vlc-bridge`.
 - **VLC opens, but the playing episode is never tracked:** mirrored networking is off. Set `networkingMode=mirrored` under `[wsl2]` in `%UserProfile%\.wslconfig`, then run `wsl --shutdown`.
 - **Videos are missing:** the disk isn't mounted in WSL, or it was mounted after the containers started. Mount it, then `moviebrowser3 restart`.

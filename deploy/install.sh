@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # MovieBrowser3 installer and updater. It asks for every setting (install folder, repos, media folders, ports),
 # prefilled with the saved answer, so Enter keeps it. Answers are saved in the install folder's .env, and
-# ~/.config/moviebrowser3/install-dir remembers that folder. Then it clones (or fast-forwards) both repos, builds the
-# frontend and the backend image from those clones, migrates and restarts. .env starts from deploy/.env.production.
+# ~/.config/moviebrowser3/install-dir remembers that folder. Then it clones or fetches both repos, checks out their
+# newest release tag, builds the frontend and the backend image from those clones, migrates and restarts. .env starts
+# from deploy/.env.production.
 # Safe to re-run: it keeps the secrets in .env and the database.
 #
 #   curl -fsSL https://raw.githubusercontent.com/NicoHeinola/MovieBrowser3_backend/main/deploy/install.sh | bash
 #   ./deploy/install.sh            # from any checkout; it still builds from the clones
 #   ./deploy/install.sh --update   # no questions, the saved answers (what `moviebrowser3 update` runs)
 #
-# When `git pull` brings a new install.sh, it hands over to the new one (--resume, same answers), so installer changes
+# When the backend update brings a new install.sh, it hands over to the new one (--resume, same answers), so installer changes
 # apply on the update that brings them. When .env.production renames or drops a setting, deploy/env-migrations moves
 # the saved values once.
 #
@@ -34,7 +35,7 @@ case "${1:-}" in
 esac
 TTY=true
 
-# This script's own checksum, to notice when `git pull` brings a different install.sh
+# This script's own checksum, to notice when the backend update brings a different install.sh
 SELF=""
 SELF_SUM=""
 if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
@@ -256,23 +257,40 @@ check_other_install() {
         fail "Another MovieBrowser3 install has containers on this machine: $others. Stop it first ($others/moviebrowser3 stop), then re-run."
 }
 
-# Clones a repo, or fast-forwards it, and prints which commit it moved from and to
+# The release tag HEAD sits on, or its short commit when it's between releases
+describe_head() {
+    git -C "$1" describe --tags --exact-match HEAD 2>/dev/null || git -C "$1" rev-parse --short HEAD
+}
+
+# Clones a repo, or fetches it, and checks out its newest release tag (vX.Y.Z) detached: commits on main after
+# the last tag are unreleased work. With no release tag yet it follows main. Prints the old and new version
 sync_repo() {
-    local name=$1 url=$2 dir=$3 old new
+    local name=$1 url=$2 dir=$3 old new tag
     if [[ -d "$dir/.git" ]]; then
-        old=$(git -C "$dir" rev-parse --short HEAD)
-        # After a hand-over to a new installer, the pull already happened: show where it started
+        old=$(describe_head "$dir")
+        # After a hand-over to a new installer, the backend was already updated once: show where it started
         [[ "$name" == backend && -n "${MOVIEBROWSER3_BACKEND_FROM:-}" ]] && old=$MOVIEBROWSER3_BACKEND_FROM
-        [[ "$name" == backend ]] && BACKEND_FROM=$old
         # Follow a repo URL changed in the installer
         git -C "$dir" remote set-url origin "$url"
-        git -C "$dir" pull --ff-only --quiet ||
-            fail "$dir can't be fast-forwarded to GitHub main. Check 'git -C $dir status', fix or reset it, and re-run."
+        # --force: a release tag moved on GitHub replaces the local one
+        git -C "$dir" fetch --quiet --tags --force origin ||
+            fail "$dir can't be fetched from GitHub. Check your connection and re-run."
     else
         old="(new)"
         git clone --quiet "$url" "$dir"
     fi
-    new=$(git -C "$dir" rev-parse --short HEAD)
+    # Carried into a hand-over, also "(new)" for a fresh clone, so the resumed run reports the real starting point
+    [[ "$name" == backend ]] && BACKEND_FROM=$old
+    # for-each-ref --count instead of `tag --list | head`: head closing the pipe early fails it under pipefail
+    tag=$(git -C "$dir" for-each-ref --count=1 --sort=-v:refname --format='%(refname:short)' 'refs/tags/v*')
+    if [[ -n "$tag" ]]; then
+        git -C "$dir" -c advice.detachedHead=false checkout --quiet --detach "$tag" ||
+            fail "$dir can't check out release $tag. Check 'git -C $dir status', discard local changes with 'git -C $dir reset --hard' (plus 'git -C $dir clean -fd' for added files), and re-run."
+    else
+        git -C "$dir" checkout --quiet main && git -C "$dir" merge --ff-only --quiet origin/main ||
+            fail "$dir can't be fast-forwarded to GitHub main. Check 'git -C $dir status', fix or reset it, and re-run."
+    fi
+    new=$(describe_head "$dir")
     if [[ "$old" == "$new" ]]; then
         info "$name: $new (unchanged)"
     else
@@ -470,7 +488,7 @@ write_update_bat() {
     UPDATE_BAT=$(wslpath -w "$bat")
 }
 
-# When the pull brought a different install.sh, continue with that one, with the answers already saved
+# When the backend update brought a different install.sh, continue with that one, with the answers already saved
 hand_over_if_installer_changed() {
     local new="$INSTALL_DIR/MovieBrowser3_backend/deploy/install.sh"
     [[ -n "$SELF" && "${MOVIEBROWSER3_RESUMED:-}" != 1 ]] || return 0
@@ -480,7 +498,7 @@ hand_over_if_installer_changed() {
         exec bash "$new" --resume
 }
 
-# Everything runs from main, which bash parses in full first: `git pull` may replace this file while it runs
+# Everything runs from main, which bash parses in full first: the backend checkout may replace this file while it runs
 main() {
     check_host
     configure

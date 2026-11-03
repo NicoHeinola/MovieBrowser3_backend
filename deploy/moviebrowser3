@@ -57,7 +57,7 @@ case "${1:-help}" in
         cat <<USAGE
 Usage: moviebrowser3 <command>
 
-  update            Pull GitHub main into both clones, rebuild, migrate and restart
+  update            Check out the newest release of both clones, rebuild, migrate and restart
   start | stop      Start or stop every service
   restart           Restart every service
   status            Show the services
