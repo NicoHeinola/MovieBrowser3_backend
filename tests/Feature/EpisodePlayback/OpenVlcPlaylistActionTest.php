@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\EpisodePlayback\OpenVlcPlaylistAction;
+use App\Actions\EpisodePlayback\ResolveEphemeralPortRangeAction;
 use App\Exceptions\VlcLaunchException;
 use App\Models\Setting\Setting;
 use Illuminate\Http\Client\ConnectionException;
@@ -48,8 +49,8 @@ test('it starts VLC with its web interface and builds the playlist through it', 
         '--http-port', (string) $vlc->port, '--http-password', $vlc->password,
     ]);
 
-    // A Windows vlc.exe cannot listen on Linux's ephemeral ports under WSL mirrored networking.
-    expect($vlc->port)->toBeGreaterThanOrEqual(47000)->toBeLessThanOrEqual(47999);
+    // Below Windows' own dynamic range (49152 and up)
+    expect($vlc->port)->toBeGreaterThanOrEqual(40000)->toBeLessThanOrEqual(49151);
 
     expect(sentVlcCommands())->toBe([
         'in_enqueue /videos/ep 1.mkv',
@@ -59,6 +60,18 @@ test('it starts VLC with its web interface and builds the playlist through it', 
 
     Http::assertSent(fn (Request $request): bool => str_starts_with($request->url(), "http://127.0.0.1:{$vlc->port}/requests/status.json")
         && $request->hasHeader('Authorization', 'Basic '.base64_encode(":{$vlc->password}")));
+});
+
+test('the port skips Linux\'s ephemeral range, where a Windows vlc.exe cannot listen under WSL mirrored networking', function () {
+    useVlcBinary('vlc');
+    Process::fake();
+    Http::fake(['127.0.0.1:*' => Http::response(['state' => 'stopped'])]);
+    // Leaves only 49151 free: everything else in the range is Linux's
+    ResolveEphemeralPortRangeAction::mock()->shouldReceive('handle')->andReturn([40000, 49150]);
+
+    $vlc = app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
+
+    expect($vlc->port)->toBe(49151);
 });
 
 test('it falls back to vlc on the PATH when no binary is configured', function () {
@@ -195,4 +208,12 @@ describe('with the bridge launcher', function () {
 
         app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
     })->throws(VlcLaunchException::class, 'The VLC bridge at http://127.0.0.1:8767 did not answer.');
+});
+
+test('the ephemeral range is read from Linux', function () {
+    $range = ResolveEphemeralPortRangeAction::run();
+
+    // Linux's default is 32768-60999; WSL mirrored networking narrows it to 4096 ports
+    expect($range)->toBeArray()->toHaveCount(2)
+        ->and($range[0])->toBeLessThan($range[1]);
 });

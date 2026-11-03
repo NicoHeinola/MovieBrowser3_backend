@@ -11,7 +11,7 @@ browser ─▶ backend (FrankenPHP)  127.0.0.1:8780   /api/*, /up → Laravel; e
            queue (queue:work)
            db (Postgres 17)      127.0.0.1:7564
 backend / queue ── POST /launch, /windows-paths ─▶ VLC bridge  127.0.0.1:8767 ─▶ vlc.exe
-backend / queue ── status.json ─▶ VLC web interface  127.0.0.1:47000-47999
+backend / queue ── status.json ─▶ VLC web interface  127.0.0.1:40000-49151
 ```
 
 Every service uses the host network, because VLC's web interface and the bridge listen on the host's 127.0.0.1 only. The ports stay clear of dev (frontend 3010, backend 8765, dev db 7563). With network access on (`WEB_BIND=0.0.0.0`), only the app port opens to the LAN; the database and the bridge stay on 127.0.0.1.

@@ -16,6 +16,7 @@ test('write actions run inside a database transaction', function () {
         'EpisodePlayback/OpenVlcPlaylistAction.php',
         'EpisodePlayback/RequestVlcBridgeAction.php',
         'EpisodePlayback/RequestVlcStatusAction.php',
+        'EpisodePlayback/ResolveEphemeralPortRangeAction.php',
         'LegacyImport/CheckLegacyShowImportAction.php',
         'LegacyImport/ResolveLegacyEpisodeSourcePathAction.php',
         'Setup/CheckSetupSettingsAction.php',

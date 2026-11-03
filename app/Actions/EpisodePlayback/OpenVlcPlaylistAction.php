@@ -20,16 +20,17 @@ class OpenVlcPlaylistAction
 
     private const int STARTUP_ATTEMPT_DELAY_MS = 100;
 
-    // VLC's web interface port. It must stay outside Linux's ephemeral range (40525-44620 here): with WSL mirrored
-    // networking that range belongs to Linux, so a Windows vlc.exe cannot listen on it. It also stays below Windows'
-    // own dynamic range (49152 and up).
-    private const int PORT_RANGE_START = 47000;
+    // VLC's web interface port, below Windows' own dynamic range (49152 and up). Linux's ephemeral range is skipped
+    // when it's picked: with WSL mirrored networking those ports belong to Linux, so a Windows vlc.exe can't listen
+    // on them, and WSL moves that range on every boot (40525-44620 once, 44620-48715 another time).
+    private const int PORT_RANGE_START = 40000;
 
-    private const int PORT_RANGE_END = 47999;
+    private const int PORT_RANGE_END = 49151;
 
     public function __construct(
         private readonly RequestVlcStatusAction $requestVlcStatusAction,
         private readonly RequestVlcBridgeAction $requestVlcBridgeAction,
+        private readonly ResolveEphemeralPortRangeAction $resolveEphemeralPortRangeAction,
     ) {}
 
     /**
@@ -135,7 +136,13 @@ class OpenVlcPlaylistAction
      */
     private function findFreePort(): int
     {
-        foreach (Arr::shuffle(range(self::PORT_RANGE_START, self::PORT_RANGE_END)) as $port) {
+        $ephemeral = $this->resolveEphemeralPortRangeAction->handle();
+        $ports = array_filter(
+            range(self::PORT_RANGE_START, self::PORT_RANGE_END),
+            fn (int $port): bool => $ephemeral === null || $port < $ephemeral[0] || $port > $ephemeral[1],
+        );
+
+        foreach (Arr::shuffle($ports) as $port) {
             $connection = @stream_socket_client("tcp://127.0.0.1:{$port}", $errorCode, $errorMessage, 0.2);
 
             if ($connection === false) {
