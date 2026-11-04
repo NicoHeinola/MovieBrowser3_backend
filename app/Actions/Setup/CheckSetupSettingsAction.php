@@ -5,6 +5,7 @@ namespace App\Actions\Setup;
 use App\Actions\EpisodePlayback\CheckVlcBinaryAction;
 use App\Dtos\Setup\CheckSetupSettingsData;
 use App\Dtos\Setup\SetupCheckData;
+use App\Enums\SetupCheckCode;
 use Illuminate\Support\Str;
 use Lorisleiva\Actions\Concerns\AsAction;
 use Spatie\LaravelData\Optional;
@@ -27,11 +28,11 @@ class CheckSetupSettingsAction
         $checks = [];
 
         if (!$data->videoBasePath instanceof Optional) {
-            $checks['video_base_path'] = SetupCheckData::fromProblem($this->videoBasePathProblem($data->videoBasePath));
+            $checks['video_base_path'] = $this->checkVideoBasePath($data->videoBasePath);
         }
 
         if (!$data->vlcMediaPlayerPath instanceof Optional) {
-            $checks['vlc_media_player_path'] = SetupCheckData::fromProblem($this->checkVlcBinaryAction->handle($data->vlcMediaPlayerPath));
+            $checks['vlc_media_player_path'] = $this->checkVlcBinaryAction->handle($data->vlcMediaPlayerPath);
         }
 
         return $checks;
@@ -41,34 +42,34 @@ class CheckSetupSettingsAction
      * The video folder must be visible here (inside a mounted media folder in prod, so VLC sees it too) and writable,
      * or creatable when it doesn't exist yet.
      */
-    private function videoBasePathProblem(?string $path): ?string
+    private function checkVideoBasePath(?string $path): SetupCheckData
     {
         if (blank($path)) {
-            return 'Enter a folder.';
+            return SetupCheckData::failed(SetupCheckCode::PathRequired);
         }
 
         $path = rtrim($path, '/') ?: '/';
 
         if (!str_starts_with($path, '/')) {
-            return 'Use a full path, starting with /.';
+            return SetupCheckData::failed(SetupCheckCode::PathNotAbsolute);
         }
 
         if (in_array('..', explode('/', $path), true)) {
-            return 'Use a path without "..".';
+            return SetupCheckData::failed(SetupCheckCode::PathHasParentSegment);
         }
 
         $mediaFolders = config('deploy.media_folders');
 
         if ($mediaFolders !== [] && !collect($mediaFolders)->contains(fn (string $folder): bool => $path === $folder || Str::startsWith($path, "{$folder}/"))) {
-            return 'This folder is outside the media folders ('.implode(', ', $mediaFolders).'), so MovieBrowser3 and VLC can\'t see it. Pick a folder inside one, or add a media folder by running the installer again.';
+            return SetupCheckData::failed(SetupCheckCode::PathOutsideMediaFolders, ['folders' => implode(', ', $mediaFolders)]);
         }
 
         if (file_exists($path)) {
             if (!is_dir($path)) {
-                return 'This is a file, not a folder.';
+                return SetupCheckData::failed(SetupCheckCode::PathIsFile);
             }
 
-            return is_writable($path) ? null : 'MovieBrowser3 can\'t write to this folder.';
+            return is_writable($path) ? SetupCheckData::passed() : SetupCheckData::failed(SetupCheckCode::PathNotWritable);
         }
 
         // A folder that doesn't exist yet is created on the first upload: its nearest existing parent must allow that
@@ -78,6 +79,8 @@ class CheckSetupSettingsAction
             $parent = dirname($parent);
         }
 
-        return is_dir($parent) && is_writable($parent) ? null : "MovieBrowser3 can't create this folder in {$parent}.";
+        return is_dir($parent) && is_writable($parent)
+            ? SetupCheckData::passed()
+            : SetupCheckData::failed(SetupCheckCode::PathNotCreatable, ['parent' => $parent]);
     }
 }

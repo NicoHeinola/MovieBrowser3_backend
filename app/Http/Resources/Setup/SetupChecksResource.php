@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * The checked setup values, keyed by setting key: { "video_base_path": { "ok", "message" }, ... }
+ * The checked setup values, keyed by setting key: { "video_base_path": { "ok", "code", "params" }, ... }
  *
  * @property array<string, SetupCheckData> $resource
  */

@@ -30,7 +30,7 @@ class GetSetupStatusAction
     private function detectVlc(): ?string
     {
         foreach (config('vlc.detect_paths') as $candidate) {
-            if ($this->checkVlcBinaryAction->handle($candidate) === null) {
+            if ($this->checkVlcBinaryAction->handle($candidate)->ok) {
                 return $candidate;
             }
         }

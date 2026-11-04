@@ -256,15 +256,28 @@ test('changing the video base path keeps the old base folder and its parents', f
     File::deleteDirectory($newBasePath);
 });
 
-test('windows absolute video base paths are accepted', function (string $path) {
+test('windows paths are rejected', function (string $key, string $path) {
     actingAsAdmin();
 
-    patchJson('/api/v1/settings/video_base_path', ['value' => $path])
+    patchJson("/api/v1/settings/{$key}", ['value' => $path])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['value']);
+})->with([
+    'video folder with backslash' => ['video_base_path', 'C:\\Videos'],
+    'video folder with forward slash' => ['video_base_path', 'C:/Videos'],
+    'vlc' => ['vlc_media_player_path', 'C:\\VLC\\vlc.exe'],
+]);
+
+test('the VLC path can be a Linux path, empty or the vlc that setup detects on the PATH', function (string $path) {
+    actingAsAdmin();
+
+    patchJson('/api/v1/settings/vlc_media_player_path', ['value' => $path])
         ->assertOk()
         ->assertJsonPath('value', $path);
 })->with([
-    'backslash' => 'C:\\Videos',
-    'forward slash' => 'C:/Videos',
+    'linux path' => '/mnt/c/Program Files/VideoLAN/VLC/vlc.exe',
+    'empty' => '',
+    'on the PATH' => 'vlc',
 ]);
 
 test('a failed base path relocation restores moved files and the old setting', function () {

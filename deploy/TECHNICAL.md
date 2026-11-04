@@ -100,7 +100,7 @@ FrankenPHP runs `PHP_THREADS` threads (default 24), and each open watch-progress
 
 - `POST /launch {"binary", "port", "password"}` starts VLC detached, with its web interface on that port. It returns 204, or 422 when the binary is missing or isn't named `vlc` / `vlc.exe`. The bridge never starts anything else.
 - `POST /windows-paths {"paths": [...]}` returns `{"paths": [...]}` converted with `wslpath -w`, or 422.
-- `POST /check-binary {"binary"}` returns 204 when that binary passes the same check as `/launch`, or 422 with the reason. The first-login setup wizard uses it to find and test VLC.
+- `POST /check-binary {"binary"}` returns 204 when that binary passes the same check as `/launch`, or 422 with the reason as `message` and `code` (`vlc_not_found`, `vlc_wrong_binary`). The first-login setup wizard uses it to find and test VLC.
 - A bad token gets 403, anything else 404.
 
 The backend uses it when `VLC_LAUNCHER=bridge`, which `compose.yml` sets. The setup wizard's media-folder rule comes from `MOVIEBROWSER3_MEDIA_DIRS` too (`config('deploy.media_folders')`): in prod, a video folder outside them is invisible to the containers and VLC. In dev it stays `local` and starts VLC itself.

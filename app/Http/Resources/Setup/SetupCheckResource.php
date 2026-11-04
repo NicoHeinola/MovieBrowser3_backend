@@ -16,7 +16,9 @@ class SetupCheckResource extends JsonResource
     {
         return [
             'ok' => $this->ok,
-            'message' => $this->message,
+            'code' => $this->code,
+            // An empty PHP array would encode as [], and the contract is always an object
+            'params' => (object) $this->params,
         ];
     }
 }

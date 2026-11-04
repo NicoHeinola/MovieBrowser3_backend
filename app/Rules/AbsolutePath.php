@@ -9,9 +9,7 @@ class AbsolutePath implements ValidationRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $path = (string) $value;
-
-        if (!str_starts_with($path, '/') && preg_match('~^[A-Za-z]:[\\\\/]~', $path) !== 1) {
+        if (!str_starts_with((string) $value, '/')) {
             $fail('The :attribute must be an absolute path.');
         }
     }

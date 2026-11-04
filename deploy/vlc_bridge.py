@@ -9,7 +9,8 @@ only, checks a shared bearer token, and only ever starts a binary named vlc or v
     POST /windows-paths  {"paths": [str, ...]}                          -> 200 {"paths": [str, ...]}
     POST /check-binary   {"binary": str}                                -> 204 when it's a VLC that exists
 
-Bad or missing token: 403. Invalid input: 422 {"message"}. Anything else: 404.
+Bad or missing token: 403. Invalid input: 422 {"message"}, plus "code" (vlc_not_found or vlc_wrong_binary) when the
+binary is the problem. Anything else: 404.
 
 Settings come from the environment, or from the .env file next to this script (as written by install.sh):
 VLC_BRIDGE_TOKEN (required) and VLC_BRIDGE_PORT (default 8767). Python 3 standard library only.
@@ -28,7 +29,11 @@ MAX_BODY_BYTES = 1024 * 1024
 
 
 class BadRequest(Exception):
-    """Invalid input, answered with 422 and the message."""
+    """Invalid input, answered with 422, the message and the code when it has one."""
+
+    def __init__(self, message, code=None):
+        super().__init__(message)
+        self.code = code
 
 
 def read_env_file(path):
@@ -55,11 +60,11 @@ def resolve_binary(binary):
     if not isinstance(binary, str) or not binary:
         raise BadRequest("binary must be a non-empty string.")
     if os.path.basename(binary).lower() not in ALLOWED_BINARIES:
-        raise BadRequest(f"{binary} is not VLC. Only vlc or vlc.exe can be started.")
+        raise BadRequest(f"{binary} is not VLC. Only vlc or vlc.exe can be started.", "vlc_wrong_binary")
     # A bare name such as "vlc" is looked up on the PATH, like the backend does without the bridge
     path = binary if "/" in binary else shutil.which(binary)
     if path is None or not os.path.isfile(path):
-        raise BadRequest(f"VLC was not found at {binary}. Check the vlc_media_player_path setting.")
+        raise BadRequest(f"VLC was not found at {binary}. Check the vlc_media_player_path setting.", "vlc_not_found")
     return path
 
 
@@ -126,7 +131,10 @@ class Handler(BaseHTTPRequestHandler):
         try:
             result = route(self.read_json())
         except BadRequest as error:
-            return self.respond(422, {"message": str(error)})
+            body = {"message": str(error)}
+            if error.code:
+                body["code"] = error.code
+            return self.respond(422, body)
         except OSError as error:
             return self.respond(422, {"message": f"VLC could not be started: {error}"})
 
