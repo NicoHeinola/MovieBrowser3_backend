@@ -33,9 +33,7 @@ trait HasWebsiteQuery
      */
     public function scopeSearch(Builder $query, string ...$terms): void
     {
-        $words = preg_split('/\s+/', implode(' ', $terms), -1, PREG_SPLIT_NO_EMPTY);
-
-        foreach ($words as $word) {
+        foreach (CaseInsensitiveLike::words(...$terms) as $word) {
             $query->where(function (Builder $query) use ($word) {
                 foreach (['websites.title', 'websites.url', 'websites.description'] as $column) {
                     CaseInsensitiveLike::where($query, $column, $word, 'or');

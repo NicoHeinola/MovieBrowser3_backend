@@ -196,6 +196,80 @@ test('show search ignores case and matches % and _ literally', function () {
         ->assertJsonPath('data.0.id', $snake->id);
 });
 
+test('show search matches the description, titles, category names and entry names', function () {
+    actingAsAdmin();
+
+    $described = Show::factory()->create(['description' => 'A chef returns to Chicago']);
+    $titled = Show::factory()->create(['description' => null]);
+    $categorized = Show::factory()->create(['description' => null]);
+    $withEntry = Show::factory()->create(['description' => null]);
+    Show::factory()->create(['description' => null]);
+
+    ShowTitle::factory()->for($titled)->create(['title' => 'Alternative Kitchen Name', 'is_primary' => false]);
+    $categorized->categories()->attach(Category::factory()->create(['name' => 'Thriller']));
+    ShowEntry::factory()->for($withEntry)->create(['name' => 'Mugen Train']);
+
+    getJson('/api/v1/shows?filter[search]=CHICAGO')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $described->id);
+
+    getJson('/api/v1/shows?filter[search]=kitchen')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $titled->id);
+
+    getJson('/api/v1/shows?filter[search]=thrill')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $categorized->id);
+
+    getJson('/api/v1/shows?filter[search]=mugen')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $withEntry->id);
+});
+
+test('show search needs every word to match, each in any field', function () {
+    actingAsAdmin();
+
+    $match = Show::factory()->create(['description' => 'Set in a Chicago restaurant']);
+    $titleOnly = Show::factory()->create(['description' => null]);
+
+    ShowTitle::factory()->for($match)->primary()->create(['title' => 'The Bear']);
+    ShowTitle::factory()->for($titleOnly)->primary()->create(['title' => 'Bear Grylls']);
+    $match->categories()->attach(Category::factory()->create(['name' => 'Drama']));
+
+    getJson('/api/v1/shows?filter[search]='.urlencode('  drama   bear chicago '))
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $match->id);
+
+    getJson('/api/v1/shows?filter[search]='.urlencode('bear weather'))
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+});
+
+test('show search stays inside the other filters', function () {
+    actingAsAdmin();
+
+    $anime = Category::factory()->create(['value' => 'anime']);
+    $inCategory = Show::factory()->create(['description' => 'Pirates at sea']);
+    $outsideCategory = Show::factory()->create(['description' => 'Pirates in the Caribbean']);
+
+    $inCategory->categories()->attach($anime);
+
+    getJson('/api/v1/shows?filter[search]=pirates&filter[categories.value]=anime')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $inCategory->id);
+
+    getJson('/api/v1/shows?filter[search]=pirates&filter[exclude_categories]=anime')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $outsideCategory->id);
+});
+
 test('an admin can filter shows with metadata operators', function () {
     actingAsAdmin();
 

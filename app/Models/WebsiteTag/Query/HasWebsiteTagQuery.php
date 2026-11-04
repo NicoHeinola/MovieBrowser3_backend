@@ -25,9 +25,7 @@ trait HasWebsiteTagQuery
      */
     public function scopeSearch(Builder $query, string ...$terms): void
     {
-        $words = preg_split('/\s+/', implode(' ', $terms), -1, PREG_SPLIT_NO_EMPTY);
-
-        foreach ($words as $word) {
+        foreach (CaseInsensitiveLike::words(...$terms) as $word) {
             CaseInsensitiveLike::where($query, 'website_tags.name', $word);
         }
     }

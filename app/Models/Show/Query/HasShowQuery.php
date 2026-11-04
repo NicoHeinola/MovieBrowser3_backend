@@ -34,15 +34,23 @@ trait HasShowQuery
     }
 
     /**
-     * Shows with a title containing the term, ignoring case.
+     * Shows where every word of the term appears, ignoring case, in the description, a title, a category name or an entry name.
      */
     public function scopeSearch(Builder $query, string ...$terms): void
     {
-        $term = implode(' ', $terms);
+        $relatedColumns = ['titles' => 'show_titles.title', 'categories' => 'categories.name', 'entries' => 'show_entries.name'];
 
-        $query->whereHas('titles', function (Builder $query) use ($term) {
-            CaseInsensitiveLike::where($query, 'show_titles.title', $term);
-        });
+        foreach (CaseInsensitiveLike::words(...$terms) as $word) {
+            $query->where(function (Builder $query) use ($relatedColumns, $word) {
+                CaseInsensitiveLike::where($query, 'shows.description', $word);
+
+                foreach ($relatedColumns as $relation => $column) {
+                    $query->orWhereHas($relation, function (Builder $query) use ($column, $word) {
+                        CaseInsensitiveLike::where($query, $column, $word);
+                    });
+                }
+            });
+        }
     }
 
     /**
