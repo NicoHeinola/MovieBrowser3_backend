@@ -3,6 +3,8 @@
 namespace App\Actions\EpisodePlayback;
 
 use App\Dtos\EpisodePlayback\VlcConnectionData;
+use App\Enums\SetupCheckCode;
+use App\Enums\VlcLaunchCode;
 use App\Exceptions\VlcLaunchException;
 use App\Models\Setting\Setting;
 use Illuminate\Support\Arr;
@@ -64,7 +66,7 @@ class OpenVlcPlaylistAction
             $status = $this->requestVlcStatusAction->handle($vlc, $command);
 
             if ($status === null) {
-                throw new VlcLaunchException('VLC was closed before the playlist was built.');
+                throw new VlcLaunchException('VLC was closed before the playlist was built.', VlcLaunchCode::VlcClosedEarly);
             }
         }
 
@@ -80,7 +82,11 @@ class OpenVlcPlaylistAction
         $binary = Setting::query()->whereKey('vlc_media_player_path')->value('value') ?: 'vlc';
 
         if (!$this->usesBridge() && str_contains($binary, '/') && !is_file($binary)) {
-            throw new VlcLaunchException("VLC was not found at {$binary}. Check the vlc_media_player_path setting.");
+            throw new VlcLaunchException(
+                "VLC was not found at {$binary}. Check the vlc_media_player_path setting.",
+                SetupCheckCode::VlcNotFound,
+                ['path' => $binary],
+            );
         }
 
         return $binary;
@@ -112,7 +118,11 @@ class OpenVlcPlaylistAction
         ]);
 
         if ($result->failed()) {
-            throw new VlcLaunchException("VLC could not be started: {$result->errorOutput()}");
+            throw new VlcLaunchException(
+                "VLC could not be started: {$result->errorOutput()}",
+                VlcLaunchCode::VlcStartFailed,
+                ['detail' => $result->errorOutput()],
+            );
         }
     }
 
@@ -129,7 +139,7 @@ class OpenVlcPlaylistAction
             Sleep::for(self::STARTUP_ATTEMPT_DELAY_MS)->milliseconds();
         }
 
-        throw new VlcLaunchException('VLC did not start. Check the vlc_media_player_path setting.');
+        throw new VlcLaunchException('VLC did not start. Check the vlc_media_player_path setting.', VlcLaunchCode::VlcStartTimeout);
     }
 
     /**
@@ -155,7 +165,7 @@ class OpenVlcPlaylistAction
             fclose($connection);
         }
 
-        throw new VlcLaunchException('No free port for the VLC web interface.');
+        throw new VlcLaunchException('No free port for the VLC web interface.', VlcLaunchCode::VlcNoFreePort);
     }
 
     /**
@@ -180,7 +190,11 @@ class OpenVlcPlaylistAction
             $result = Process::run(['wslpath', '-w', $path]);
 
             if ($result->failed()) {
-                throw new VlcLaunchException("Could not convert {$path} to a Windows path: {$result->errorOutput()}");
+                throw new VlcLaunchException(
+                    "Could not convert {$path} to a Windows path: {$result->errorOutput()}",
+                    VlcLaunchCode::VlcPathConversionFailed,
+                    ['path' => $path, 'detail' => $result->errorOutput()],
+                );
             }
 
             return trim($result->output());

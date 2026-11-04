@@ -5,7 +5,7 @@ namespace App\Exceptions;
 use App\Enums\SetupCheckCode;
 
 /**
- * A failed VLC bridge call. Playback shows the message; the setup check sends the code and params instead.
+ * A failed VLC bridge call. Its code is always a setup check code, so the setup check can report it as well.
  */
 class VlcBridgeException extends VlcLaunchException
 {
@@ -15,8 +15,8 @@ class VlcBridgeException extends VlcLaunchException
     public function __construct(
         string $message,
         public readonly SetupCheckCode $checkCode,
-        public readonly array $params = [],
+        array $params = [],
     ) {
-        parent::__construct($message);
+        parent::__construct($message, $checkCode, $params);
     }
 }

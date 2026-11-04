@@ -50,19 +50,19 @@ test('show write endpoints forbid authenticated non-admin users', function () {
 
     postJson('/api/v1/shows', [])
         ->assertForbidden()
-        ->assertJsonPath('message', 'Forbidden.');
+        ->assertJsonPath('code', 'forbidden');
 
     patchJson("/api/v1/shows/{$show->id}", [])
         ->assertForbidden()
-        ->assertJsonPath('message', 'Forbidden.');
+        ->assertJsonPath('code', 'forbidden');
 
     deleteJson("/api/v1/shows/{$show->id}")
         ->assertForbidden()
-        ->assertJsonPath('message', 'Forbidden.');
+        ->assertJsonPath('code', 'forbidden');
 
     deleteJson('/api/v1/shows', ['ids' => [1]])
         ->assertForbidden()
-        ->assertJsonPath('message', 'Forbidden.');
+        ->assertJsonPath('code', 'forbidden');
 });
 
 test('an admin can create a show', function () {

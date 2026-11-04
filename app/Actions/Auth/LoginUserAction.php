@@ -4,6 +4,7 @@ namespace App\Actions\Auth;
 
 use App\Dtos\Auth\AuthTokenData;
 use App\Dtos\Auth\LoginUserData;
+use App\Enums\ValidationErrorCode;
 use App\Models\User\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -34,7 +35,7 @@ class LoginUserAction
 
         if (!$hasLoginSucceeded) {
             throw ValidationException::withMessages([
-                'username' => ['The provided credentials are incorrect.'],
+                'username' => [ValidationErrorCode::InvalidCredentials->value],
             ]);
         }
 

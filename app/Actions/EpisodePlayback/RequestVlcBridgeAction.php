@@ -14,7 +14,7 @@ class RequestVlcBridgeAction
 
     /**
      * Calls the host-side VLC bridge (deploy/vlc_bridge.py), which starts VLC and converts paths for a backend that
-     * runs in a container. Its 422 messages (e.g. VLC not found) are passed on as they are, next to a setup check code.
+     * runs in a container. Its 422 messages (e.g. VLC not found) stay on the exception for the logs, next to a setup check code.
      *
      * @param  string  $endpoint  `launch` or `windows-paths`
      * @param  array<string, mixed>  $payload

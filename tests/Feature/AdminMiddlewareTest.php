@@ -36,7 +36,7 @@ test('admin middleware forbids authenticated non-admin users', function () {
 
     getJson('/api/test-admin-only')
         ->assertForbidden()
-        ->assertJsonPath('message', 'Forbidden.');
+        ->assertExactJson(['code' => 'forbidden', 'params' => []]);
 });
 
 test('admin middleware allows authenticated admin users', function () {

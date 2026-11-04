@@ -2,6 +2,7 @@
 
 namespace App\Actions\ShowTitle;
 
+use App\Enums\ValidationErrorCode;
 use App\Models\ShowTitle\ShowTitle;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -22,7 +23,7 @@ class DeleteShowTitleAction
 
                 if (!$otherPrimaryExists) {
                     throw ValidationException::withMessages([
-                        'title' => ['Cannot delete the only primary title.'],
+                        'title' => [ValidationErrorCode::OnlyPrimaryTitle->value],
                     ]);
                 }
             }

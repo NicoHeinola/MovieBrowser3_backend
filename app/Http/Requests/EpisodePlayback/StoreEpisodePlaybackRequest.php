@@ -3,6 +3,7 @@
 namespace App\Http\Requests\EpisodePlayback;
 
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
+use App\Enums\ValidationErrorCode;
 use App\Models\Episode\Episode;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
@@ -32,7 +33,7 @@ class StoreEpisodePlaybackRequest extends FormRequest
                 $episode = $this->route('episode');
 
                 if (!File::isFile(ResolveEpisodeVideoPathAction::run($episode))) {
-                    $validator->errors()->add('episode', 'The episode has no video file.');
+                    $validator->errors()->add('episode', ValidationErrorCode::NoVideoFile->value);
                 }
             },
         ];

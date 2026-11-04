@@ -3,6 +3,7 @@
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Actions\EpisodePlayback\OpenVlcPlaylistAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
+use App\Enums\SetupCheckCode;
 use App\Exceptions\VlcLaunchException;
 use App\Jobs\TrackVlcPlaybackJob;
 use App\Models\Episode\Episode;
@@ -241,11 +242,11 @@ test('a failed VLC launch keeps the previous progress', function () {
     $entry = ShowEntry::factory()->create();
     [$first, $second] = playableEpisodes($entry, 2);
     ShowWatchProgress::factory()->create(['user_id' => $user->id, 'episode_id' => $first->id]);
-    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->andThrow(new VlcLaunchException('VLC did not start.'));
+    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->andThrow(new VlcLaunchException('VLC was not found.', SetupCheckCode::VlcNotFound, ['path' => '/missing/vlc']));
 
     postJson("/api/v1/episodes/{$second->id}/playback")
         ->assertStatus(503)
-        ->assertJsonPath('message', 'VLC did not start.');
+        ->assertExactJson(['code' => 'vlc_not_found', 'params' => ['path' => '/missing/vlc']]);
 
     Queue::assertNothingPushed();
 
