@@ -9,3 +9,5 @@
 # Change .env.production in the same commit, so new installs get the same result.
 #
 # Keys that .env.production adds don't need a line: every run adds missing keys with their defaults.
+
+1 set VLC_TRACK_INTERVAL_SECONDS 5

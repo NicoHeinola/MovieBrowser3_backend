@@ -170,7 +170,7 @@ test('a status without a state is treated as not playing', function () {
     assertTrackingContinues($user);
 });
 
-test('the check interval never drops below 5 seconds', function (string $value, int $expected) {
+test('the check interval never drops below 1 second', function (string $value, int $expected) {
     $_ENV['VLC_TRACK_INTERVAL_SECONDS'] = $_SERVER['VLC_TRACK_INTERVAL_SECONDS'] = $value;
 
     try {
@@ -179,8 +179,9 @@ test('the check interval never drops below 5 seconds', function (string $value, 
         unset($_ENV['VLC_TRACK_INTERVAL_SECONDS'], $_SERVER['VLC_TRACK_INTERVAL_SECONDS']);
     }
 })->with([
-    'empty' => ['', 5],
-    'zero' => ['0', 5],
-    'too small' => ['2', 5],
+    'empty' => ['', 1],
+    'zero' => ['0', 1],
+    'too small' => ['-3', 1],
+    'minimum' => ['1', 1],
     'normal' => ['15', 15],
 ]);
