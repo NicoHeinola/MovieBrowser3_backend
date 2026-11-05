@@ -35,4 +35,5 @@ return DB::transaction(function () use ($data): X {
 ## Helpers
 
 - Logic that must not live on models (paths, setting lookups) goes in read-only helper actions, e.g. `ResolveEpisodeVideoPathAction::run($episode)`.
-- `ResolveVideoBasePathAction` memoizes with `once()` from a static method; actions that change that setting call `Once::flush()`.
+- `ResolveVideoBasePathAction` memoizes with `once()` from a static method; actions that change that setting call `Once::flush()`. `queue:work` never flushes it, so jobs that resolve video paths flush first.
+- Before treating missing files as real, confirm `CheckVideoBasePathAction`: an unmounted drive makes every file look missing.

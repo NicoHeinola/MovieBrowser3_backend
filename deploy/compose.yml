@@ -10,7 +10,7 @@ x-logging: &logging
     max-size: 10m
     max-file: "3"
 
-# backend and queue share the image and settings. Both need the host network: VLC's web interface and the VLC
+# backend, queue and scheduler share the image and settings. They need the host network: VLC's web interface and the VLC
 # bridge listen on the host's 127.0.0.1 only.
 x-backend: &backend
   image: moviebrowser3-backend:local
@@ -67,6 +67,13 @@ services:
     <<: *backend
     command: ["php", "artisan", "queue:work", "--tries=1"]
     # The FrankenPHP base image's healthcheck probes a web server the worker doesn't run
+    healthcheck:
+      disable: true
+
+  # Only queues the scheduled jobs; queue runs them, so this one needs no media folders
+  scheduler:
+    <<: *backend
+    command: ["php", "artisan", "schedule:work"]
     healthcheck:
       disable: true
 

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['show_entry_id', 'name', 'filename', 'sequence_number'])]
+#[Fillable(['show_entry_id', 'name', 'filename', 'has_video_file', 'sequence_number'])]
 class Episode extends Model
 {
     use HasEpisodeQuery;
@@ -17,6 +17,10 @@ class Episode extends Model
 
     /** @use HasFactory<EpisodeFactory> */
     use HasFactory;
+
+    protected $casts = [
+        'has_video_file' => 'boolean',
+    ];
 
     protected static function newFactory(): EpisodeFactory
     {

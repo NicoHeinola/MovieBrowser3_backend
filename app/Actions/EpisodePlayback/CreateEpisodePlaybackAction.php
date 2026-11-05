@@ -2,15 +2,19 @@
 
 namespace App\Actions\EpisodePlayback;
 
+use App\Actions\Episode\UpdateEpisodeVideoFileStatusAction;
+use App\Actions\Episode\VideoFile\CheckVideoBasePathAction;
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
 use App\Dtos\ShowWatchProgress\WatchPositionData;
+use App\Enums\ValidationErrorCode;
 use App\Jobs\TrackVlcPlaybackJob;
 use App\Models\Episode\Episode;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Validation\ValidationException;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CreateEpisodePlaybackAction
@@ -21,6 +25,8 @@ class CreateEpisodePlaybackAction
         private readonly ResolveEpisodeVideoPathAction $resolveEpisodeVideoPathAction,
         private readonly OpenVlcPlaylistAction $openVlcPlaylistAction,
         private readonly UpdateShowWatchProgressAction $updateShowWatchProgressAction,
+        private readonly UpdateEpisodeVideoFileStatusAction $updateEpisodeVideoFileStatusAction,
+        private readonly CheckVideoBasePathAction $checkVideoBasePathAction,
     ) {}
 
     /**
@@ -33,6 +39,8 @@ class CreateEpisodePlaybackAction
      */
     public function handle(Episode $episode, User $user, bool $fromStart = false): ShowWatchProgress
     {
+        $this->ensureVideoFileExists($episode);
+
         $resume = $fromStart ? null : $this->resumableProgress($episode, $user);
         $startSeconds = $resume?->position_seconds ?? 0;
 
@@ -51,6 +59,23 @@ class CreateEpisodePlaybackAction
 
             return $progress;
         });
+    }
+
+    /**
+     * Fails with `no_video_file` when the file is gone, and keeps the stored `has_video_file` in step with what was
+     * found. An unreachable base folder says nothing about this file, so the stored value stays then.
+     */
+    private function ensureVideoFileExists(Episode $episode): void
+    {
+        $hasVideoFile = File::isFile($this->resolveEpisodeVideoPathAction->handle($episode));
+
+        if ($hasVideoFile || $this->checkVideoBasePathAction->handle()) {
+            $this->updateEpisodeVideoFileStatusAction->handle($episode, $hasVideoFile);
+        }
+
+        if (!$hasVideoFile) {
+            throw ValidationException::withMessages(['episode' => ValidationErrorCode::NoVideoFile->value]);
+        }
     }
 
     /**

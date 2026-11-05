@@ -216,7 +216,11 @@ test('an episode whose video is missing is imported without one', function () {
         ->expectsOutputToContain('video missing')
         ->assertSuccessful();
 
-    expect(Episode::query()->where('sequence_number', 3)->sole()->filename)->toBe('');
+    $missing = Episode::query()->where('sequence_number', 3)->sole();
+
+    expect($missing->filename)->toBe('')
+        ->and($missing->has_video_file)->toBeFalse()
+        ->and(Episode::query()->where('sequence_number', 1)->sole()->has_video_file)->toBeTrue();
 });
 
 test('it refuses to start when none of the videos can be found', function () {

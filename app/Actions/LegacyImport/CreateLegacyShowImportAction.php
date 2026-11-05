@@ -90,6 +90,7 @@ class CreateLegacyShowImportAction
                     $episode = $entry->episodes()->create([
                         'name' => $this->episodeName($legacyEpisode),
                         'filename' => $hasVideo ? basename((string) $legacyEpisode->filename) : '',
+                        'has_video_file' => $hasVideo,
                         'sequence_number' => $legacyEpisode->number,
                     ]);
 

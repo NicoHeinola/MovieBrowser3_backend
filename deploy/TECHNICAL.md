@@ -9,6 +9,7 @@ MovieBrowser3 runs in Docker on WSL2 (Docker Engine inside WSL, mirrored network
 ```text
 browser ─▶ backend (FrankenPHP)  127.0.0.1:8780   /api/*, /up → Laravel; everything else → the built frontend
            queue (queue:work)
+           scheduler (schedule:work)
            db (Postgres 17)      127.0.0.1:7564
 backend / queue ── POST /launch, /windows-paths ─▶ VLC bridge  127.0.0.1:8767 ─▶ vlc.exe
 backend / queue ── status.json ─▶ VLC web interface  127.0.0.1:40000-49151
@@ -67,7 +68,7 @@ When settings change between versions:
 | --- | --- |
 | `MovieBrowser3_backend/`, `MovieBrowser3_frontend/` | The clones, each on its newest release tag. Don't edit them: local changes block the update. To recover one, `git -C <clone> reset --hard` (plus `clean -fd` for added files) and re-run. |
 | `.env` | Settings, secrets and installer answers. Compose, the containers and the bridge read it. |
-| `compose.yml` | The stack, copied from the backend clone on every run. `backend` and `queue` use the locally built `moviebrowser3-backend:local` with `pull_policy: never`. |
+| `compose.yml` | The stack, copied from the backend clone on every run. `backend`, `queue` and `scheduler` use the locally built `moviebrowser3-backend:local` with `pull_policy: never`. |
 | `compose.override.yml` | Media folder mounts, rewritten on every run. |
 | `web/current/` | The frontend being served. `web/next/` exists only during an update. |
 | `data/postgres/` | The database. |
@@ -83,6 +84,13 @@ Each media folder is mounted into `backend` and `queue` at the same path as on t
 
 Windows drives appear as `/mnt/<letter>` (drvfs). WSL only mounts drives present when it starts, and the bridge task keeps WSL running, so an external disk plugged in later needs `sudo mount -t drvfs G: /mnt/g` (or an `/etc/fstab` line with `nofail`, see README step 5). Containers only see mounts that existed when they started, so run `moviebrowser3 restart` afterwards. The installer warns when a `/mnt/<letter>` folder's drive isn't mounted. A disk with a Linux filesystem mounts with `wsl --mount \\.\PHYSICALDRIVE<n> --partition <p>` from an administrator PowerShell, under `/mnt/wsl/`.
 
+## Scheduled Jobs
+
+`scheduler` runs `schedule:work`, which only queues what `routes/console.php` schedules; `queue` does the work, so `scheduler` needs no media folders.
+
+- **Daily:** `CheckEpisodeVideoFilesJob` refreshes every episode's stored `has_video_file`, 200 episodes per job so VLC tracking keeps running on the shared worker. Admins can start it with `POST /api/v1/video-files/check` and follow it with `GET` on the same path. Each run is a row in `video_file_checks`. Starting one while another runs answers 422 `video_file_check_running`, a unique index backs that up for simultaneous starts, and a run that fails reports `video_file_check_failed`. If the worker is killed before it can report that, the run counts as dead after 5 minutes without progress, so it can't block the next one.
+- While any episode expects a file, a missing, unreadable or empty video base folder counts as unreachable: the check stops without changing anything and reports `video_base_path_unavailable`, because a drive that isn't mounted looks like an empty folder in the containers.
+
 ## Serving
 
 One FrankenPHP container (classic mode) serves everything on `WEB_PORT`:
@@ -92,7 +100,7 @@ One FrankenPHP container (classic mode) serves everything on `WEB_PORT`:
 - `/assets/*` has hashed names and is cached for a year. Everything else is `no-cache`, so a new build shows on the next load. Frontend files are compressed with zstd or gzip.
 - The site address matches any Host header, so localhost, 127.0.0.1 and LAN names all work.
 
-FrankenPHP runs `PHP_THREADS` threads (default 24), and each open watch-progress stream holds one. `max_execution_time` is 0, output buffering is off, and uploads have no size cap or timeout. The entrypoint caches config, routes and events, but not views: a clone has no `resources/views`. It doesn't run `artisan optimize`, because laravel-data's step writes to the database cache before the first migration. `backend` and `queue` run as the host user, so files they write on the media folders stay yours.
+FrankenPHP runs `PHP_THREADS` threads (default 24), and each open watch-progress stream holds one. `max_execution_time` is 0, output buffering is off, and uploads have no size cap or timeout. The entrypoint caches config, routes and events, but not views: a clone has no `resources/views`. It doesn't run `artisan optimize`, because laravel-data's step writes to the database cache before the first migration. `backend`, `queue` and `scheduler` run as the host user, so files they write on the media folders stay yours.
 
 ## VLC Bridge
 

@@ -19,6 +19,7 @@ use App\Http\Controllers\ShowSectionController;
 use App\Http\Controllers\ShowTitleController;
 use App\Http\Controllers\ShowWatchProgressStreamController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VideoFileCheckController;
 use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\WebsiteTagController;
 use Illuminate\Support\Facades\Route;
@@ -79,5 +80,7 @@ Route::prefix('v1')->group(function (): void {
         // Not resources: a dry run of setup values, and marking the first-login setup done
         Route::post('setup/checks', [SetupCheckController::class, 'store'])->name('setup.checks.store');
         Route::post('setup/complete', [SetupCompletionController::class, 'store'])->name('setup.complete.store');
+
+        Route::apiSingleton('video-files/check', VideoFileCheckController::class)->creatable()->names('video-files.check')->only(['show', 'store']);
     });
 });

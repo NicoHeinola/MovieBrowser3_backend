@@ -61,7 +61,7 @@ Usage: moviebrowser3 <command>
   start | stop      Start or stop every service
   restart           Restart every service
   status            Show the services
-  logs [service]    Follow the logs (db, backend, queue)
+  logs [service]    Follow the logs (db, backend, queue, scheduler)
   artisan <args>    Run an artisan command in a one-off backend container
   import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]
                     Import MovieBrowser2 shows, copying the videos from the folder (mounted read-only)

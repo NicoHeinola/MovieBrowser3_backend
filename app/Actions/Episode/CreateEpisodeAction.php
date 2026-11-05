@@ -22,6 +22,7 @@ class CreateEpisodeAction
             $episode = $showEntry->episodes()->create([
                 'name' => $data->name,
                 'filename' => '',
+                'has_video_file' => false,
                 'sequence_number' => $data->sequenceNumber,
             ]);
 

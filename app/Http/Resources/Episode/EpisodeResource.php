@@ -21,6 +21,7 @@ class EpisodeResource extends JsonResource
 
             'name' => $this->name,
             'filename' => $this->filename,
+            'has_video_file' => $this->has_video_file,
             'sequence_number' => $this->sequence_number,
             'file_path' => ResolveEpisodeVideoPathAction::run($this->resource),
         ];

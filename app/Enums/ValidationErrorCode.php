@@ -36,6 +36,8 @@ enum ValidationErrorCode: string
     case InvalidCredentials = 'invalid_credentials';
     case NoVideoFile = 'no_video_file';
     case OnlyPrimaryTitle = 'only_primary_title';
+    case VideoBasePathUnavailable = 'video_base_path_unavailable';
+    case VideoFileCheckRunning = 'video_file_check_running';
 
     case Invalid = 'invalid';
 }
