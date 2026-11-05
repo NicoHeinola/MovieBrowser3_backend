@@ -17,6 +17,8 @@ applyTo: 'app/**/ShowEntryWatchStatus/**,app/**/ShowWatchProgress/**,app/Http/Co
 
 - Status is per user and per show entry (`WatchStatus` enum, `ShowEntryWatchStatus`), so season 1 can be `completed` while season 2 is `watching`. Any authenticated user can `PUT|DELETE show-entries/{show_entry}/watch-status`.
 - `ShowController` and `ShowEntryController` eager-load only the current user's row of `watchStatuses`; `ShowEntryResource` nests the first one as `watch_status` (object or `null`). `filter[watch_status]` uses the `withWatchStatus` scope.
+- On shows, `filter[watch_status]` and `filter[exclude_watch_status]` match the user's combined status, which must mirror the frontend's `getCombinedWatchStatus`: the shared status when every entry has it, `mixed` when statuses differ or only some entries have one, and `null` otherwise. `mixed` is a filter value only, not a `WatchStatus` case.
+- `filter[entry_watch_status]` and `filter[exclude_entry_watch_status]` match any single entry instead, and don't know `mixed`.
 
 ## Watch Progress
 

@@ -21,6 +21,26 @@ function actingAsRegularUser(): User
     return $user;
 }
 
+/**
+ * Creates a show with one entry per given status, marked for the user; null leaves that entry unmarked.
+ *
+ * @param  array<int, string|null>  $statuses
+ */
+function showWithStatuses(User $user, array $statuses): Show
+{
+    $show = Show::factory()->create();
+
+    foreach ($statuses as $status) {
+        $entry = ShowEntry::factory()->create(['show_id' => $show->id]);
+
+        if ($status !== null) {
+            ShowEntryWatchStatus::factory()->create(['show_entry_id' => $entry->id, 'user_id' => $user->id, 'status' => $status]);
+        }
+    }
+
+    return $show;
+}
+
 test('show entry status endpoints require authentication', function () {
     $entry = ShowEntry::factory()->create();
 
@@ -149,62 +169,178 @@ test('entries can be filtered by the current users status', function () {
         ->assertJsonPath('data.0.id', $watching->id);
 });
 
-test('shows can be filtered by the current users entry statuses', function () {
+test('shows can be filtered by the current users combined status', function () {
     $user = actingAsRegularUser();
-    $watching = Show::factory()->create();
-    $mixed = Show::factory()->create();
-    $onHold = Show::factory()->create();
-    $otherUsers = Show::factory()->create();
+    $watching = showWithStatuses($user, ['watching', 'watching']);
+    $completed = showWithStatuses($user, ['completed', 'completed']);
+    $differing = showWithStatuses($user, ['watching', 'completed']);
+    $partly = showWithStatuses($user, ['completed', null]);
+    $onHold = showWithStatuses($user, ['on_hold']);
+    showWithStatuses($user, [null]);
     Show::factory()->create();
-
-    foreach ([[$watching, 'watching'], [$mixed, 'completed'], [$mixed, 'watching'], [$onHold, 'on_hold']] as [$show, $status]) {
-        $entry = ShowEntry::factory()->create(['show_id' => $show->id]);
-        ShowEntryWatchStatus::factory()->create(['show_entry_id' => $entry->id, 'user_id' => $user->id, 'status' => $status]);
-    }
-
-    // Another user's status must not count.
-    $otherEntry = ShowEntry::factory()->create(['show_id' => $otherUsers->id]);
-    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $otherEntry->id, 'user_id' => User::factory(), 'status' => 'watching']);
 
     getJson('/api/v1/shows?filter[watch_status]=watching&sort=id')
         ->assertOk()
-        ->assertJsonPath('data.*.id', [$watching->id, $mixed->id]);
+        ->assertJsonPath('data.*.id', [$watching->id]);
 
-    getJson('/api/v1/shows?filter[watch_status][]=completed&filter[watch_status][]=on_hold&sort=id')
+    getJson('/api/v1/shows?filter[watch_status]=completed&sort=id')
         ->assertOk()
-        ->assertJsonPath('data.*.id', [$mixed->id, $onHold->id]);
+        ->assertJsonPath('data.*.id', [$completed->id]);
+
+    getJson('/api/v1/shows?filter[watch_status]=mixed&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$differing->id, $partly->id]);
+
+    getJson('/api/v1/shows?filter[watch_status][]=completed&filter[watch_status][]=on_hold&filter[watch_status][]=mixed&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$completed->id, $differing->id, $partly->id, $onHold->id]);
 
     getJson('/api/v1/shows?filter[watch_status]=dropped')
         ->assertOk()
         ->assertJsonCount(0, 'data');
 });
 
-test('shows can exclude the current users entry statuses', function () {
+test('shows can exclude the current users combined status', function () {
     $user = actingAsRegularUser();
-    $dropped = Show::factory()->create();
-    $mixed = Show::factory()->create();
-    $watching = Show::factory()->create();
-    $otherUsers = Show::factory()->create();
-    $unstarted = Show::factory()->create();
+    $watching = showWithStatuses($user, ['watching', 'watching']);
+    $completed = showWithStatuses($user, ['completed', 'completed']);
+    $differing = showWithStatuses($user, ['watching', 'completed']);
+    $partly = showWithStatuses($user, ['completed', null]);
+    $unmarked = showWithStatuses($user, [null]);
+    $noEntries = Show::factory()->create();
 
-    foreach ([[$dropped, 'dropped'], [$mixed, 'watching'], [$mixed, 'completed'], [$watching, 'watching']] as [$show, $status]) {
-        $entry = ShowEntry::factory()->create(['show_id' => $show->id]);
-        ShowEntryWatchStatus::factory()->create(['show_entry_id' => $entry->id, 'user_id' => $user->id, 'status' => $status]);
-    }
-
-    // Another user's status must not count.
-    $otherEntry = ShowEntry::factory()->create(['show_id' => $otherUsers->id]);
-    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $otherEntry->id, 'user_id' => User::factory(), 'status' => 'dropped']);
-
-    getJson('/api/v1/shows?filter[exclude_watch_status]=dropped&sort=id')
+    getJson('/api/v1/shows?filter[exclude_watch_status]=completed&sort=id')
         ->assertOk()
-        ->assertJsonPath('data.*.id', [$mixed->id, $watching->id, $otherUsers->id, $unstarted->id]);
+        ->assertJsonPath('data.*.id', [$watching->id, $differing->id, $partly->id, $unmarked->id, $noEntries->id]);
 
-    getJson('/api/v1/shows?filter[exclude_watch_status][]=dropped&filter[exclude_watch_status][]=completed&sort=id')
+    getJson('/api/v1/shows?filter[exclude_watch_status]=mixed&sort=id')
         ->assertOk()
-        ->assertJsonPath('data.*.id', [$watching->id, $otherUsers->id, $unstarted->id]);
+        ->assertJsonPath('data.*.id', [$watching->id, $completed->id, $unmarked->id, $noEntries->id]);
+
+    getJson('/api/v1/shows?filter[exclude_watch_status][]=completed&filter[exclude_watch_status][]=mixed&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$watching->id, $unmarked->id, $noEntries->id]);
 
     getJson('/api/v1/shows?filter[watch_status]=watching&filter[exclude_watch_status]=completed')
         ->assertOk()
         ->assertJsonPath('data.*.id', [$watching->id]);
+});
+
+test('other users statuses never count toward the combined status', function () {
+    $user = actingAsRegularUser();
+    $other = User::factory()->create();
+
+    // Only another user marked it, so the current user has no combined status.
+    $unmarked = showWithStatuses($other, ['completed']);
+
+    // The other user's rows must neither fill the gap on the second entry nor differ from the first.
+    $partly = showWithStatuses($user, ['completed', null]);
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $partly->entries()->orderByDesc('id')->value('id'), 'user_id' => $other->id, 'status' => 'completed']);
+    $completed = showWithStatuses($user, ['completed']);
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $completed->entries()->value('id'), 'user_id' => $other->id, 'status' => 'dropped']);
+
+    getJson('/api/v1/shows?filter[watch_status]=completed')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$completed->id]);
+
+    getJson('/api/v1/shows?filter[watch_status]=mixed')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$partly->id]);
+
+    getJson('/api/v1/shows?filter[exclude_watch_status]=completed&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$unmarked->id, $partly->id]);
+});
+
+test('unknown show status filter values match nothing and exclude nothing', function () {
+    $user = actingAsRegularUser();
+    $completed = showWithStatuses($user, ['completed']);
+    $differing = showWithStatuses($user, ['watching', 'completed']);
+
+    getJson('/api/v1/shows?filter[watch_status]=binging')
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+
+    getJson('/api/v1/shows?filter[watch_status][]=binging&filter[watch_status][]=completed')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$completed->id]);
+
+    getJson('/api/v1/shows?filter[exclude_watch_status]=binging&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$completed->id, $differing->id]);
+});
+
+test('shows can be filtered by any entry having the current users status', function () {
+    $user = actingAsRegularUser();
+    $differing = showWithStatuses($user, ['watching', 'completed']);
+    $completed = showWithStatuses($user, ['completed', 'completed']);
+    showWithStatuses(User::factory()->create(), ['completed']);
+    showWithStatuses($user, [null]);
+    Show::factory()->create();
+
+    getJson('/api/v1/shows?filter[entry_watch_status]=watching')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$differing->id]);
+
+    getJson('/api/v1/shows?filter[entry_watch_status]=completed&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$differing->id, $completed->id]);
+
+    getJson('/api/v1/shows?filter[entry_watch_status][]=watching&filter[entry_watch_status][]=dropped')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$differing->id]);
+
+    getJson('/api/v1/shows?filter[entry_watch_status]=dropped')
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+});
+
+test('shows can exclude any entry having the current users status', function () {
+    $user = actingAsRegularUser();
+    $differing = showWithStatuses($user, ['watching', 'completed']);
+    $dropped = showWithStatuses($user, ['dropped']);
+    $otherUsers = showWithStatuses(User::factory()->create(), ['completed']);
+    $unmarked = showWithStatuses($user, [null]);
+    $noEntries = Show::factory()->create();
+
+    getJson('/api/v1/shows?filter[exclude_entry_watch_status]=completed&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$dropped->id, $otherUsers->id, $unmarked->id, $noEntries->id]);
+
+    getJson('/api/v1/shows?filter[exclude_entry_watch_status]=dropped&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$differing->id, $otherUsers->id, $unmarked->id, $noEntries->id]);
+
+    getJson('/api/v1/shows?filter[exclude_entry_watch_status][]=completed&filter[exclude_entry_watch_status][]=dropped&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$otherUsers->id, $unmarked->id, $noEntries->id]);
+});
+
+test('mixed and unknown values are not any-entry statuses', function (string $value) {
+    $user = actingAsRegularUser();
+    $differing = showWithStatuses($user, ['watching', 'completed']);
+    $completed = showWithStatuses($user, ['completed']);
+
+    getJson("/api/v1/shows?filter[entry_watch_status]={$value}")
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+
+    getJson("/api/v1/shows?filter[exclude_entry_watch_status]={$value}&sort=id")
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$differing->id, $completed->id]);
+})->with(['mixed', 'binging']);
+
+test('any-entry filters combine with the combined status filters', function () {
+    $user = actingAsRegularUser();
+    $differing = showWithStatuses($user, ['completed', 'watching']);
+    $watching = showWithStatuses($user, ['watching']);
+    showWithStatuses($user, ['completed', 'completed']);
+
+    getJson('/api/v1/shows?filter[exclude_watch_status]=completed&filter[entry_watch_status]=watching&sort=id')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$differing->id, $watching->id]);
+
+    getJson('/api/v1/shows?filter[watch_status]=mixed&filter[entry_watch_status]=watching')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$differing->id]);
 });

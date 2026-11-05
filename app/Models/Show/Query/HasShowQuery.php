@@ -2,6 +2,7 @@
 
 namespace App\Models\Show\Query;
 
+use App\Enums\WatchStatus;
 use App\Models\Query\CaseInsensitiveLike;
 use App\Models\Show\Query\Filters\MetadataFilter;
 use App\Models\Show\Query\Sorts\LastWatchedSort;
@@ -28,8 +29,10 @@ trait HasShowQuery
             AllowedFilter::custom('categories.value', new MetadataFilter, 'categories.value'),
             AllowedFilter::scope('has_watch_progress', 'withWatchProgress'),
             AllowedFilter::scope('watch_status', 'withWatchStatus'),
+            AllowedFilter::scope('entry_watch_status', 'withEntryWatchStatus'),
             AllowedFilter::scope('exclude_categories', 'withoutCategories'),
             AllowedFilter::scope('exclude_watch_status', 'withoutWatchStatus'),
+            AllowedFilter::scope('exclude_entry_watch_status', 'withoutEntryWatchStatus'),
         ];
     }
 
@@ -64,12 +67,47 @@ trait HasShowQuery
     }
 
     /**
-     * Shows with at least one entry the authenticated user has marked with one of the given statuses.
+     * Shows whose combined watch status for the authenticated user is one of the given values.
+     * The combined status mirrors the frontend's getCombinedWatchStatus: the shared status when every entry has
+     * the same one, `mixed` when statuses differ or only some entries have one, and null when no entry has one.
      */
     public function scopeWithWatchStatus(Builder $query, string ...$statuses): void
     {
-        $query->whereHas('entries.watchStatuses', function (Builder $query) use ($statuses) {
-            $query->where('user_id', Auth::id())->whereIn('status', $statuses);
+        $query->where(function (Builder $query) use ($statuses) {
+            foreach ($statuses as $status) {
+                $query->orWhere(function (Builder $query) use ($status) {
+                    $status === 'mixed' ? $query->withMixedWatchStatus() : $query->withUniformWatchStatus($status);
+                });
+            }
+        });
+    }
+
+    /**
+     * Shows where every entry has the given status from the authenticated user.
+     */
+    public function scopeWithUniformWatchStatus(Builder $query, string $status): void
+    {
+        // "No entry lacks the status" also holds for a show with no entries, so require at least one.
+        $query->whereHas('entries')->whereDoesntHave('entries', function (Builder $query) use ($status) {
+            $query->whereDoesntHave('watchStatuses', function (Builder $query) use ($status) {
+                $query->where('user_id', Auth::id())->where('status', $status);
+            });
+        });
+    }
+
+    /**
+     * Shows where the authenticated user marked at least one entry, but not every entry with the same status.
+     */
+    public function scopeWithMixedWatchStatus(Builder $query): void
+    {
+        $query->whereHas('entries.watchStatuses', function (Builder $query) {
+            $query->where('user_id', Auth::id());
+        })->whereNot(function (Builder $query) {
+            foreach (WatchStatus::cases() as $status) {
+                $query->orWhere(function (Builder $query) use ($status) {
+                    $query->withUniformWatchStatus($status->value);
+                });
+            }
         });
     }
 
@@ -84,9 +122,30 @@ trait HasShowQuery
     }
 
     /**
-     * Shows with no entry the authenticated user has marked with one of the given statuses.
+     * Shows whose combined watch status for the authenticated user is none of the given values.
+     * A show without a combined status is never excluded.
      */
     public function scopeWithoutWatchStatus(Builder $query, string ...$statuses): void
+    {
+        $query->whereNot(function (Builder $query) use ($statuses) {
+            $query->withWatchStatus(...$statuses);
+        });
+    }
+
+    /**
+     * Shows with at least one entry the authenticated user has marked with one of the given statuses.
+     */
+    public function scopeWithEntryWatchStatus(Builder $query, string ...$statuses): void
+    {
+        $query->whereHas('entries.watchStatuses', function (Builder $query) use ($statuses) {
+            $query->where('user_id', Auth::id())->whereIn('status', $statuses);
+        });
+    }
+
+    /**
+     * Shows with no entry the authenticated user has marked with one of the given statuses.
+     */
+    public function scopeWithoutEntryWatchStatus(Builder $query, string ...$statuses): void
     {
         $query->whereDoesntHave('entries.watchStatuses', function (Builder $query) use ($statuses) {
             $query->where('user_id', Auth::id())->whereIn('status', $statuses);
