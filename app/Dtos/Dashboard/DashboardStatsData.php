@@ -11,6 +11,7 @@ class DashboardStatsData extends Data
         public int $showsAddedLast7Days,
         public int $showsAddedLast30Days,
         public int $episodesCount,
+        public int $episodesMissingVideoFileCount,
         public int $websitesCount,
         public int $usersCount,
     ) {}

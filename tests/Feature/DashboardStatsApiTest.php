@@ -36,7 +36,24 @@ test('an admin can read the dashboard stats', function () {
             'shows_added_last_7_days' => 2,
             'shows_added_last_30_days' => 3,
             'episodes_count' => 3,
+            'episodes_missing_video_file_count' => 0,
             'websites_count' => 2,
             'users_count' => User::query()->count(),
         ]);
+});
+
+test('dashboard stats count episodes without a playable video file once', function () {
+    actingAsAdmin();
+
+    $episodes = Episode::factory()->for(ShowEntry::factory()->for(Show::factory()), 'entry');
+
+    $episodes->create();
+    $episodes->create(['has_video_file' => false]);
+    $episodes->create(['filename' => '']);
+    $episodes->create(['has_video_file' => false, 'filename' => '']);
+
+    getJson('/api/v1/dashboard-stats')
+        ->assertOk()
+        ->assertJsonPath('episodes_count', 4)
+        ->assertJsonPath('episodes_missing_video_file_count', 3);
 });

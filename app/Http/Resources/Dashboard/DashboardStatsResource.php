@@ -19,6 +19,7 @@ class DashboardStatsResource extends JsonResource
             'shows_added_last_7_days' => $this->showsAddedLast7Days,
             'shows_added_last_30_days' => $this->showsAddedLast30Days,
             'episodes_count' => $this->episodesCount,
+            'episodes_missing_video_file_count' => $this->episodesMissingVideoFileCount,
             'websites_count' => $this->websitesCount,
             'users_count' => $this->usersCount,
         ];
