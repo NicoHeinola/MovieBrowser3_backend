@@ -614,3 +614,29 @@ test('bulk deleting shows removes their video files and keeps other shows files'
     expect(File::exists($paths[$secondShow->id]))->toBeFalse();
     expect(File::exists($paths[$keptShow->id]))->toBeTrue();
 });
+
+test('an admin can filter shows by episode count', function () {
+    actingAsAdmin();
+
+    $none = Show::factory()->create();
+    $two = Show::factory()->create();
+    $five = Show::factory()->create();
+    Episode::factory()->count(2)->for(ShowEntry::factory()->for($two)->create(), 'entry')->create();
+    Episode::factory()->count(3)->for(ShowEntry::factory()->for($five)->create(), 'entry')->create();
+    Episode::factory()->count(2)->for(ShowEntry::factory()->for($five)->create(), 'entry')->create();
+
+    getJson('/api/v1/shows?filter[min_episode_count]=3&sort=id')
+        ->assertOk()->assertJsonPath('data.*.id', [$five->id]);
+
+    getJson('/api/v1/shows?filter[max_episode_count]=2&sort=id')
+        ->assertOk()->assertJsonPath('data.*.id', [$none->id, $two->id]);
+
+    getJson('/api/v1/shows?filter[min_episode_count]=2&filter[max_episode_count]=2&sort=id')
+        ->assertOk()->assertJsonPath('data.*.id', [$two->id]);
+
+    getJson('/api/v1/shows?filter[min_episode_count]=0&sort=id')
+        ->assertOk()->assertJsonPath('data.*.id', [$none->id, $two->id, $five->id]);
+
+    getJson('/api/v1/shows?filter[max_episode_count]=0&sort=id')
+        ->assertOk()->assertJsonPath('data.*.id', [$none->id]);
+});

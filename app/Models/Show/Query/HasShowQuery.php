@@ -30,6 +30,8 @@ trait HasShowQuery
             AllowedFilter::scope('has_watch_progress', 'withWatchProgress'),
             AllowedFilter::scope('watch_status', 'withWatchStatus'),
             AllowedFilter::scope('entry_watch_status', 'withEntryWatchStatus'),
+            AllowedFilter::scope('min_episode_count', 'withMinEpisodeCount'),
+            AllowedFilter::scope('max_episode_count', 'withMaxEpisodeCount'),
             AllowedFilter::scope('exclude_categories', 'withoutCategories'),
             AllowedFilter::scope('exclude_watch_status', 'withoutWatchStatus'),
             AllowedFilter::scope('exclude_entry_watch_status', 'withoutEntryWatchStatus'),
@@ -109,6 +111,22 @@ trait HasShowQuery
                 });
             }
         });
+    }
+
+    /**
+     * Shows with at least this many episodes across all their entries.
+     */
+    public function scopeWithMinEpisodeCount(Builder $query, int $count): void
+    {
+        $query->has('episodes', '>=', $count);
+    }
+
+    /**
+     * Shows with at most this many episodes across all their entries. A show without episodes counts as 0.
+     */
+    public function scopeWithMaxEpisodeCount(Builder $query, int $count): void
+    {
+        $query->has('episodes', '<=', $count);
     }
 
     /**

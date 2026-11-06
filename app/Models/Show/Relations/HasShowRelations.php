@@ -3,12 +3,14 @@
 namespace App\Models\Show\Relations;
 
 use App\Models\Category\Category;
+use App\Models\Episode\Episode;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowLink\ShowLink;
 use App\Models\ShowTitle\ShowTitle;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 trait HasShowRelations
 {
@@ -25,6 +27,14 @@ trait HasShowRelations
     public function entries(): HasMany
     {
         return $this->hasMany(ShowEntry::class)->chaperone('show')->orderBy('sort_order');
+    }
+
+    /**
+     * Episodes across all entries; used for counting, so it carries no ordering.
+     */
+    public function episodes(): HasManyThrough
+    {
+        return $this->hasManyThrough(Episode::class, ShowEntry::class);
     }
 
     /**
