@@ -16,7 +16,7 @@ class CheckVideoBasePathAction
      * Whether the video base folder can be trusted to show which files exist.
      *
      * An empty folder counts as unreachable: a drive that isn't mounted still shows up as an empty folder in the
-     * containers, and believing it would flag every episode as missing. Uses scandir because the SPL directory
+     * containers, so every episode looking missing may say nothing about the files. Uses scandir because the SPL directory
      * iterators skip entries on Windows drives.
      */
     public function handle(): bool

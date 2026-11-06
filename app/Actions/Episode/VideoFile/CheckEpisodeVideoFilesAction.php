@@ -16,7 +16,7 @@ class CheckEpisodeVideoFilesAction
     public const int CHUNK_SIZE = 200;
 
     public function __construct(
-        private readonly CheckVideoBasePathAction $checkVideoBasePathAction,
+        private readonly CheckVideoBasePathExistsAction $checkVideoBasePathExistsAction,
         private readonly ResolveEpisodeVideoPathAction $resolveEpisodeVideoPathAction,
         private readonly UpdateVideoFileCheckProgressAction $updateVideoFileCheckProgressAction,
         private readonly UpdateVideoFileCheckResultAction $updateVideoFileCheckResultAction,
@@ -25,13 +25,14 @@ class CheckEpisodeVideoFilesAction
     /**
      * Updates `has_video_file` for the next chunk of episodes after $afterId.
      *
-     * Returns the id to continue after, or null when the check ended: nothing left, or the base folder can't be reached.
+     * Returns the id to continue after, or null when the check ended: nothing left, or the base folder doesn't exist.
+     * An empty base folder is a normal result: its episodes are simply missing, and the next check repairs the flags.
      * An episode without a filename resolves to its folder, which isFile rejects.
      */
     public function handle(VideoFileCheck $check, int $afterId = 0): ?int
     {
-        if (!$this->checkVideoBasePathAction->handle()) {
-            return $this->stopUnreachable($check);
+        if (!$this->checkVideoBasePathExistsAction->handle()) {
+            return $this->stopWithoutBasePath($check);
         }
 
         $episodes = Episode::query()
@@ -45,9 +46,9 @@ class CheckEpisodeVideoFilesAction
             fn (Episode $episode): bool => File::isFile($this->resolveEpisodeVideoPathAction->handle($episode)),
         );
 
-        // Checked again before writing: a drive lost during this chunk makes the rest of its files look missing
-        if (!$this->checkVideoBasePathAction->handle()) {
-            return $this->stopUnreachable($check);
+        // Checked again before writing: a folder lost during this chunk makes the rest of its files look missing
+        if (!$this->checkVideoBasePathExistsAction->handle()) {
+            return $this->stopWithoutBasePath($check);
         }
 
         // The transaction starts only now so the slow disk checks above hold no lock
@@ -70,7 +71,7 @@ class CheckEpisodeVideoFilesAction
         return $episodes->last()->id;
     }
 
-    private function stopUnreachable(VideoFileCheck $check): null
+    private function stopWithoutBasePath(VideoFileCheck $check): null
     {
         $this->updateVideoFileCheckResultAction->handle($check, VideoFileCheckErrorCode::VideoBasePathUnavailable);
 

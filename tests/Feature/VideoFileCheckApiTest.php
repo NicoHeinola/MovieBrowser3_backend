@@ -1,12 +1,13 @@
 <?php
 
 use App\Actions\Episode\VideoFile\CheckEpisodeVideoFilesAction;
-use App\Actions\Episode\VideoFile\CheckVideoBasePathAction;
+use App\Actions\Episode\VideoFile\CheckVideoBasePathExistsAction;
 use App\Actions\Episode\VideoFile\CreateVideoFileCheckAction;
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Actions\Episode\VideoFile\ResolveVideoBasePathAction;
 use App\Actions\EpisodePlayback\OpenVlcPlaylistAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
+use App\Enums\VideoFileCheckErrorCode;
 use App\Jobs\CheckEpisodeVideoFilesJob;
 use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
@@ -27,7 +28,7 @@ use function Pest\Laravel\travel;
 use function Pest\Laravel\withToken;
 
 /**
- * Anything in the base folder makes it count as reachable, as a mounted drive would.
+ * Gives the base folder content, as a mounted drive would: the check only needs the folder, playback needs it non-empty.
  */
 function mountVideoBasePath(): void
 {
@@ -71,7 +72,7 @@ test('an admin queues the check and gets an empty 202', function () {
     Queue::assertPushed(CheckEpisodeVideoFilesJob::class, fn (CheckEpisodeVideoFilesJob $job): bool => $job->afterId === 0);
 });
 
-test('video file check answers 422 with a code when the base folder is missing', function () {
+test('video file check answers 422 with a code when the base folder does not exist', function () {
     Queue::fake();
     actingAsAdmin();
     Episode::factory()->create();
@@ -87,17 +88,42 @@ test('video file check answers 422 with a code when the base folder is missing',
     Queue::assertNothingPushed();
 });
 
-test('an empty base folder counts as unavailable, as an unmounted drive looks that way', function () {
+test('an unreadable base folder stops the check like a missing one', function () {
+    if (posix_getuid() === 0) {
+        $this->markTestSkipped('Root can read every folder.');
+    }
+
+    Queue::fake();
+    actingAsAdmin();
+    $episode = episodeWithVideoFile();
+    chmod(videoBasePathForTests(), 0);
+
+    try {
+        postJson('/api/v1/video-files/check')
+            ->assertUnprocessable()
+            ->assertJsonPath('code', 'video_base_path_unavailable');
+
+        Queue::assertNothingPushed();
+
+        runVideoFileCheck();
+    } finally {
+        // The folder must be readable again for the cleanup after each test
+        chmod(videoBasePathForTests(), 0755);
+    }
+
+    expect($episode->fresh()->has_video_file)->toBeTrue()
+        ->and(VideoFileCheck::query()->sole()->error_code)->toBe(VideoFileCheckErrorCode::VideoBasePathUnavailable);
+});
+
+test('an empty base folder does not stop the admin from starting a check', function () {
     Queue::fake();
     actingAsAdmin();
     Episode::factory()->create();
     File::ensureDirectoryExists(videoBasePathForTests());
 
-    postJson('/api/v1/video-files/check')
-        ->assertUnprocessable()
-        ->assertJsonPath('code', 'video_base_path_unavailable');
+    postJson('/api/v1/video-files/check')->assertAccepted();
 
-    Queue::assertNothingPushed();
+    Queue::assertPushedTimes(CheckEpisodeVideoFilesJob::class, 1);
 });
 
 test('the check stores which episodes have their video file', function () {
@@ -115,27 +141,75 @@ test('the check stores which episodes have their video file', function () {
         ->and($withoutFilename->fresh()->has_video_file)->toBeFalse();
 });
 
-test('the check changes nothing when the base folder is missing or empty', function (bool $folderExists) {
+test('the check changes nothing when the base folder does not exist', function () {
     $episode = Episode::factory()->create();
-
-    if ($folderExists) {
-        File::ensureDirectoryExists(videoBasePathForTests());
-    }
 
     CreateVideoFileCheckAction::run();
 
-    expect($episode->fresh()->has_video_file)->toBeTrue();
-})->with(['missing' => false, 'empty' => true]);
+    expect($episode->fresh()->has_video_file)->toBeTrue()
+        ->and(VideoFileCheck::query()->sole()->error_code)->toBe(VideoFileCheckErrorCode::VideoBasePathUnavailable);
+});
 
-test('the check writes nothing when the drive is lost during a chunk', function () {
+test('the check flags episodes as missing without an error when the base folder is empty', function () {
     $episode = Episode::factory()->create();
-    CheckVideoBasePathAction::mock()->shouldReceive('handle')->twice()->andReturn(true, false);
+    File::ensureDirectoryExists(videoBasePathForTests());
+
+    CreateVideoFileCheckAction::run();
+
+    expect($episode->fresh()->has_video_file)->toBeFalse()
+        ->and(VideoFileCheck::query()->sole()->error_code)->toBeNull();
+});
+
+test('the check writes nothing when the base folder is lost during a chunk', function () {
+    $episode = Episode::factory()->create();
+    CheckVideoBasePathExistsAction::mock()->shouldReceive('handle')->twice()->andReturn(true, false);
 
     Queue::fake();
     runVideoFileCheck();
 
     expect($episode->fresh()->has_video_file)->toBeTrue();
     Queue::assertNothingPushed();
+});
+
+test('a deleted show folder only flags that show as missing', function () {
+    $kept = episodeWithVideoFile();
+    $deleted = episodeWithVideoFile();
+    File::deleteDirectory(dirname(ResolveEpisodeVideoPathAction::run($deleted), 2));
+
+    CreateVideoFileCheckAction::run();
+
+    expect($kept->fresh()->has_video_file)->toBeTrue()
+        ->and($deleted->fresh()->has_video_file)->toBeFalse()
+        ->and(VideoFileCheck::query()->sole()->error_code)->toBeNull();
+});
+
+test('the status counts files that went missing, not episodes that never had one', function () {
+    actingAsAdmin();
+    episodeWithVideoFile();
+    $deleted = episodeWithVideoFile();
+    Episode::factory()->create(['filename' => '']);
+    File::deleteDirectory(dirname(ResolveEpisodeVideoPathAction::run($deleted), 2));
+
+    CreateVideoFileCheckAction::run();
+
+    getJson('/api/v1/video-files/check')
+        ->assertJsonPath('error', null)
+        ->assertJsonPath('missing_video_files_count', 1);
+});
+
+test('the next check restores the flags once the drive is back', function () {
+    $episode = episodeWithVideoFile();
+    $path = ResolveEpisodeVideoPathAction::run($episode);
+    File::deleteDirectory(videoBasePathForTests());
+    File::ensureDirectoryExists(videoBasePathForTests());
+
+    CreateVideoFileCheckAction::run();
+    expect($episode->fresh()->has_video_file)->toBeFalse();
+
+    putVideoFile($path);
+    CreateVideoFileCheckAction::run();
+
+    expect($episode->fresh()->has_video_file)->toBeTrue();
 });
 
 test('the check goes through every chunk, one job each', function () {
@@ -207,7 +281,14 @@ test('the status is empty before any check ran', function () {
 
     getJson('/api/v1/video-files/check')
         ->assertOk()
-        ->assertExactJson(['running' => false, 'checked' => 0, 'total' => 0, 'finished_at' => null, 'error' => null]);
+        ->assertExactJson([
+            'running' => false,
+            'checked' => 0,
+            'total' => 0,
+            'finished_at' => null,
+            'error' => null,
+            'missing_video_files_count' => 0,
+        ]);
 });
 
 test('pressing the button again during a check answers 422 with a code and starts nothing', function () {
@@ -290,7 +371,7 @@ test('a library that expects no files checks fine without a base folder', functi
     expect($episode->fresh()->has_video_file)->toBeFalse();
 });
 
-test('a check stopped by an unreachable base folder reports the code', function () {
+test('a check stopped by a missing base folder reports the code', function () {
     actingAsAdmin();
     Episode::factory()->create();
 

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\VideoFile;
 
-use App\Actions\Episode\VideoFile\CheckVideoBasePathAction;
+use App\Actions\Episode\VideoFile\CheckVideoBasePathExistsAction;
 use App\Enums\ValidationErrorCode;
 use App\Models\VideoFileCheck\VideoFileCheck;
 use Closure;
@@ -32,7 +32,7 @@ class StoreVideoFileCheckRequest extends FormRequest
                     return;
                 }
 
-                if (!CheckVideoBasePathAction::run()) {
+                if (!CheckVideoBasePathExistsAction::run()) {
                     $validator->errors()->add('video_base_path', ValidationErrorCode::VideoBasePathUnavailable->value);
                 }
             },

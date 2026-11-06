@@ -36,5 +36,5 @@ return DB::transaction(function () use ($data): X {
 
 - Logic that must not live on models (paths, setting lookups) goes in read-only helper actions, e.g. `ResolveEpisodeVideoPathAction::run($episode)`.
 - `ResolveVideoBasePathAction` memoizes with `once()` from a static method; actions that change that setting call `Once::flush()`. `queue:work` never flushes it, so jobs that resolve video paths flush first.
-- Before treating missing files as real, confirm `CheckVideoBasePathAction`: an unmounted drive makes every file look missing.
+- An unmounted drive makes every file look missing, so confirm `CheckVideoBasePathAction` before acting on a missing file. The video file check is the exception: only a base folder that doesn't exist or can't be read (`CheckVideoBasePathExistsAction`) stops it. An empty one is a normal result, because its stored flags repair themselves on the next run.
 - Video paths must stay valid on Windows, because a Windows `vlc.exe` opens them: `ResolveEpisodeVideoPathAction` replaces `\ / : * ? " < > |` and strips trailing dots and spaces. Changing those rules changes every computed path, so existing files need moving too, and never from a migration.

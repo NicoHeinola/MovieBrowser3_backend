@@ -89,7 +89,8 @@ Windows drives appear as `/mnt/<letter>` (drvfs). WSL only mounts drives present
 `scheduler` runs `schedule:work`, which only queues what `routes/console.php` schedules; `queue` does the work, so `scheduler` needs no media folders.
 
 - **Daily:** `CheckEpisodeVideoFilesJob` refreshes every episode's stored `has_video_file`, 200 episodes per job so VLC tracking keeps running on the shared worker. Admins can start it with `POST /api/v1/video-files/check` and follow it with `GET` on the same path. Each run is a row in `video_file_checks`. Starting one while another runs answers 422 `video_file_check_running`, a unique index backs that up for simultaneous starts, and a run that fails reports `video_file_check_failed`. If the worker is killed before it can report that, the run counts as dead after 5 minutes without progress, so it can't block the next one.
-- While any episode expects a file, a missing, unreadable or empty video base folder counts as unreachable: the check stops without changing anything and reports `video_base_path_unavailable`, because a drive that isn't mounted looks like an empty folder in the containers.
+- While any episode expects a file, a video base folder that doesn't exist or can't be read stops the check: starting one answers 422 `video_base_path_unavailable`, and a run already going (or the daily one) ends with that code without changing anything further.
+- An empty base folder doesn't stop it: the check flags those episodes as missing and finishes without an error, and the status's `missing_video_files_count` shows the result: episodes whose uploaded file is gone, not ones that never had a file. A drive that isn't mounted looks like an empty folder in the containers, so nearly everything showing as missing usually means that. The next check with the drive back restores the flags.
 
 ## Serving
 

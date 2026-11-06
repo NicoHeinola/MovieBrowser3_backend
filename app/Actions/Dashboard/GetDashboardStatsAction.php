@@ -20,7 +20,7 @@ class GetDashboardStatsAction
             showsAddedLast7Days: Show::query()->where('created_at', '>=', now()->subDays(7))->count(),
             showsAddedLast30Days: Show::query()->where('created_at', '>=', now()->subDays(30))->count(),
             episodesCount: Episode::query()->count(),
-            episodesMissingVideoFileCount: Episode::query()->where('has_video_file', false)->orWhere('filename', '')->count(),
+            episodesMissingVideoFileCount: Episode::query()->missingVideoFile()->count(),
             websitesCount: Website::query()->count(),
             usersCount: User::query()->count(),
         );

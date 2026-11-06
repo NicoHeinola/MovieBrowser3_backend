@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Why a video file check ended early. The frontend turns each code into translated text.
+ * What went wrong in a video file check. The frontend turns each code into translated text.
  */
 enum VideoFileCheckErrorCode: string
 {

@@ -22,6 +22,7 @@ class VideoFileCheckResource extends JsonResource
             'error' => $this->errorCode !== null
                 ? ['code' => $this->errorCode->value, 'params' => (object) []]
                 : null,
+            'missing_video_files_count' => $this->missingVideoFilesCount,
         ];
     }
 }

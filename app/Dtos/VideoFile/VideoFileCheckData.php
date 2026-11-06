@@ -14,5 +14,6 @@ class VideoFileCheckData extends Data
         public int $total,
         public ?CarbonImmutable $finishedAt,
         public ?VideoFileCheckErrorCode $errorCode,
+        public int $missingVideoFilesCount,
     ) {}
 }
