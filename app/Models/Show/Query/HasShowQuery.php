@@ -32,6 +32,8 @@ trait HasShowQuery
             AllowedFilter::scope('entry_watch_status', 'withEntryWatchStatus'),
             AllowedFilter::scope('min_episode_count', 'withMinEpisodeCount'),
             AllowedFilter::scope('max_episode_count', 'withMaxEpisodeCount'),
+            AllowedFilter::scope('has_missing_video_file', 'withMissingVideoFile'),
+            AllowedFilter::scope('has_lost_video_file', 'withLostVideoFile'),
             AllowedFilter::scope('exclude_categories', 'withoutCategories'),
             AllowedFilter::scope('exclude_watch_status', 'withoutWatchStatus'),
             AllowedFilter::scope('exclude_entry_watch_status', 'withoutEntryWatchStatus'),
@@ -127,6 +129,27 @@ trait HasShowQuery
     public function scopeWithMaxEpisodeCount(Builder $query, int $count): void
     {
         $query->has('episodes', '<=', $count);
+    }
+
+    /**
+     * Shows with at least one episode lacking its video file. Only `true` filters; any other value is ignored.
+     */
+    public function scopeWithMissingVideoFile(Builder $query, mixed $value = true): void
+    {
+        // Spatie turns the string 'true' into a boolean before calling the scope.
+        if ($value === true || $value === 'true') {
+            $query->whereHas('episodes', fn (Builder $query) => $query->missingVideoFile());
+        }
+    }
+
+    /**
+     * Shows with at least one episode whose uploaded video file is gone. Only `true` filters; any other value is ignored.
+     */
+    public function scopeWithLostVideoFile(Builder $query, mixed $value = true): void
+    {
+        if ($value === true || $value === 'true') {
+            $query->whereHas('episodes', fn (Builder $query) => $query->lostVideoFile());
+        }
     }
 
     /**

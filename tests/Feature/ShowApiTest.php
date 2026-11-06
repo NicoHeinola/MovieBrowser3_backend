@@ -640,3 +640,35 @@ test('an admin can filter shows by episode count', function () {
     getJson('/api/v1/shows?filter[max_episode_count]=0&sort=id')
         ->assertOk()->assertJsonPath('data.*.id', [$none->id]);
 });
+
+test('an admin can filter shows by missing and lost episode video files', function () {
+    actingAsAdmin();
+
+    $complete = Show::factory()->create();
+    $neverUploaded = Show::factory()->create();
+    $lost = Show::factory()->create();
+    $none = Show::factory()->create();
+    Episode::factory()->for(ShowEntry::factory()->for($complete)->create(), 'entry')->create();
+    Episode::factory()->for(ShowEntry::factory()->for($neverUploaded)->create(), 'entry')
+        ->create(['filename' => '', 'has_video_file' => false]);
+    $lostEntry = ShowEntry::factory()->for($lost)->create();
+    Episode::factory()->for($lostEntry, 'entry')->create();
+    Episode::factory()->for($lostEntry, 'entry')->create(['has_video_file' => false]);
+
+    getJson('/api/v1/shows?filter[has_missing_video_file]=true&sort=id')
+        ->assertOk()->assertJsonPath('data.*.id', [$neverUploaded->id, $lost->id]);
+
+    getJson('/api/v1/shows?filter[has_lost_video_file]=true&sort=id')
+        ->assertOk()->assertJsonPath('data.*.id', [$lost->id]);
+
+    getJson('/api/v1/shows?filter[has_missing_video_file]=true&filter[has_lost_video_file]=true&sort=id')
+        ->assertOk()->assertJsonPath('data.*.id', [$lost->id]);
+
+    getJson('/api/v1/shows?filter[has_missing_video_file]=true&filter[max_episode_count]=1&sort=id')
+        ->assertOk()->assertJsonPath('data.*.id', [$neverUploaded->id]);
+
+    foreach (['false', 'nope'] as $value) {
+        getJson("/api/v1/shows?filter[has_missing_video_file]=$value&filter[has_lost_video_file]=$value&sort=id")
+            ->assertOk()->assertJsonPath('data.*.id', [$complete->id, $neverUploaded->id, $lost->id, $none->id]);
+    }
+});
