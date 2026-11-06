@@ -38,6 +38,30 @@ it('replaces slashes and collapses whitespace in every name', function () {
         ->toBe('/videos/3_Fate - Zero 2/5_Part 1/8_A-B-C.mkv');
 });
 
+it('replaces characters windows does not allow in every name', function () {
+    $episode = episodeForPath(episodeName: 'What? *Really*', primaryTitle: 'Re:Zero', entryName: 'Special: <1> | "2"');
+
+    expect(ResolveEpisodeVideoPathAction::run($episode, basePath: '/videos'))
+        ->toBe('/videos/3_Re-Zero/5_Special- -1- - -2-/8_What- -Really-.mkv');
+});
+
+it('removes trailing dots and spaces from every name', function () {
+    $episode = episodeForPath(episodeName: 'The end...', primaryTitle: 'Ea harum aut recusandae.', entryName: 'Season 1 . ');
+
+    expect(ResolveEpisodeVideoPathAction::run($episode, basePath: '/videos'))
+        ->toBe('/videos/3_Ea harum aut recusandae/5_Season 1/8_The end.mkv');
+});
+
+it('keeps dots inside a name', function () {
+    expect(ResolveEpisodeVideoPathAction::run(episodeForPath(primaryTitle: 'Mr. Robot v1.2'), basePath: '/videos'))
+        ->toBe('/videos/3_Mr. Robot v1.2/5_Season 1/8_Episode 1.mkv');
+});
+
+it('falls back to untitled for a name of only dots', function () {
+    expect(ResolveEpisodeVideoPathAction::run(episodeForPath(episodeName: '...'), basePath: '/videos'))
+        ->toBe('/videos/3_Dr. Stone/5_Season 1/8_untitled.mkv');
+});
+
 it('falls back to untitled for names that are empty after cleaning', function () {
     expect(ResolveEpisodeVideoPathAction::run(episodeForPath(episodeName: '   ', entryName: ''), basePath: '/videos'))
         ->toBe('/videos/3_Dr. Stone/5_untitled/8_untitled.mkv');

@@ -49,11 +49,16 @@ class ResolveEpisodeVideoPathAction
             : "{$directory}/{$episodeSegment}.{$extension}";
     }
 
+    /**
+     * Keeps a name valid on Windows as well: the videos usually live on a Windows drive and a Windows vlc.exe opens them.
+     */
     private function sanitizePathPart(string $value): string
     {
         $value = trim($value);
-        $value = preg_replace('/[\\\\\/]+/', '-', $value) ?? '';
+        $value = preg_replace('/[\\\\\/:*?"<>|]+/', '-', $value) ?? '';
         $value = preg_replace('/\s+/', ' ', $value) ?? '';
+        // Windows drops trailing dots and spaces when it opens a path, so a folder Linux created with one can't be found
+        $value = rtrim($value, ' .');
 
         return $value !== '' ? $value : 'untitled';
     }
