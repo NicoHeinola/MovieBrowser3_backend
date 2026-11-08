@@ -41,9 +41,20 @@ sync_repo() {
     fi
 
     new=$(describe_head "$dir")
-    if [[ "$old" == "$new" ]]; then
-        info "$name: $new (unchanged)"
+    # The summary at the end repeats this as BACKEND_CHANGE / FRONTEND_CHANGE
+    local change
+    if [[ "$old" == "(new)" ]]; then
+        change="$new ${DIM}(new install)${RESET}"
+    elif [[ "$old" == "$new" ]]; then
+        change="$new ${DIM}(unchanged)${RESET}"
     else
-        info "$name: $old -> $new  $(git -C "$dir" log -1 --format=%s)"
+        change="$old → ${GREEN}${BOLD}$new${RESET}"
+    fi
+    printf -v "${name^^}_CHANGE" '%s' "$change"
+
+    if [[ "$old" == "$new" ]]; then
+        done_line "$(printf '%-9s' "${name^}") $change"
+    else
+        done_line "$(printf '%-9s' "${name^}") $change" "$(git -C "$dir" log -1 --format=%s)"
     fi
 }

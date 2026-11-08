@@ -17,6 +17,8 @@ for module in common env bridge; do
     source "$INSTALL_DIR/lib/$module.sh"
 done
 unset module
+# No step headers here, so the lines start at the margin
+INDENT=""
 
 usage() {
     cat <<USAGE

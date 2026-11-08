@@ -192,5 +192,6 @@ moviebrowser3 restart    # restart everything
 | Videos are missing | The disk isn't visible to Ubuntu: see step 5, then run `moviebrowser3 restart`. |
 | Playing says "The VLC bridge … did not answer" | Run `moviebrowser3 bridge start`. Or open Task Scheduler and run **MovieBrowser3 VLC bridge**. |
 | VLC opens, but MovieBrowser3 doesn't notice what's playing | Mirrored networking is off: redo step 2. |
+| The update stops with a red ✖ | It shows the end of the log, and the whole log is in `~/prod_codes/MovieBrowser3/install.log`. To watch every command's output live, run `MOVIEBROWSER3_VERBOSE=1 moviebrowser3 update`. The previous version keeps running. |
 | The update says "can't be fast-forwarded" or "can't check out release" | Someone changed files in the install folder. Ask a developer, or see TECHNICAL.md. |
 | `moviebrowser3: command not found` | Close and reopen Ubuntu. If it still happens, run `~/prod_codes/MovieBrowser3/moviebrowser3` with the full path. |

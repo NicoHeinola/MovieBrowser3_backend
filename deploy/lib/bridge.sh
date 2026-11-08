@@ -30,19 +30,24 @@ bridge_up() {
 }
 
 start_bridge() {
-    bridge_up && return 0
-
-    info "Starting the VLC bridge"
-    if is_wsl; then
-        run_powershell -Command "Start-ScheduledTask -TaskName '$BRIDGE_TASK'" >/dev/null ||
-            warn "Could not start the VLC bridge. Run '$BRIDGE_TASK' from Task Scheduler."
-    else
-        systemctl --user start "$BRIDGE_SERVICE" || warn "Could not start the VLC bridge ($BRIDGE_SERVICE)."
+    if bridge_up; then
+        done_line "VLC bridge" "already running"
+        return 0
     fi
+
+    if is_wsl; then
+        run_powershell -Command "Start-ScheduledTask -TaskName '$BRIDGE_TASK'" >/dev/null 2>&1 ||
+            { warn "Could not start the VLC bridge. Run '$BRIDGE_TASK' from Task Scheduler."; return 0; }
+    else
+        systemctl --user start "$BRIDGE_SERVICE" 2>/dev/null ||
+            { warn "Could not start the VLC bridge ($BRIDGE_SERVICE)."; return 0; }
+    fi
+    done_line "VLC bridge" "started"
 }
 
 stop_bridge() {
-    bridge_up && info "Stopping the VLC bridge"
+    local was_up=false
+    bridge_up && was_up=true
 
     if is_wsl; then
         # Ending the task stops wsl.exe. pkill catches a bridge that outlives it or was started by hand.
@@ -55,7 +60,10 @@ stop_bridge() {
     # Wait for the port to close, so a start right after doesn't take the old bridge for a running one
     local _
     for _ in {1..20}; do
-        bridge_up || return 0
+        if ! bridge_up; then
+            [[ "$was_up" == false ]] || done_line "VLC bridge" "stopped"
+            return 0
+        fi
         sleep 0.25
     done
     warn "The VLC bridge still answers on its port."
@@ -69,7 +77,6 @@ install_bridge() {
     sum="$(cd "$INSTALL_DIR" && cat "${BRIDGE_FILES[@]}" | cksum) port $(env_get VLC_BRIDGE_PORT)"
 
     if [[ -f "$stamp" && "$(<"$stamp")" == "$sum" ]]; then
-        info "VLC bridge unchanged"
         start_bridge
         return
     fi
@@ -88,16 +95,16 @@ register_bridge_task() {
     command -v powershell.exe >/dev/null ||
         fail "No WSL interop (powershell.exe), so the VLC bridge can't be registered. See TECHNICAL.md."
 
-    info "Registering and starting the VLC bridge logon task"
-    run_powershell -ExecutionPolicy Bypass -File "$(wslpath -w "$INSTALL_DIR/windows/register-vlc-bridge.ps1")" \
-        -Distro "$WSL_DISTRO_NAME" -BridgeScript "$INSTALL_DIR/vlc_bridge.py"
+    run_quiet "VLC bridge logon task, registered and started" \
+        run_powershell -ExecutionPolicy Bypass -File "$(wslpath -w "$INSTALL_DIR/windows/register-vlc-bridge.ps1")" \
+        -Distro "$WSL_DISTRO_NAME" -BridgeScript "$INSTALL_DIR/vlc_bridge.py" ||
+        fail "Registering the VLC bridge logon task failed. Re-run the update to try again."
 }
 
 register_bridge_service() {
     command -v systemctl >/dev/null ||
         fail "No systemd, so the VLC bridge can't be installed as a service. Start it yourself: python3 $INSTALL_DIR/vlc_bridge.py"
 
-    info "Installing and starting the VLC bridge user service"
     mkdir -p "$HOME/.config/systemd/user"
     cat >"$HOME/.config/systemd/user/$BRIDGE_SERVICE" <<UNIT
 [Unit]
@@ -112,7 +119,7 @@ Restart=on-failure
 WantedBy=default.target
 UNIT
 
-    systemctl --user daemon-reload
-    systemctl --user enable "$BRIDGE_SERVICE"
-    systemctl --user restart "$BRIDGE_SERVICE"
+    run_quiet "VLC bridge user service, installed and started" bash -c \
+        'systemctl --user daemon-reload && systemctl --user enable "$1" && systemctl --user restart "$1"' _ "$BRIDGE_SERVICE" ||
+        fail "Installing the VLC bridge user service failed. Re-run the update to try again."
 }

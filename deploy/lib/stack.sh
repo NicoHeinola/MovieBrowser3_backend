@@ -53,8 +53,7 @@ write_media_override() {
 build_frontend() {
     local dir="$INSTALL_DIR/MovieBrowser3_frontend"
 
-    info "Building the frontend"
-    docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$dir:/app" -v "$INSTALL_DIR/web:/out" -w /app \
+    run_quiet "Frontend packages and build" docker run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$dir:/app" -v "$INSTALL_DIR/web:/out" -w /app \
         node:24-alpine sh -c 'npm ci && npm run build && rm -rf /out/next && cp -R dist /out/next' ||
         fail "The frontend build failed; MovieBrowser3 was not restarted."
 
@@ -71,20 +70,25 @@ publish_frontend() {
     mv "$web/next" "$web/current"
 }
 
-# Builds the backend image, migrates, then swaps in the new frontend and (re)starts every service
+# Builds the backend image and migrates. The running app is untouched until start_stack.
+build_backend() {
+    cd "$INSTALL_DIR"
+
+    run_quiet "Backend image" docker compose build || fail "The backend image build failed; MovieBrowser3 was not restarted."
+
+    run_migrations
+}
+
+# Swaps in the new frontend and (re)starts every service
 start_stack() {
     cd "$INSTALL_DIR"
 
-    info "Building the backend image"
-    docker compose build
-
-    run_migrations
-
-    info "Starting MovieBrowser3"
     publish_frontend
     # Recreate the backend even when its image is unchanged: its mount must pick up the new web/current
-    docker compose up -d --force-recreate --no-deps backend
-    docker compose up -d --remove-orphans
+    run_quiet "Backend on the new version" docker compose up -d --force-recreate --no-deps backend ||
+        fail "The backend failed to start."
+    run_quiet "Database, queue and scheduler" docker compose up -d --remove-orphans ||
+        fail "The services failed to start."
     rm -rf "$INSTALL_DIR/web/previous"
 }
 
@@ -111,8 +115,8 @@ run_migrations() {
         admin_env=(-e ADMIN_USER_USERNAME -e ADMIN_USER_PASSWORD)
     fi
 
-    info "Running migrations"
-    docker compose run --rm "${admin_env[@]}" backend php artisan migrate --force
+    run_quiet "Database migrations" docker compose run --rm -T "${admin_env[@]}" backend php artisan migrate --force ||
+        fail "The migrations failed; MovieBrowser3 was not restarted."
     unset ADMIN_USER_USERNAME ADMIN_USER_PASSWORD
 }
 
