@@ -2,70 +2,109 @@
 # MovieBrowser3 control command, installed to ~/.local/bin by install.sh.
 set -euo pipefail
 
-# The install dir is where this script lives (~/.local/bin/moviebrowser3 links to it), whatever MOVIEBROWSER3_DIR says
+# The install dir is where this script lives (~/.local/bin/moviebrowser3 links to it), whatever MOVIEBROWSER3_DIR says.
+# Exported so `update` keeps installing into this folder.
 export MOVIEBROWSER3_DIR="$(dirname "$(readlink -f "$0")")"
+INSTALL_DIR=$MOVIEBROWSER3_DIR
+
 # Paths given as arguments are relative to where the command was run, not to the install dir
 caller_dir=$PWD
-cd "$MOVIEBROWSER3_DIR"
+cd "$INSTALL_DIR"
 
-case "${1:-help}" in
-    update)
-        # The installer with the saved answers: fast-forward both clones, refresh the deploy files, build, migrate,
-        # restart
-        exec bash MovieBrowser3_backend/deploy/install.sh --update
-        ;;
-    start) docker compose up -d ;;
-    stop) docker compose down ;;
-    restart) docker compose restart ;;
-    status) docker compose ps ;;
-    logs)
-        shift
-        docker compose logs --follow --tail=100 "$@"
-        ;;
-    artisan)
-        shift
-        docker compose run --rm backend php artisan "$@"
-        ;;
-    import-moviebrowser2)
-        shift
-        if [[ $# -lt 2 ]]; then
-            echo "Usage: moviebrowser3 import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]" >&2
-            exit 1
-        fi
-        # A missing path is usually an external drive that isn't mounted, so say which one instead of the usage.
-        # The messages use the paths as typed: readlink -f prints nothing when the parent folder is missing too.
-        if [[ ! -f $(cd "$caller_dir" && readlink -f "$1") ]]; then
-            echo "Export not found: $1 (is the drive mounted? sudo mount /mnt/<letter>)" >&2
-            exit 1
-        fi
-        if [[ ! -d $(cd "$caller_dir" && readlink -f "$2") ]]; then
-            echo "MovieBrowser2 video folder not found: $2 (is the drive mounted? sudo mount /mnt/<letter>)" >&2
-            exit 1
-        fi
-        set -- "$(cd "$caller_dir" && readlink -f "$1")" "$(cd "$caller_dir" && readlink -f "$2")" "${@:3}"
-        export_file=$1
-        source_dir=$2
-        shift 2
-        # Both are mounted read-only for this run only, so nothing in the container can change the originals.
-        # The folder keeps its host path; --source-root finds each video by its path relative to it.
-        docker compose run --rm \
-            -v "$export_file:/tmp/moviebrowser2-export.json:ro" \
-            -v "$source_dir:$source_dir:ro" \
-            backend php artisan moviebrowser2:import-shows /tmp/moviebrowser2-export.json --source-root="$source_dir" "$@"
-        ;;
-    *)
-        cat <<USAGE
+# Copied next to this script by install.sh
+for module in common env bridge; do
+    # shellcheck source=/dev/null
+    source "$INSTALL_DIR/lib/$module.sh"
+done
+unset module
+
+usage() {
+    cat <<USAGE
 Usage: moviebrowser3 <command>
 
   update            Check out the newest release of both clones, rebuild, migrate and restart
-  start | stop      Start or stop every service
-  restart           Restart every service
-  status            Show the services
+  start | stop      Start or stop every service and the VLC bridge
+  restart           Restart every service and the VLC bridge
+  bridge <start|stop|restart>
+                    Only the VLC bridge
+  status            Show the services and whether the VLC bridge answers
   logs [service]    Follow the logs (db, backend, queue, scheduler)
   artisan <args>    Run an artisan command in a one-off backend container
   import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]
                     Import MovieBrowser2 shows, copying the videos from the folder (mounted read-only)
 
 USAGE
+}
+
+status() {
+    docker compose ps
+    echo
+    if bridge_up; then
+        echo "VLC bridge: running"
+    else
+        echo "VLC bridge: not running (moviebrowser3 bridge start)"
+    fi
+}
+
+bridge() {
+    case "${1:-}" in
+        start) start_bridge ;;
+        stop) stop_bridge ;;
+        restart)
+            stop_bridge
+            start_bridge
+            ;;
+        *) fail "Usage: moviebrowser3 bridge <start|stop|restart>" ;;
+    esac
+}
+
+# import_moviebrowser2 <export .json> <MovieBrowser2 video folder> [artisan options]
+import_moviebrowser2() {
+    (($# >= 2)) || fail "Usage: moviebrowser3 import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]"
+
+    local export_file source_dir
+    export_file=$(cd "$caller_dir" && readlink -f "$1" || true)
+    source_dir=$(cd "$caller_dir" && readlink -f "$2" || true)
+
+    # A missing path is usually an external drive that isn't mounted, so say which one instead of the usage.
+    # The messages use the paths as typed: readlink -f prints nothing when the parent folder is missing too.
+    [[ -f "$export_file" ]] || fail "Export not found: $1 (is the drive mounted? sudo mount /mnt/<letter>)"
+    [[ -d "$source_dir" ]] || fail "MovieBrowser2 video folder not found: $2 (is the drive mounted? sudo mount /mnt/<letter>)"
+    shift 2
+
+    # Both are mounted read-only for this run only, so nothing in the container can change the originals.
+    # The folder keeps its host path; --source-root finds each video by its path relative to it.
+    docker compose run --rm \
+        -v "$export_file:/tmp/moviebrowser2-export.json:ro" \
+        -v "$source_dir:$source_dir:ro" \
+        backend php artisan moviebrowser2:import-shows /tmp/moviebrowser2-export.json --source-root="$source_dir" "$@"
+}
+
+command=${1:-help}
+shift || true
+
+case "$command" in
+    # The installer with the saved answers: fetch both clones, refresh the deploy files, build, migrate, restart
+    update) exec bash MovieBrowser3_backend/deploy/install.sh --update ;;
+
+    start)
+        docker compose up -d
+        start_bridge
         ;;
+    stop)
+        docker compose down
+        stop_bridge
+        ;;
+    restart)
+        docker compose restart
+        stop_bridge
+        start_bridge
+        ;;
+
+    bridge) bridge "$@" ;;
+    status) status ;;
+    logs) docker compose logs --follow --tail=100 "$@" ;;
+    artisan) docker compose run --rm backend php artisan "$@" ;;
+    import-moviebrowser2) import_moviebrowser2 "$@" ;;
+    *) usage ;;
 esac
