@@ -299,6 +299,19 @@ test('creating an episode requires name, file, and sequence_number', function ()
         ->assertJsonValidationErrors(['name', 'sequence_number']);
 });
 
+test('uploading a video stores its file size', function () {
+    actingAsAdmin();
+    useTestVideoBasePath();
+
+    $episode = Episode::factory()->create(['filename' => '', 'has_video_file' => false]);
+
+    patch("/api/v1/episodes/{$episode->id}", [
+        'file' => UploadedFile::fake()->createWithContent('ep1.mkv', 'twelve bytes'),
+    ], ['Accept' => 'application/json'])
+        ->assertOk()
+        ->assertJsonPath('video_file_size', 12);
+});
+
 test('re-uploading a video with the same name and extension keeps the new file', function () {
     actingAsAdmin();
     $base = useTestVideoBasePath();

@@ -8,6 +8,7 @@ use App\Models\Show\Query\Filters\MetadataFilter;
 use App\Models\Show\Query\Sorts\LastWatchedSort;
 use App\Models\Show\Query\Sorts\PrimaryTitleSort;
 use App\Models\Show\Query\Sorts\RandomSort;
+use App\Models\Show\Query\Sorts\VideoFilesBytesSort;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -208,6 +209,7 @@ trait HasShowQuery
             AllowedSort::custom('random', new RandomSort),
             AllowedSort::custom('last_watched_at', new LastWatchedSort),
             AllowedSort::custom('title', new PrimaryTitleSort),
+            AllowedSort::custom('video_files_bytes', new VideoFilesBytesSort),
         ];
     }
 }

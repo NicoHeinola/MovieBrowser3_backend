@@ -110,6 +110,7 @@ class CreateLegacyShowImportAction
             // Files last, so a failed copy rolls back every row above; each copy deletes itself on rollback
             foreach ($copies as [$episode, $sourcePath]) {
                 $bytes = $this->copyVideoFileAction->handle($sourcePath, $this->resolveEpisodeVideoPathAction->handle($episode), $copyWithWindows);
+                $episode->update(['video_file_size' => $bytes]);
 
                 if ($onFileCopied !== null) {
                     $onFileCopied($sourcePath, $bytes);

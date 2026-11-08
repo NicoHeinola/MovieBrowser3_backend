@@ -2,11 +2,10 @@
 
 namespace App\Actions\Episode\VideoFile;
 
+use App\Actions\Episode\UpdateEpisodeVideoFileSizesAction;
 use App\Enums\VideoFileCheckErrorCode;
 use App\Models\Episode\Episode;
 use App\Models\VideoFileCheck\VideoFileCheck;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class CheckEpisodeVideoFilesAction
@@ -17,17 +16,17 @@ class CheckEpisodeVideoFilesAction
 
     public function __construct(
         private readonly CheckVideoBasePathExistsAction $checkVideoBasePathExistsAction,
-        private readonly ResolveEpisodeVideoPathAction $resolveEpisodeVideoPathAction,
+        private readonly ResolveEpisodeVideoFileSizeAction $resolveEpisodeVideoFileSizeAction,
+        private readonly UpdateEpisodeVideoFileSizesAction $updateEpisodeVideoFileSizesAction,
         private readonly UpdateVideoFileCheckProgressAction $updateVideoFileCheckProgressAction,
         private readonly UpdateVideoFileCheckResultAction $updateVideoFileCheckResultAction,
     ) {}
 
     /**
-     * Updates `has_video_file` for the next chunk of episodes after $afterId.
+     * Refreshes `has_video_file` and `video_file_size` for the next chunk of episodes after $afterId.
      *
      * Returns the id to continue after, or null when the check ended: nothing left, or the base folder doesn't exist.
      * An empty base folder is a normal result: its episodes are simply missing, and the next check repairs the flags.
-     * An episode without a filename resolves to its folder, which isFile rejects.
      */
     public function handle(VideoFileCheck $check, int $afterId = 0): ?int
     {
@@ -42,20 +41,17 @@ class CheckEpisodeVideoFilesAction
             ->limit(self::CHUNK_SIZE)
             ->get();
 
-        [$found, $missing] = $episodes->partition(
-            fn (Episode $episode): bool => File::isFile($this->resolveEpisodeVideoPathAction->handle($episode)),
-        );
+        // Measured before any transaction so the slow disk reads hold no lock; null marks a missing file
+        $sizes = $episodes->mapWithKeys(fn (Episode $episode): array => [
+            $episode->id => $this->resolveEpisodeVideoFileSizeAction->handle($episode),
+        ]);
 
         // Checked again before writing: a folder lost during this chunk makes the rest of its files look missing
         if (!$this->checkVideoBasePathExistsAction->handle()) {
             return $this->stopWithoutBasePath($check);
         }
 
-        // The transaction starts only now so the slow disk checks above hold no lock
-        DB::transaction(function () use ($found, $missing): void {
-            Episode::query()->whereKey($found->where('has_video_file', false)->pluck('id'))->update(['has_video_file' => true]);
-            Episode::query()->whereKey($missing->where('has_video_file', true)->pluck('id'))->update(['has_video_file' => false]);
-        });
+        $this->updateEpisodeVideoFileSizesAction->handle($episodes, $sizes);
 
         // Empty when the previous chunk happened to end exactly on the last episode
         if ($episodes->isNotEmpty()) {

@@ -10,7 +10,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class DashboardStatsResource extends JsonResource
 {
     /**
-     * @return array<string, int>
+     * @return array<string, int|null>
      */
     public function toArray(Request $request): array
     {
@@ -22,6 +22,9 @@ class DashboardStatsResource extends JsonResource
             'episodes_missing_video_file_count' => $this->episodesMissingVideoFileCount,
             'websites_count' => $this->websitesCount,
             'users_count' => $this->usersCount,
+            'video_files_total_bytes' => $this->videoFilesTotalBytes,
+            'disk_total_bytes' => $this->diskTotalBytes,
+            'disk_free_bytes' => $this->diskFreeBytes,
         ];
     }
 }

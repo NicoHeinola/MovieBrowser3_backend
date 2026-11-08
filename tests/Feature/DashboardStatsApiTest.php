@@ -1,14 +1,47 @@
 <?php
 
+use App\Actions\Episode\VideoFile\ResolveFreeDiskSpaceAction;
+use App\Actions\Episode\VideoFile\ResolveTotalDiskSpaceAction;
 use App\Models\Episode\Episode;
+use App\Models\Setting\Setting;
 use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\User\User;
 use App\Models\Website\Website;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\File;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\withToken;
+
+test('dashboard stats sum video file sizes and report the video disk space', function () {
+    actingAsAdmin();
+    File::ensureDirectoryExists(useTestVideoBasePath());
+
+    $episodes = Episode::factory()->for(ShowEntry::factory()->for(Show::factory()), 'entry');
+    $episodes->create(['video_file_size' => 100]);
+    $episodes->create(['video_file_size' => 50]);
+    $episodes->create(['has_video_file' => false, 'video_file_size' => 999]);
+
+    ResolveTotalDiskSpaceAction::mock()->shouldReceive('handle')->andReturn(1000);
+    ResolveFreeDiskSpaceAction::mock()->shouldReceive('handle')->andReturn(400);
+
+    getJson('/api/v1/dashboard-stats')
+        ->assertOk()
+        ->assertJsonPath('video_files_total_bytes', 150)
+        ->assertJsonPath('disk_total_bytes', 1000)
+        ->assertJsonPath('disk_free_bytes', 400);
+});
+
+test('dashboard stats leave disk space unknown when the video folder does not exist', function () {
+    actingAsAdmin();
+    Setting::query()->whereKey('video_base_path')->update(['value' => '/nonexistent/moviebrowser-videos']);
+
+    getJson('/api/v1/dashboard-stats')
+        ->assertOk()
+        ->assertJsonPath('disk_total_bytes', null)
+        ->assertJsonPath('disk_free_bytes', null);
+});
 
 test('dashboard stats require an admin', function () {
     getJson('/api/v1/dashboard-stats')->assertUnauthorized();
@@ -39,6 +72,9 @@ test('an admin can read the dashboard stats', function () {
             'episodes_missing_video_file_count' => 0,
             'websites_count' => 2,
             'users_count' => User::query()->count(),
+            'video_files_total_bytes' => 0,
+            'disk_total_bytes' => null,
+            'disk_free_bytes' => null,
         ]);
 });
 

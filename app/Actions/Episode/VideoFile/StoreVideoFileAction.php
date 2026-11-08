@@ -49,7 +49,11 @@ class StoreVideoFileAction
             File::ensureDirectoryExists(dirname($targetPath));
             $file->move(dirname($targetPath), basename($targetPath));
 
-            $episode->update(['filename' => $resolvedFilename, 'has_video_file' => true]);
+            $episode->update([
+                'filename' => $resolvedFilename,
+                'has_video_file' => true,
+                'video_file_size' => File::size($targetPath),
+            ]);
 
             return $episode->fresh();
         });

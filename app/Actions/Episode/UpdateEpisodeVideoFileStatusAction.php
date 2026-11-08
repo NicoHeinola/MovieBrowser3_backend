@@ -13,7 +13,8 @@ class UpdateEpisodeVideoFileStatusAction
     public function handle(Episode $episode, bool $hasVideoFile): Episode
     {
         return DB::transaction(function () use ($episode, $hasVideoFile): Episode {
-            $episode->update(['has_video_file' => $hasVideoFile]);
+            // A lost file has no size; a found one keeps its size until the next check measures it
+            $episode->update($hasVideoFile ? ['has_video_file' => true] : ['has_video_file' => false, 'video_file_size' => null]);
 
             return $episode->fresh();
         });

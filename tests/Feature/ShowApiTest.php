@@ -544,6 +544,30 @@ test('shows can be sorted by primary title', function () {
         ->assertJsonPath('data.*.id', [$cherry->id, $banana->id, $apple->id, $untitled->id]);
 });
 
+test('shows can be sorted by the size of their video files', function () {
+    actingAsAdmin();
+
+    $small = Show::factory()->create();
+    Episode::factory()->for(ShowEntry::factory()->for($small), 'entry')->create(['video_file_size' => 100]);
+    $large = Show::factory()->create();
+    $largeEpisodes = Episode::factory()->for(ShowEntry::factory()->for($large), 'entry');
+    $largeEpisodes->create(['video_file_size' => 300]);
+    $largeEpisodes->create(['video_file_size' => 200]);
+    // A lost file's stale size doesn't count
+    $largeEpisodes->create(['has_video_file' => false, 'video_file_size' => 10_000]);
+    $empty = Show::factory()->create();
+    $unmeasured = Show::factory()->create();
+    Episode::factory()->for(ShowEntry::factory()->for($unmeasured), 'entry')->create(['video_file_size' => null]);
+
+    getJson('/api/v1/shows?sort=video_files_bytes')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$empty->id, $unmeasured->id, $small->id, $large->id]);
+
+    getJson('/api/v1/shows?sort=-video_files_bytes')
+        ->assertOk()
+        ->assertJsonPath('data.*.id', [$large->id, $small->id, $empty->id, $unmeasured->id]);
+});
+
 test('listing shows looks up the video base path only once', function () {
     actingAsAdmin();
 

@@ -126,6 +126,17 @@ test('an empty base folder does not stop the admin from starting a check', funct
     Queue::assertPushedTimes(CheckEpisodeVideoFilesJob::class, 1);
 });
 
+test('the check stores each found video file size and clears it for missing ones', function () {
+    $present = Episode::factory()->create();
+    putVideoFile(ResolveEpisodeVideoPathAction::run($present), str_repeat('x', 42));
+    $gone = Episode::factory()->create(['video_file_size' => 99]);
+
+    CreateVideoFileCheckAction::run();
+
+    expect($present->fresh()->video_file_size)->toBe(42)
+        ->and($gone->fresh()->video_file_size)->toBeNull();
+});
+
 test('the check stores which episodes have their video file', function () {
     $present = episodeWithVideoFile();
     $returned = episodeWithVideoFile();
@@ -501,14 +512,15 @@ test('uploading a replacement clears the missing flag', function () {
 test('a failed playback check flags the episode as missing', function () {
     actingAsAdmin();
     mountVideoBasePath();
-    $episode = Episode::factory()->create();
+    $episode = Episode::factory()->create(['video_file_size' => 500]);
 
     postJson("/api/v1/episodes/{$episode->id}/playback")
         ->assertUnprocessable()
         ->assertJsonPath('code', 'no_video_file')
         ->assertJsonPath('errors.episode.0.code', 'no_video_file');
 
-    expect($episode->fresh()->has_video_file)->toBeFalse();
+    expect($episode->fresh()->has_video_file)->toBeFalse()
+        ->and($episode->fresh()->video_file_size)->toBeNull();
 });
 
 test('a failed playback check keeps the stored value when the base folder is unreachable', function () {
