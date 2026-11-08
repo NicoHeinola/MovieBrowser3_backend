@@ -13,4 +13,19 @@ class WatchPositionData extends Data
         public ?int $positionSeconds = null,
         public ?int $durationSeconds = null,
     ) {}
+
+    /**
+     * Whether the position is within `watch_progress.finished_before_end_seconds` of the end, so the episode counts as
+     * watched. Unknown values never count, and neither does a video no longer than that window: any position in it
+     * would be "near the end".
+     */
+    public function isNearEnd(): bool
+    {
+        $window = (int) config('watch_progress.finished_before_end_seconds');
+
+        return $this->positionSeconds !== null
+            && $this->durationSeconds !== null
+            && $this->durationSeconds > $window
+            && $this->positionSeconds >= $this->durationSeconds - $window;
+    }
 }

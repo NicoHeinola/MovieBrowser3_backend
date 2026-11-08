@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Actions\Episode\VideoFile\ResolveEpisodeFromVideoFileAction;
 use App\Actions\EpisodePlayback\RequestVlcStatusAction;
+use App\Actions\ShowEntryWatchStatus\CompleteEntryOnLastEpisodeAction;
 use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
 use App\Dtos\ShowWatchProgress\WatchPositionData;
@@ -41,6 +42,7 @@ class TrackVlcPlaybackJob implements ShouldQueue
         RequestVlcStatusAction $requestVlcStatusAction,
         ResolveEpisodeFromVideoFileAction $resolveEpisodeFromVideoFileAction,
         UpdateShowWatchProgressAction $updateShowWatchProgressAction,
+        CompleteEntryOnLastEpisodeAction $completeEntryOnLastEpisodeAction,
     ): void {
         $status = $requestVlcStatusAction->handle($this->vlc);
 
@@ -59,14 +61,18 @@ class TrackVlcPlaybackJob implements ShouldQueue
             : null;
 
         if ($episode !== null) {
-            $updateShowWatchProgressAction->handle(
-                $episode,
-                $this->user,
-                new WatchPositionData(
-                    $this->seconds(data_get($status, 'time'), 0),
-                    $this->seconds(data_get($status, 'length'), 1),
-                ),
+            $position = new WatchPositionData(
+                $this->seconds(data_get($status, 'time'), 0),
+                $this->seconds(data_get($status, 'length'), 1),
             );
+
+            $updateShowWatchProgressAction->handle($episode, $this->user, $position);
+
+            // Reaching the credits of the entry's last episode (or a movie) means the entry has been watched, whatever
+            // status the user set meanwhile.
+            if ($position->isNearEnd()) {
+                $completeEntryOnLastEpisodeAction->handle($episode, $this->user);
+            }
         }
     }
 

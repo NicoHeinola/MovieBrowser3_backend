@@ -1,10 +1,15 @@
 <?php
 
+use App\Actions\ShowEntryWatchStatus\UpdateShowEntryWatchStatusAction;
 use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
+use App\Dtos\ShowEntryWatchStatus\UpdateShowEntryWatchStatusData;
 use App\Dtos\ShowWatchProgress\WatchPositionData;
+use App\Enums\WatchStatus;
 use App\Jobs\TrackVlcPlaybackJob;
 use App\Models\Episode\Episode;
+use App\Models\ShowEntry\ShowEntry;
+use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
 use Illuminate\Support\Carbon;
@@ -63,8 +68,86 @@ function watchProgressEvent(Episode $episode, string $updatedAt, ?int $positionS
         'updated_at' => $updatedAt,
     ]);
 
-    return "event: watch-progress\nid: {$updatedAt}\ndata: {$data}\n\n";
+    return "event: watch-progress\ndata: {$data}\n\n";
 }
+
+function watchStatusEvent(ShowEntry $entry, ?WatchStatus $status): string
+{
+    $data = json_encode(['show_id' => $entry->show_id, 'show_entry_id' => $entry->id, 'status' => $status]);
+
+    return "event: watch-status\ndata: {$data}\n\n";
+}
+
+test('a watch status set while the stream is open is sent, and one from before it is not', function () {
+    $user = actingAsStreamUser();
+    $entry = ShowEntry::factory()->create();
+    ShowEntryWatchStatus::factory()->create(['user_id' => $user->id, 'status' => WatchStatus::Watching]);
+
+    beforeStreamPoll(2, fn () => UpdateShowEntryWatchStatusAction::run(new UpdateShowEntryWatchStatusData($entry, $user, WatchStatus::Completed)));
+
+    expect(streamWatchProgress())->toBe("retry: 3000\n\n".watchStatusEvent($entry, WatchStatus::Completed));
+});
+
+test('changing a watch status is sent and saving the same one again is not', function () {
+    $user = actingAsStreamUser();
+    $entry = ShowEntry::factory()->create();
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $entry->id, 'user_id' => $user->id, 'status' => WatchStatus::Watching]);
+
+    beforeStreamPoll(1, fn () => UpdateShowEntryWatchStatusAction::run(new UpdateShowEntryWatchStatusData($entry, $user, WatchStatus::Completed)));
+    beforeStreamPoll(2, fn () => UpdateShowEntryWatchStatusAction::run(new UpdateShowEntryWatchStatusData($entry, $user, WatchStatus::Completed)));
+
+    expect(streamWatchProgress())->toBe("retry: 3000\n\n".watchStatusEvent($entry, WatchStatus::Completed));
+});
+
+test('clearing a watch status is sent with a null status', function () {
+    $user = actingAsStreamUser();
+    $entry = ShowEntry::factory()->create();
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $entry->id, 'user_id' => $user->id, 'status' => WatchStatus::Watching]);
+
+    beforeStreamPoll(1, fn () => ShowEntryWatchStatus::query()->where('user_id', $user->id)->delete());
+
+    expect(streamWatchProgress())->toBe("retry: 3000\n\n".watchStatusEvent($entry, null));
+});
+
+test('a watch status set again after clearing it is sent again', function () {
+    $user = actingAsStreamUser();
+    $entry = ShowEntry::factory()->create();
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $entry->id, 'user_id' => $user->id, 'status' => WatchStatus::Watching]);
+
+    beforeStreamPoll(1, fn () => ShowEntryWatchStatus::query()->where('user_id', $user->id)->delete());
+    beforeStreamPoll(3, fn () => UpdateShowEntryWatchStatusAction::run(new UpdateShowEntryWatchStatusData($entry, $user, WatchStatus::Watching)));
+
+    expect(streamWatchProgress())->toBe("retry: 3000\n\n"
+        .watchStatusEvent($entry, null)
+        .watchStatusEvent($entry, WatchStatus::Watching));
+});
+
+test('watch statuses of other users are not sent', function () {
+    actingAsStreamUser();
+    $entry = ShowEntry::factory()->create();
+
+    beforeStreamPoll(1, fn () => ShowEntryWatchStatus::factory()->create(['show_entry_id' => $entry->id, 'status' => WatchStatus::Completed]));
+
+    expect(streamWatchProgress())->toBe("retry: 3000\n\n");
+});
+
+test('the entry completed by the vlc job is sent', function () {
+    Queue::fake();
+    $user = actingAsStreamUser();
+    $episode = Episode::factory()->create();
+
+    beforeStreamPoll(1, function () use ($user, $episode): void {
+        Http::fake(['127.0.0.1:*' => Http::response([
+            'state' => 'playing',
+            'time' => 1400,
+            'length' => 1440,
+            'information' => ['category' => ['meta' => ['filename' => "{$episode->id}_episode.mkv"]]],
+        ])]);
+        app()->call([new TrackVlcPlaybackJob($user, new VlcConnectionData(45678, 'secret')), 'handle']);
+    });
+
+    expect(streamWatchProgress())->toContain(watchStatusEvent($episode->entry, WatchStatus::Completed));
+});
 
 test('the watch progress stream requires authentication', function () {
     getJson('/api/v1/watch-progress/stream')->assertUnauthorized();

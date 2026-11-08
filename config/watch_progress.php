@@ -24,4 +24,18 @@ return [
 
     'stream_lifetime_seconds' => max(60, (int) env('WATCH_PROGRESS_STREAM_LIFETIME_SECONDS', 3600)),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Watched To The End
+    |--------------------------------------------------------------------------
+    |
+    | An episode (or movie) counts as watched once playback is within this many
+    | seconds of its end, which is where the credits usually start. When it is
+    | the last episode of its entry, the entry is marked completed. The saved
+    | position is kept either way. Negative values are raised to 0.
+    |
+    */
+
+    'finished_before_end_seconds' => max(0, (int) env('WATCH_FINISHED_BEFORE_END_SECONDS', 120)),
+
 ];

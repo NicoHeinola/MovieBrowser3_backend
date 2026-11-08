@@ -6,7 +6,7 @@ test('write actions run inside a database transaction', function () {
     $actionsPath = dirname(__DIR__, 2).'/app/Actions';
 
     // Filesystem and VLC helpers write no rows and run inside their caller's transaction; login must not hold one open during its delay,
-    // the read-only progress stream must not hold one open for its whole lifetime, and the app version, dashboard stats and legacy import checks only read.
+    // the read-only progress stream (and the change lists it polls) must not hold one open for its whole lifetime, and the app version, dashboard stats and legacy import checks only read.
     $exempt = [
         'AppVersion/FetchLatestReleaseAction.php',
         'AppVersion/GetAppVersionAction.php',
@@ -24,6 +24,8 @@ test('write actions run inside a database transaction', function () {
         'Setup/CheckSetupSettingsAction.php',
         'Setup/GetSetupStatusAction.php',
         'Show/RelocateShowVideosAction.php',
+        'ShowEntryWatchStatus/ListChangedShowEntryWatchStatusesAction.php',
+        'ShowWatchProgress/ListChangedShowWatchProgressAction.php',
         'ShowWatchProgress/StreamShowWatchProgressAction.php',
     ];
 

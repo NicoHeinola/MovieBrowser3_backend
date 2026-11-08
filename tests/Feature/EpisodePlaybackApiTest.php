@@ -201,6 +201,22 @@ test('playing another episode than the one in progress starts it from the beginn
     ]);
 });
 
+test('replaying an episode stopped within the last two minutes still resumes where it stopped', function () {
+    $user = actingAsPlaybackUser();
+    [$episode] = playableEpisodes(ShowEntry::factory()->create(), 1);
+    ShowWatchProgress::factory()->create([
+        'user_id' => $user->id,
+        'episode_id' => $episode->id,
+        'position_seconds' => 1330,
+        'duration_seconds' => 1440,
+    ]);
+    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->once()->with(Mockery::any(), 0, 1330)->andReturn(fakeVlcConnection());
+
+    postJson("/api/v1/episodes/{$episode->id}/playback")
+        ->assertCreated()
+        ->assertJsonPath('position_seconds', 1330);
+});
+
 test('from_start must be a boolean', function () {
     actingAsPlaybackUser();
     [$episode] = playableEpisodes(ShowEntry::factory()->create(), 1);

@@ -2,8 +2,11 @@
 
 use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
+use App\Enums\WatchStatus;
 use App\Jobs\TrackVlcPlaybackJob;
 use App\Models\Episode\Episode;
+use App\Models\ShowEntry\ShowEntry;
+use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
 use Illuminate\Support\Facades\Http;
@@ -53,6 +56,56 @@ test('the playing episode becomes the user progress', function () {
         'episode_id' => $episode->id,
     ]);
     assertTrackingContinues($user);
+});
+
+test('reaching the end of the last episode completes its entry', function () {
+    $user = User::factory()->create();
+    $entry = ShowEntry::factory()->create();
+    Episode::factory()->create(['show_entry_id' => $entry->id, 'sequence_number' => 1]);
+    $last = Episode::factory()->create(['show_entry_id' => $entry->id, 'sequence_number' => 2]);
+    fakeVlcStatus('playing', "{$last->id}_{$last->name}.mkv", time: 1330, length: 1440);
+
+    runTrackVlcPlaybackJob($user);
+
+    assertDatabaseHas('show_entry_watch_statuses', [
+        'show_entry_id' => $entry->id,
+        'user_id' => $user->id,
+        'status' => WatchStatus::Completed->value,
+    ]);
+});
+
+test('the credits of the last episode complete its entry whatever status the user set', function () {
+    $user = User::factory()->create();
+    $episode = Episode::factory()->create();
+    ShowWatchProgress::factory()->create(['user_id' => $user->id, 'episode_id' => $episode->id, 'position_seconds' => 1330, 'duration_seconds' => 1440]);
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $episode->show_entry_id, 'user_id' => $user->id, 'status' => WatchStatus::Watching]);
+    fakeVlcStatus('playing', "{$episode->id}_{$episode->name}.mkv", time: 1335, length: 1440);
+
+    runTrackVlcPlaybackJob($user);
+
+    assertDatabaseHas('show_entry_watch_statuses', ['show_entry_id' => $episode->show_entry_id, 'status' => WatchStatus::Completed->value]);
+});
+
+test('reaching the end of an earlier episode does not complete its entry', function () {
+    $user = User::factory()->create();
+    $entry = ShowEntry::factory()->create();
+    $first = Episode::factory()->create(['show_entry_id' => $entry->id, 'sequence_number' => 1]);
+    Episode::factory()->create(['show_entry_id' => $entry->id, 'sequence_number' => 2]);
+    fakeVlcStatus('playing', "{$first->id}_{$first->name}.mkv", time: 1430, length: 1440);
+
+    runTrackVlcPlaybackJob($user);
+
+    assertDatabaseCount('show_entry_watch_statuses', 0);
+});
+
+test('the last episode before the final two minutes does not complete its entry', function () {
+    $user = User::factory()->create();
+    $episode = Episode::factory()->create();
+    fakeVlcStatus('playing', "{$episode->id}_{$episode->name}.mkv", time: 1000, length: 1440);
+
+    runTrackVlcPlaybackJob($user);
+
+    assertDatabaseCount('show_entry_watch_statuses', 0);
 });
 
 test('the playing position and length are saved with the progress', function () {

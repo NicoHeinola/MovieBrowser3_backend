@@ -2,9 +2,10 @@
 
 namespace App\Actions\ShowWatchProgress;
 
+use App\Actions\ShowEntryWatchStatus\ListChangedShowEntryWatchStatusesAction;
+use App\Dtos\ShowEntryWatchStatus\WatchStatusChangeData;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
-use DateTimeInterface;
 use Generator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Sleep;
@@ -14,12 +15,17 @@ class StreamShowWatchProgressAction
 {
     use AsAction;
 
+    public function __construct(
+        private readonly ListChangedShowWatchProgressAction $listChangedShowWatchProgressAction,
+        private readonly ListChangedShowEntryWatchStatusesAction $listChangedShowEntryWatchStatusesAction,
+    ) {}
+
     /**
-     * Follows the user's progress: every `watch_progress.stream_poll_seconds` it yields the progress rows that changed
-     * since the last check (often none), whatever wrote them. Progress saved before the stream started is not sent.
-     * Ends once the token is revoked or after `watch_progress.stream_lifetime_seconds`.
+     * Follows the user's progress and entry watch statuses: every `watch_progress.stream_poll_seconds` it yields what
+     * changed since the last check (often nothing), whatever wrote it. Anything saved before the stream started is not
+     * sent. Ends once the token is revoked or after `watch_progress.stream_lifetime_seconds`.
      *
-     * @return Generator<int, Collection<int, ShowWatchProgress>>
+     * @return Generator<int, array{progress: Collection<int, ShowWatchProgress>, statuses: Collection<int, WatchStatusChangeData>}>
      */
     public function handle(User $user, int $tokenId): Generator
     {
@@ -27,7 +33,10 @@ class StreamShowWatchProgressAction
 
         // Timestamps have whole seconds, so rows saved earlier in this second are already known rather than sent.
         $since = now()->startOfSecond();
-        $sent = $this->changedSince($user, $since)->map($this->version(...));
+
+        // What the client counts as current: everything that exists when the stream opens.
+        $knownProgress = $this->listChangedShowWatchProgressAction->handle($user, $since, collect());
+        $knownStatuses = $this->listChangedShowEntryWatchStatusesAction->handle($user, collect());
 
         while (now()->lessThan($endsAt)) {
             Sleep::for((int) config('watch_progress.stream_poll_seconds'))->seconds();
@@ -37,35 +46,13 @@ class StreamShowWatchProgressAction
                 return;
             }
 
-            $changed = $this->changedSince($user, $since)
-                ->reject(fn (ShowWatchProgress $progress): bool => $sent->get($progress->show_id) === $this->version($progress));
+            $progress = $this->listChangedShowWatchProgressAction->handle($user, $since, $knownProgress);
+            $statuses = $this->listChangedShowEntryWatchStatusesAction->handle($user, $knownStatuses);
 
-            $sent = $sent->replace($changed->map($this->version(...)));
+            $knownProgress = $knownProgress->replace($progress);
+            $knownStatuses = $knownStatuses->replace($statuses);
 
-            yield $changed->values();
+            yield ['progress' => $progress->values(), 'statuses' => $statuses->values()];
         }
-    }
-
-    /**
-     * @return Collection<int, ShowWatchProgress> keyed by show id
-     */
-    private function changedSince(User $user, DateTimeInterface $since): Collection
-    {
-        return ShowWatchProgress::query()
-            ->where('user_id', $user->id)
-            ->where('updated_at', '>=', $since)
-            ->get()
-            ->keyBy('show_id');
-    }
-
-    /**
-     * What the client has been told about a show; a second save within the same second still differs by episode
-     * or position.
-     *
-     * @return array{int, int|null, int|null, int|null}
-     */
-    private function version(ShowWatchProgress $progress): array
-    {
-        return [$progress->show_entry_id, $progress->episode_id, $progress->position_seconds, $progress->updated_at?->getTimestamp()];
     }
 }
