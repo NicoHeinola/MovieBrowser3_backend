@@ -17,5 +17,6 @@ class UpdateEpisodeData extends Data
         public string|Optional $name,
         public UploadedFile|Optional $file,
         public int|Optional $sequenceNumber,
+        public int|Optional $showEntryId,
     ) {}
 }

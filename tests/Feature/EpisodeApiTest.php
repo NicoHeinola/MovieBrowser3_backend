@@ -6,7 +6,9 @@ use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
 use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
+use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\ShowTitle\ShowTitle;
+use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -494,3 +496,118 @@ test('a rolled back first upload removes the stored video', function () {
     expect(File::exists("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv"))->toBeFalse();
     expect(File::isDirectory("$base/{$entry->show_id}_{$entry->show_id}"))->toBeFalse();
 });
+
+test('moving an episode to another entry of its show moves its row, video and watch progress', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $show = Show::factory()->create();
+    $from = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $to = ShowEntry::factory()->for($show)->create(['name' => 'Season 2']);
+    $episode = Episode::factory()->for($from, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $oldPath = putVideoFile("$base/{$show->id}_{$show->id}/{$from->id}_Season 1/{$episode->id}_Episode 1.mkv");
+    $newPath = "$base/{$show->id}_{$show->id}/{$to->id}_Season 2/{$episode->id}_Episode 1.mkv";
+    $progress = ShowWatchProgress::factory()->create(['episode_id' => $episode->id, 'position_seconds' => 42]);
+    $status = ShowEntryWatchStatus::factory()->create(['show_entry_id' => $from->id, 'user_id' => $progress->user_id]);
+
+    patch("/api/v1/episodes/{$episode->id}", [
+        'name' => 'Episode 1',
+        'sequence_number' => 1,
+        'show_entry_id' => $to->id,
+    ], ['Accept' => 'application/json'])
+        ->assertOk()
+        ->assertJsonPath('show_entry_id', $to->id)
+        ->assertJsonPath('file_path', $newPath);
+
+    assertDatabaseHas('episodes', ['id' => $episode->id, 'show_entry_id' => $to->id]);
+    assertDatabaseHas('show_watch_progress', [
+        'id' => $progress->id,
+        'show_entry_id' => $to->id,
+        'episode_id' => $episode->id,
+        'position_seconds' => 42,
+    ]);
+    assertDatabaseHas('show_entry_watch_statuses', ['id' => $status->id, 'show_entry_id' => $from->id]);
+    expect(File::exists($newPath))->toBeTrue();
+    expect(File::exists($oldPath))->toBeFalse();
+    expect(File::exists(dirname($oldPath)))->toBeFalse();
+});
+
+test('moving and renaming an episode at once lands its video on one final path', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $show = Show::factory()->create();
+    $from = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $to = ShowEntry::factory()->for($show)->create(['name' => 'Season 2']);
+    $episode = Episode::factory()->for($from, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $oldPath = putVideoFile("$base/{$show->id}_{$show->id}/{$from->id}_Season 1/{$episode->id}_Episode 1.mkv");
+    $newPath = "$base/{$show->id}_{$show->id}/{$to->id}_Season 2/{$episode->id}_Pilot.mkv";
+
+    patchJson("/api/v1/episodes/{$episode->id}", ['name' => 'Pilot', 'show_entry_id' => $to->id])
+        ->assertOk()
+        ->assertJsonPath('file_path', $newPath);
+
+    expect(File::get($newPath))->toBe('video-bytes');
+    expect(File::exists($oldPath))->toBeFalse();
+});
+
+test('moving an episode with a new upload stores the new video in the new entry and deletes the old one', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $show = Show::factory()->create();
+    $from = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $to = ShowEntry::factory()->for($show)->create(['name' => 'Season 2']);
+    $episode = Episode::factory()->for($from, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $oldPath = putVideoFile("$base/{$show->id}_{$show->id}/{$from->id}_Season 1/{$episode->id}_Episode 1.mkv", 'old-bytes');
+    $newPath = "$base/{$show->id}_{$show->id}/{$to->id}_Season 2/{$episode->id}_Episode 1.mp4";
+
+    patch("/api/v1/episodes/{$episode->id}", [
+        'show_entry_id' => $to->id,
+        'file' => UploadedFile::fake()->createWithContent('ep1.mp4', 'new-bytes'),
+    ], ['Accept' => 'application/json'])
+        ->assertOk()
+        ->assertJsonPath('filename', 'ep1.mp4')
+        ->assertJsonPath('file_path', $newPath);
+
+    expect(File::get($newPath))->toBe('new-bytes');
+    expect(File::exists($oldPath))->toBeFalse();
+    expect(File::exists(dirname($oldPath)))->toBeFalse();
+});
+
+test('sending the current entry id leaves the episode and its video in place', function () {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $path = putVideoFile("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
+    $progress = ShowWatchProgress::factory()->create(['episode_id' => $episode->id]);
+
+    patchJson("/api/v1/episodes/{$episode->id}", ['name' => 'Episode 1', 'show_entry_id' => $entry->id])
+        ->assertOk()
+        ->assertJsonPath('show_entry_id', $entry->id)
+        ->assertJsonPath('file_path', $path);
+
+    expect(File::exists($path))->toBeTrue();
+    assertDatabaseHas('show_watch_progress', ['id' => $progress->id, 'show_entry_id' => $entry->id]);
+});
+
+test('an episode cannot move to an entry of another show or a missing entry', function (int $targetId) {
+    actingAsAdmin();
+    $base = useTestVideoBasePath();
+
+    $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $path = putVideoFile("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
+
+    patchJson("/api/v1/episodes/{$episode->id}", ['show_entry_id' => $targetId])
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.show_entry_id.0.code', 'exists');
+
+    assertDatabaseHas('episodes', ['id' => $episode->id, 'show_entry_id' => $entry->id]);
+    expect(File::exists($path))->toBeTrue();
+})->with([
+    'entry of another show' => fn (): int => ShowEntry::factory()->create()->id,
+    'missing entry' => 999999,
+]);

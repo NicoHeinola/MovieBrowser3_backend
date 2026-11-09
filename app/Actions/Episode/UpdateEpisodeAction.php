@@ -8,6 +8,7 @@ use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Actions\Episode\VideoFile\StoreVideoFileAction;
 use App\Dtos\Episode\UpdateEpisodeData;
 use App\Models\Episode\Episode;
+use App\Models\ShowWatchProgress\ShowWatchProgress;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -32,6 +33,18 @@ class UpdateEpisodeAction
 
             $data->episode->fill(Arr::only($data->all(), $data->episode->getFillable()))->save();
 
+            $movedEntry = $data->episode->wasChanged('show_entry_id');
+
+            if ($movedEntry) {
+                // The cached `entry` is still the old one; drop it so every path below resolves into the new entry's folder
+                $data->episode->unsetRelation('entry');
+
+                // Keep "continue watching" pointing at this episode's new entry
+                ShowWatchProgress::query()
+                    ->where('episode_id', $data->episode->id)
+                    ->update(['show_entry_id' => $data->episode->show_entry_id]);
+            }
+
             // If a new video file is provided, store it and delete the old one if the path has changed
             if (!($data->file instanceof Optional)) {
                 $episode = $this->storeVideoFileAction->handle($data->episode, $data->file);
@@ -45,8 +58,8 @@ class UpdateEpisodeAction
                 return $episode->fresh();
             }
 
-            // Rename the video file if the episode name has changed and there is an existing video file
-            if ($data->episode->wasChanged('name') && $oldFilename !== '') {
+            // Move the existing video file when its name or entry changed, both at once landing on one final path
+            if (($movedEntry || $data->episode->wasChanged('name')) && $oldFilename !== '') {
                 $newPath = $this->resolveEpisodeVideoPathAction->handle($data->episode);
 
                 if ($oldPath !== $newPath) {

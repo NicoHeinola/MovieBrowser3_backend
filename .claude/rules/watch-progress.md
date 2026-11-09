@@ -22,7 +22,7 @@ applyTo: 'app/**/ShowEntryWatchStatus/**,app/**/ShowWatchProgress/**,app/Http/Co
 
 ## Watch Progress
 
-- `show_watch_progress` holds one row per user and show: entry plus nullable episode (nulled when the episode is deleted), and nullable `position_seconds`/`duration_seconds` inside that episode. `ShowResource` exposes the current user's row as `watch_progress` (object or `null`). "Continue watching" is `filter[has_watch_progress]=1&sort=-last_watched_at`.
+- `show_watch_progress` holds one row per user and show: entry plus nullable episode (nulled when the episode is deleted, entry moved with it when the episode moves to another entry), and nullable `position_seconds`/`duration_seconds` inside that episode. `ShowResource` exposes the current user's row as `watch_progress` (object or `null`). "Continue watching" is `filter[has_watch_progress]=1&sort=-last_watched_at`.
 
 ## Live Stream
 
