@@ -5,6 +5,7 @@ namespace App\Actions\Setting;
 use App\Actions\Episode\RelocateEpisodeVideosAction;
 use App\Actions\Episode\VideoFile\ResolveVideoBasePathAction;
 use App\Dtos\Setting\UpdateSettingData;
+use App\Enums\SettingKey;
 use App\Models\Setting\Setting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Once;
@@ -22,7 +23,7 @@ class UpdateSettingAction
     public function handle(UpdateSettingData $data): Setting
     {
         return DB::transaction(function () use ($data): Setting {
-            $isVideoBasePath = $data->setting->key === 'video_base_path';
+            $isVideoBasePath = $data->setting->key === SettingKey::VideoBasePath->value;
             $oldBasePath = $isVideoBasePath ? $this->resolveVideoBasePathAction->handle() : null;
 
             $data->setting->update([

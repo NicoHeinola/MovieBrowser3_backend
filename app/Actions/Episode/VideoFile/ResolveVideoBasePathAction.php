@@ -2,6 +2,7 @@
 
 namespace App\Actions\Episode\VideoFile;
 
+use App\Enums\SettingKey;
 use App\Models\Setting\Setting;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -20,7 +21,7 @@ class ResolveVideoBasePathAction
     private static function resolve(): string
     {
         return once(function (): string {
-            $basePath = Setting::query()->whereKey('video_base_path')->value('value');
+            $basePath = Setting::query()->whereKey(SettingKey::VideoBasePath->value)->value('value');
 
             return rtrim((string) ($basePath ?: storage_path('app/videos')), '/\\');
         });

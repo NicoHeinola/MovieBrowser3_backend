@@ -5,6 +5,7 @@ namespace App\Actions\Setup;
 use App\Actions\EpisodePlayback\CheckVlcBinaryAction;
 use App\Dtos\Setup\CheckSetupSettingsData;
 use App\Dtos\Setup\SetupCheckData;
+use App\Enums\SettingKey;
 use App\Enums\SetupCheckCode;
 use Illuminate\Support\Str;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -28,11 +29,11 @@ class CheckSetupSettingsAction
         $checks = [];
 
         if (!$data->videoBasePath instanceof Optional) {
-            $checks['video_base_path'] = $this->checkVideoBasePath($data->videoBasePath);
+            $checks[SettingKey::VideoBasePath->value] = $this->checkVideoBasePath($data->videoBasePath);
         }
 
         if (!$data->vlcMediaPlayerPath instanceof Optional) {
-            $checks['vlc_media_player_path'] = $this->checkVlcBinaryAction->handle($data->vlcMediaPlayerPath);
+            $checks[SettingKey::VlcMediaPlayerPath->value] = $this->checkVlcBinaryAction->handle($data->vlcMediaPlayerPath);
         }
 
         return $checks;

@@ -10,6 +10,7 @@ use App\Actions\LegacyImport\CreateLegacyShowImportAction;
 use App\Actions\Show\DeleteShowAction;
 use App\Dtos\LegacyImport\LegacyShowData;
 use App\Dtos\LegacyImport\LegacyShowImportCheckData;
+use App\Enums\SettingKey;
 use App\Models\Setting\Setting;
 use App\Models\Show\Show;
 use Illuminate\Console\Command;
@@ -54,7 +55,7 @@ class ImportLegacyShowsCommand extends Command
 
         // Until the setup wizard picks a video folder, copies would land in the fallback storage/app/videos, which in
         // Docker is the WSL disk rather than the media drive
-        if (!Setting::query()->whereKey('setup_completed_at')->value('value')) {
+        if (!Setting::query()->whereKey(SettingKey::SetupCompletedAt->value)->value('value')) {
             $this->components->error('Finish the first-login setup in MovieBrowser3 first, so the videos are copied into your video folder.');
 
             return self::FAILURE;

@@ -3,6 +3,7 @@
 namespace App\Actions\EpisodePlayback;
 
 use App\Dtos\EpisodePlayback\VlcConnectionData;
+use App\Enums\SettingKey;
 use App\Enums\SetupCheckCode;
 use App\Enums\VlcLaunchCode;
 use App\Exceptions\VlcLaunchException;
@@ -79,7 +80,7 @@ class OpenVlcPlaylistAction
      */
     private function resolveBinary(): string
     {
-        $binary = Setting::query()->whereKey('vlc_media_player_path')->value('value') ?: 'vlc';
+        $binary = Setting::query()->whereKey(SettingKey::VlcMediaPlayerPath->value)->value('value') ?: 'vlc';
 
         if (!$this->usesBridge() && str_contains($binary, '/') && !is_file($binary)) {
             throw new VlcLaunchException(

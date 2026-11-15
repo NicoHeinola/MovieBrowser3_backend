@@ -4,6 +4,7 @@ namespace App\Actions\Setup;
 
 use App\Actions\EpisodePlayback\CheckVlcBinaryAction;
 use App\Dtos\Setup\SetupStatusData;
+use App\Enums\SettingKey;
 use App\Models\Setting\Setting;
 use Illuminate\Support\Carbon;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -18,7 +19,7 @@ class GetSetupStatusAction
 
     public function handle(): SetupStatusData
     {
-        $completedAt = Setting::query()->whereKey('setup_completed_at')->value('value');
+        $completedAt = Setting::query()->whereKey(SettingKey::SetupCompletedAt->value)->value('value');
 
         return new SetupStatusData(
             $completedAt ? Carbon::parse($completedAt) : null,

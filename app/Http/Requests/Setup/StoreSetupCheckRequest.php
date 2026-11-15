@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests\Setup;
 
+use App\Enums\SettingKey;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 class StoreSetupCheckRequest extends FormRequest
 {
-    private const array CHECKABLE = ['video_base_path', 'vlc_media_player_path'];
+    private const array CHECKABLE = [SettingKey::VideoBasePath->value, SettingKey::VlcMediaPlayerPath->value];
 
     /**
      * @return array<string, list<string>>
@@ -17,8 +18,8 @@ class StoreSetupCheckRequest extends FormRequest
     {
         // Empty is allowed (it arrives as null): an empty VLC path means `vlc` on the PATH, as for playback
         return [
-            'video_base_path' => ['sometimes', 'nullable', 'string'],
-            'vlc_media_player_path' => ['sometimes', 'nullable', 'string'],
+            SettingKey::VideoBasePath->value => ['sometimes', 'nullable', 'string'],
+            SettingKey::VlcMediaPlayerPath->value => ['sometimes', 'nullable', 'string'],
         ];
     }
 

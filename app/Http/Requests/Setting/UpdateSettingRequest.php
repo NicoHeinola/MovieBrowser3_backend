@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Setting;
 
+use App\Enums\SettingKey;
 use App\Models\Setting\Setting;
 use App\Rules\AbsolutePath;
 use Illuminate\Foundation\Http\FormRequest;
@@ -29,7 +30,7 @@ class UpdateSettingRequest extends FormRequest
                 default => null,
             };
 
-            if ($setting->key === 'video_base_path') {
+            if ($setting->key === SettingKey::VideoBasePath->value) {
                 $rules['value'] = [
                     'required',
                     'string',
@@ -38,7 +39,7 @@ class UpdateSettingRequest extends FormRequest
             }
 
             // Empty means `vlc` on the PATH. `vlc` itself stays valid: GET /setup detects it and the wizard saves it
-            if ($setting->key === 'vlc_media_player_path') {
+            if ($setting->key === SettingKey::VlcMediaPlayerPath->value) {
                 $rules['value'] = [
                     'nullable',
                     'string',
@@ -47,7 +48,7 @@ class UpdateSettingRequest extends FormRequest
             }
 
             // Read back as a date by the setup wizard; empty means "not set up"
-            if ($setting->key === 'setup_completed_at') {
+            if ($setting->key === SettingKey::SetupCompletedAt->value) {
                 $rules['value'] = ['nullable', 'date'];
             }
         }
