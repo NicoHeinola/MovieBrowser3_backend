@@ -321,3 +321,25 @@ test('usernames that differ only by case are taken on create and update', functi
     // Changing only the case of your own name is fine
     patchJson("/api/v1/users/{$other->id}", ['username' => 'Grace'])->assertOk();
 });
+
+test('the last admin cannot lose admin access', function () {
+    $admin = actingAsAdmin();
+    User::query()->whereKeyNot($admin->id)->update(['is_admin' => false]);
+
+    patchJson("/api/v1/users/{$admin->id}", ['is_admin' => false])
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.is_admin.0.code', 'last_admin');
+
+    expect($admin->fresh()->is_admin)->toBeTrue();
+});
+
+test('an admin can be demoted while another admin remains', function () {
+    $admin = actingAsAdmin();
+    User::query()->whereKeyNot($admin->id)->update(['is_admin' => false]);
+    $other = User::factory()->admin()->create();
+
+    patchJson("/api/v1/users/{$admin->id}", ['is_admin' => false])->assertOk();
+
+    expect($admin->fresh()->is_admin)->toBeFalse()
+        ->and($other->fresh()->is_admin)->toBeTrue();
+});

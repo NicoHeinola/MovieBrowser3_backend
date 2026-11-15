@@ -34,6 +34,7 @@ enum ValidationErrorCode: string
     case UniqueIgnoringCase = 'unique_ignoring_case';
 
     case InvalidCredentials = 'invalid_credentials';
+    case LastAdmin = 'last_admin';
     case NoVideoFile = 'no_video_file';
     case OnlyPrimaryTitle = 'only_primary_title';
     case VideoBasePathUnavailable = 'video_base_path_unavailable';
