@@ -1,6 +1,7 @@
 # shellcheck shell=bash
 # The installer's settings: asked, prefilled with the saved answer, or taken as they are with --update.
-# Sets INSTALL_DIR, BACKEND_REPO, FRONTEND_REPO, MEDIA_DIRS, WEB_PORT, WEB_BIND, DB_PORT and VLC_BRIDGE_PORT.
+# Sets INSTALL_DIR, BACKEND_REPO, FRONTEND_REPO, MEDIA_DIRS, BACKUP_PATH, WEB_PORT, WEB_BIND, DB_PORT and
+# VLC_BRIDGE_PORT.
 
 configure() {
     has_tty || { TTY=false; ASK_SETTINGS=false; }
@@ -14,6 +15,7 @@ configure() {
     ask FRONTEND_REPO "Frontend repo" "${MOVIEBROWSER3_FRONTEND_REPO:-${saved:-$DEFAULT_FRONTEND_REPO}}"
 
     ask_media_dirs
+    ask_backup_path
 
     local lan
     saved=$(env_get WEB_PORT)
@@ -79,12 +81,46 @@ add_media_dir() {
     # MOVIEBROWSER3_MEDIA_DIRS separates folders with ':'
     [[ "$dir" != *:* ]] || { warn "Skipped $dir: a media folder can't contain ':'."; return 1; }
 
-    # /mnt/<letter> is a Windows drive. An external one is only there if it was plugged in when WSL started.
-    if [[ "$dir" =~ ^/mnt/([a-z])(/|$) ]] && ! mountpoint -q "/mnt/${BASH_REMATCH[1]}"; then
-        warn "Drive ${BASH_REMATCH[1]^^}: isn't mounted in WSL, so $dir is empty for now. See step 5 of deploy/README.md."
-    elif [[ ! -d "$dir" ]]; then
-        warn "$dir does not exist (yet)."
-    fi
-
+    warn_if_unreachable "$dir"
     MEDIA_DIRS+=("$dir")
+}
+
+# The folder for the database backups, best on another drive than the install folder so a failing disk doesn't take
+# both. The default depends on the install folder, so it can't live in .env.production.
+ask_backup_path() {
+    local saved dir
+    saved=$(env_get BACKUP_PATH)
+
+    [[ "$ASK_SETTINGS" == true ]] &&
+        info "Backup folder: where daily database backups go. Another drive is safest, e.g. /mnt/g/MovieBrowser3_backups."
+
+    while true; do
+        ask dir "Backup folder" "${saved:-$INSTALL_DIR/backups}"
+        dir=${dir/#\~/$HOME}
+        dir=${dir%/}
+
+        if [[ "$dir" == /* && "$dir" != *:* && "$dir" != *[[:space:]]* ]]; then
+            break
+        fi
+        [[ "$ASK_SETTINGS" == false ]] && fail "The backup folder needs an absolute path without spaces or ':', not '$dir'."
+        warn "Enter an absolute path without spaces or ':'."
+    done
+
+    # A folder in the install folder is created later, by install_files
+    [[ "$dir" == "$INSTALL_DIR"/* ]] || warn_if_unreachable "$dir"
+    BACKUP_PATH=$dir
+}
+
+# drive_unmounted DIR: whether DIR is on a Windows drive (/mnt/<letter>) that isn't mounted in WSL. An external one
+# is only there if it was plugged in when WSL started.
+drive_unmounted() { [[ "$1" =~ ^/mnt/([a-z])(/|$) ]] && ! mountpoint -q "/mnt/${BASH_REMATCH[1]}"; }
+
+warn_if_unreachable() {
+    local drive=${1:5:1}
+
+    if drive_unmounted "$1"; then
+        warn "Drive ${drive^^}: isn't mounted in WSL, so $1 is empty for now. See step 5 of deploy/README.md."
+    elif [[ ! -d "$1" ]]; then
+        warn "$1 does not exist (yet)."
+    fi
 }

@@ -32,6 +32,9 @@ Usage: moviebrowser3 <command>
   status            Show the services and whether the VLC bridge answers
   logs [service]    Follow the logs (db, backend, queue, scheduler)
   artisan <args>    Run an artisan command in a one-off backend container
+  backup            Back up the database now, into the backup folder (BACKUP_PATH in .env)
+  restore <backup> [--yes]
+                    Replace the database with a backup: a file name from the backup folder, or a path
   import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]
                     Import MovieBrowser2 shows, copying the videos from the folder (mounted read-only)
 
@@ -82,6 +85,64 @@ import_moviebrowser2() {
         backend php artisan moviebrowser2:import-shows /tmp/moviebrowser2-export.json --source-root="$source_dir" "$@"
 }
 
+# restore <backup> [--yes]: replaces the whole database with a dump from `backup` or the scheduled backups
+restore() {
+    (($# >= 1)) || fail "Usage: moviebrowser3 restore <backup> [--yes]"
+
+    # A bare name is one from the backup folder, as the admin page lists them
+    local file backup_dir
+    backup_dir=$(env_get BACKUP_PATH)
+    if [[ "$1" != */* && -n "$backup_dir" && -f "$backup_dir/$1" ]]; then
+        file="$backup_dir/$1"
+    else
+        file=$(cd "$caller_dir" && readlink -f "$1" || true)
+    fi
+    [[ -f "$file" ]] || fail "Backup not found: $1 (is the backup folder's drive mounted?)"
+
+    if [[ "${2:-}" != --yes ]]; then
+        local answer
+        echo "This replaces the whole database with $(basename "$file"). Everything changed since that backup is lost."
+        read -r -p "Type yes to continue: " answer </dev/tty
+        [[ "$answer" == yes ]] || fail "Cancelled; nothing changed."
+    fi
+
+    # Opened now, so the dump stays readable whatever happens to the file below
+    exec 3<"$file"
+
+    # Nothing may write while the tables are replaced
+    docker compose stop backend queue scheduler
+    docker compose up -d --wait db
+
+    # The current database, in case the restore was the wrong call. A broken database may not dump, which is no reason
+    # to stop. --no-prune: one more dump would otherwise delete the oldest, which may be the one being restored.
+    docker compose run --rm -T backend php artisan backups:create --label=before-restore --no-prune ||
+        warn "Couldn't back up the current database first; restoring anyway."
+
+    # Drops every table first, so tables newer than the backup don't linger and trip the migrations below. Runs in the
+    # db container, so pg_restore matches the server's version, as the container's own user:
+    # 1. pg_restore turns the whole dump into SQL first. Piped straight into psql, a truncated dump would end the SQL
+    #    early and psql would commit the dropped schema.
+    # 2. psql runs it in one transaction, so a restore that fails halfway leaves the database as it was.
+    local status=0
+    # shellcheck disable=SC2016 # expanded inside the container
+    docker compose exec -T db sh -c 'set -e
+        trap "rm -f /tmp/moviebrowser3-restore.sql" EXIT
+        pg_restore --no-owner -f /tmp/moviebrowser3-restore.sql
+        { echo "SET client_min_messages = warning; DROP SCHEMA public CASCADE; CREATE SCHEMA public;"; cat /tmp/moviebrowser3-restore.sql; } |
+            psql -q -o /dev/null -v ON_ERROR_STOP=1 --single-transaction -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <&3 || status=$?
+    exec 3<&-
+
+    # A backup from an older version has an older schema
+    local migrated=0
+    ((status != 0)) || docker compose run --rm -T backend php artisan migrate --force || migrated=$?
+
+    docker compose up -d
+    ((status == 0)) || fail "The restore failed and the database is unchanged; check the output above. The services were started again."
+    ((migrated == 0)) ||
+        fail "Restored the database from $file, but the migrations failed; check the output above, then run: moviebrowser3 artisan migrate --force"
+    echo "Restored the database from $file."
+}
+
 command=${1:-help}
 shift || true
 
@@ -107,6 +168,8 @@ case "$command" in
     status) status ;;
     logs) docker compose logs --follow --tail=100 "$@" ;;
     artisan) docker compose run --rm backend php artisan "$@" ;;
+    backup) docker compose run --rm -T backend php artisan backups:create ;;
+    restore) restore "$@" ;;
     import-moviebrowser2) import_moviebrowser2 "$@" ;;
     *) usage ;;
 esac

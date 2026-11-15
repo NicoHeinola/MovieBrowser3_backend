@@ -10,6 +10,9 @@ install_files() {
     mkdir -p "$INSTALL_DIR/windows" "$INSTALL_DIR/data/postgres" "$INSTALL_DIR/storage/app/private" \
         "$INSTALL_DIR/storage/app/public" "$INSTALL_DIR/web/current"
 
+    # Not on a drive that isn't mounted: the folder would land on the WSL disk, hidden once the drive comes back
+    drive_unmounted "$BACKUP_PATH" || mkdir -p "$BACKUP_PATH"
+
     for file in "${DEPLOY_FILES[@]}"; do
         cp "$source_dir/$file" "$INSTALL_DIR/$file"
     done
@@ -25,22 +28,18 @@ install_files() {
         warn "$HOME/.local/bin is not on your PATH; add it to use the 'moviebrowser3' command."
 }
 
-# Media folders are mounted at the same path as on the host, so stored video paths work for the backend and VLC
-write_media_override() {
+# Media folders and the backup folder are mounted at the same path as on the host, so stored video paths work for the
+# backend and VLC, and backup paths read the same in and outside the containers
+write_compose_override() {
     local service dir
 
     {
-        echo "# Media folders, mounted at the same path as on the host. Written by install.sh from MOVIEBROWSER3_MEDIA_DIRS."
+        echo "# Written by install.sh from MOVIEBROWSER3_MEDIA_DIRS and BACKUP_PATH: media and backup folders, mounted at the same path as on the host."
         echo "services:"
         for service in backend queue; do
             echo "  $service:"
-            if ((${#MEDIA_DIRS[@]} == 0)); then
-                echo "    volumes: []"
-                continue
-            fi
-
             echo "    volumes:"
-            for dir in "${MEDIA_DIRS[@]}"; do
+            for dir in "$BACKUP_PATH" "${MEDIA_DIRS[@]}"; do
                 printf '      - "%s:%s"\n' "$dir" "$dir"
             done
         done
@@ -101,7 +100,11 @@ run_migrations() {
     # Fails on a new database, which has no migrations table yet: that also means ask
     migrations=$(docker compose run --rm -T backend php artisan migrate:status 2>/dev/null || true)
 
-    if ! grep -q 'seed_admin_user.*Ran' <<<"$migrations"; then
+    if grep -q 'seed_admin_user.*Ran' <<<"$migrations"; then
+        # An existing database: back it up first, since a migration that goes wrong is the likeliest way to lose data
+        run_quiet "Database backup" docker compose run --rm -T backend php artisan backups:create --label=before-update ||
+            fail "The database backup before the update failed (is the backup folder's drive mounted?); MovieBrowser3 was not changed."
+    else
         local username=${MOVIEBROWSER3_ADMIN_USERNAME:-} password=${MOVIEBROWSER3_ADMIN_PASSWORD:-}
 
         if [[ -z "$username" ]]; then

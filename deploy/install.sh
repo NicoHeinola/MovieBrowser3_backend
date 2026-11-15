@@ -129,7 +129,7 @@ main() {
     sync_repo frontend "$FRONTEND_REPO" "$INSTALL_DIR/MovieBrowser3_frontend"
 
     install_files
-    write_media_override
+    write_compose_override
 
     step "Building the frontend"
     build_frontend

@@ -5,12 +5,16 @@ use Symfony\Component\Finder\Finder;
 test('write actions run inside a database transaction', function () {
     $actionsPath = dirname(__DIR__, 2).'/app/Actions';
 
-    // Filesystem and VLC helpers write no rows and run inside their caller's transaction; login must not hold one open during its delay,
+    // Backup dumps and their files write no rows (and must work before the migrations), filesystem and VLC helpers write no rows and run inside their caller's transaction; login must not hold one open during its delay,
     // the read-only progress stream (and the change lists it polls) must not hold one open for its whole lifetime, and the app version, dashboard stats, legacy import checks and relocation status only read.
     $exempt = [
         'AppVersion/FetchLatestReleaseAction.php',
         'AppVersion/GetAppVersionAction.php',
         'Auth/LoginUserAction.php',
+        'Backup/CreateBackupAction.php',
+        'Backup/CreateScheduledBackupAction.php',
+        'Backup/DeleteOldBackupsAction.php',
+        'Backup/ListBackupFilesAction.php',
         'Dashboard/GetDashboardStatsAction.php',
         'Episode/DeleteEpisodeVideosAction.php',
         'EpisodePlayback/CheckVlcBinaryAction.php',

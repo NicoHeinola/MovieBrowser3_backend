@@ -125,6 +125,7 @@ It asks a few questions. Each answer is filled in already: press Enter to keep i
 | Install folder | Enter keeps the default. |
 | Backend repo, Frontend repo | Enter. |
 | Media folder 1, 2, … | Your video folders, as in step 5 (`/mnt/g/New_Vid`). An empty line finishes. |
+| Backup folder | Where the database backups go. A folder on another drive is safest (`/mnt/g/MovieBrowser3_backups`), so one broken disk can't take both. Enter keeps `backups` in the install folder. |
 | App port | Enter (8780). |
 | Reachable from other devices on the network? | `y` to use MovieBrowser3 from a phone or another PC at home, otherwise `n`. |
 | Database port, VLC bridge port | Enter. |
@@ -173,7 +174,7 @@ MovieBrowser3 can import your MovieBrowser2 shows: titles, images, descriptions,
 
 - After you restart the PC and log in to Windows, MovieBrowser3 starts by itself within a minute. You don't need to open Ubuntu.
 - To update MovieBrowser3, double-click `update_movie_browser_3.bat`. The window shows what changed and stays open until you press a key. If an update fails, the previous version keeps running.
-- To change an answer (more media folders, network access, ports), run the installer from step 6 again. It remembers your answers.
+- To change an answer (more media folders, the backup folder, network access, ports), run the installer from step 6 again. It remembers your answers.
 
 From the Ubuntu window you can also run:
 
@@ -182,7 +183,14 @@ moviebrowser3 update     # the same as the .bat
 moviebrowser3 status     # is everything running?
 moviebrowser3 logs       # what's happening (Ctrl+C to stop watching)
 moviebrowser3 restart    # restart everything
+moviebrowser3 backup     # back up the database now
 ```
+
+## Backups
+
+MovieBrowser3 backs up its database (your shows, episodes, watch progress, users and settings, not the videos) into the backup folder once a day while the PC is on, and before every update. It keeps the newest 14. Admins see them, and can start one, in MovieBrowser3's settings.
+
+To go back to a backup, run `moviebrowser3 restore <name>` with a name from that list, e.g. `moviebrowser3 restore moviebrowser3-20261115-030000.dump`. It replaces everything since that backup, so it asks you to type `yes` first, and it backs up the current database before restoring.
 
 ## When Something Goes Wrong
 
@@ -194,4 +202,6 @@ moviebrowser3 restart    # restart everything
 | VLC opens, but MovieBrowser3 doesn't notice what's playing | Mirrored networking is off: redo step 2. |
 | The update stops with a red ✖ | It shows the end of the log, and the whole log is in `~/prod_codes/MovieBrowser3/install.log`. To watch every command's output live, run `MOVIEBROWSER3_VERBOSE=1 moviebrowser3 update`. The previous version keeps running. |
 | The update says "can't be fast-forwarded" or "can't check out release" | Someone changed files in the install folder. Ask a developer, or see TECHNICAL.md. |
+| The newest backup in Settings is days old | The backup folder's drive isn't visible to Ubuntu: see step 5, then run `moviebrowser3 restart` and `moviebrowser3 backup`. |
+| The update says the database backup failed | The same: the backup folder's drive isn't mounted. Nothing was changed; mount it and update again. |
 | `moviebrowser3: command not found` | Close and reopen Ubuntu. If it still happens, run `~/prod_codes/MovieBrowser3/moviebrowser3` with the full path. |

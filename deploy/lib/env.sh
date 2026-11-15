@@ -122,6 +122,7 @@ write_env() {
     env_set MOVIEBROWSER3_BACKEND_REPO "$BACKEND_REPO"
     env_set MOVIEBROWSER3_FRONTEND_REPO "$FRONTEND_REPO"
     env_set MOVIEBROWSER3_MEDIA_DIRS "$media_dirs"
+    env_set BACKUP_PATH "$BACKUP_PATH"
     env_set WEB_PORT "$WEB_PORT"
     env_set WEB_BIND "$WEB_BIND"
     env_set APP_URL "http://localhost:$WEB_PORT"

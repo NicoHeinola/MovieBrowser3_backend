@@ -8,6 +8,16 @@ Laravel 13 JSON API backend for MovieBrowser3.
 composer setup
 ```
 
+Database backups need `pg_dump` 17 on the host (the production image has it). On Ubuntu:
+
+```bash
+sudo apt install -y postgresql-common
+sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+sudo apt install -y postgresql-client-17
+```
+
+Dumps go to `storage/app/backups` unless `BACKUP_PATH` says otherwise.
+
 ## Run
 
 ```bash

@@ -3,6 +3,14 @@ FROM dunglas/frankenphp:1-php8.4-bookworm
 
 RUN install-php-extensions pdo_pgsql pcntl intl zip opcache
 
+# pg_dump for the database backups. It must be at least the server's version and Debian ships an older one, so it
+# comes from the PostgreSQL apt repo; keep the major equal to the postgres image in deploy/compose.yml
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-common \
+    && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y \
+    && apt-get install -y --no-install-recommends postgresql-client-17 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app

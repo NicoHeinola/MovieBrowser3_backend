@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppVersionController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardStatsController;
 use App\Http\Controllers\EpisodeController;
@@ -84,5 +85,7 @@ Route::prefix('v1')->group(function (): void {
 
         Route::apiSingleton('video-files/check', VideoFileCheckController::class)->creatable()->names('video-files.check')->only(['show', 'store']);
         Route::apiSingleton('video-files/relocation', VideoRelocationController::class)->creatable()->names('video-files.relocation')->only(['show', 'store']);
+
+        Route::apiResource('backups', BackupController::class)->only(['index', 'store']);
     });
 });

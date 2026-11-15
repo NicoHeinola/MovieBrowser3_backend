@@ -28,6 +28,8 @@ summary() {
         summary_row "$label" "${!var:-?}"
     done
     summary_row Open "$BOLD${CYAN}http://localhost:$WEB_PORT$RESET"
+    # An update asks nothing, so this is where an existing install first learns where its backups go
+    summary_row Backups "$BACKUP_PATH"
     summary_row "Next update" "moviebrowser3 update"
     if [[ -n "$UPDATE_BAT" ]]; then
         summary_row "" "${DIM}or double-click$RESET $UPDATE_BAT"

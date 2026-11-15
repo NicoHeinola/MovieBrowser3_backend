@@ -10,6 +10,7 @@ MovieBrowser3 runs in Docker on WSL2 (Docker Engine inside WSL, mirrored network
 browser ─▶ backend (FrankenPHP)  127.0.0.1:8780   /api/*, /up → Laravel; everything else → the built frontend
            queue (queue:work)
            scheduler (schedule:work)
+           pg_dump ─▶ backup folder (BACKUP_PATH)
            db (Postgres 17)      127.0.0.1:7564
 backend / queue ── POST /launch, /windows-paths ─▶ VLC bridge  127.0.0.1:8767 ─▶ vlc.exe
 backend / queue ── status.json ─▶ VLC web interface  127.0.0.1:40000-49151
@@ -28,15 +29,15 @@ Every service uses the host network, because VLC's web interface and the bridge 
 5. If the backend update brought a different installer (`install.sh` or `lib/`), it hands over to it with `--resume`: the same answers, no prompts, and the backend's old version carried in `MOVIEBROWSER3_BACKEND_FROM`. Installer changes apply on the update that brings them.
 6. Clones or fetches the frontend into `<install folder>/MovieBrowser3_frontend` and checks out its newest release tag the same way, with the same `main` fallback. The two repos are versioned independently.
 7. Copies `compose.yml`, the bridge, the `moviebrowser3` command, `lib/` (which the command uses) and the task script from the backend clone, and links `moviebrowser3` into `~/.local/bin`.
-8. Writes `compose.override.yml` with the media folders.
+8. Writes `compose.override.yml` with the media folders and the backup folder.
 9. Builds the frontend: `npm ci && npm run build` in `node:24-alpine`, as the host user, with no Node on the host. The clone's git-ignored `dist/` is copied to `web/next`.
 10. Builds the backend image.
-11. Runs the migrations in a one-off container (`docker compose run --rm backend php artisan migrate --force`). Containers never migrate on start. When the admin seed migration hasn't run on this database yet (a new or recreated one), it asks for the admin username and password and passes them to that run only, through the environment (`-e NAME`), so they don't show in the process list. So the password is never stored, and the seed never falls back to its `admin` / `password` default.
+11. Runs the migrations in a one-off container (`docker compose run --rm backend php artisan migrate --force`). Containers never migrate on start. On an existing database it first backs it up (`backups:create --label=before-update`); a failed backup stops the update. When the admin seed migration hasn't run on this database yet (a new or recreated one), it asks for the admin username and password and passes them to that run only, through the environment (`-e NAME`), so they don't show in the process list. So the password is never stored, and the seed never falls back to its `admin` / `password` default.
 12. Swaps `web/next` in as `web/current`, recreates the backend so its mount picks it up, and starts the rest.
 13. Registers the VLC bridge when it differs from the last one registered (below).
 14. On WSL, writes `windows/update_movie_browser_3.bat`: `wsl.exe -d <distro> -e bash -lc "<install folder>/moviebrowser3 update"`, then `pause`.
 
-A failed fetch, checkout, build or migration stops the run before step 12, so the previous frontend and containers keep running. `install.sh` loads every module before it starts and runs everything from `main()`, which bash parses in full first, so a backend checkout that replaces those files mid-run is safe.
+A failed fetch, checkout, build, backup or migration stops the run before step 12, so the previous frontend and containers keep running. `install.sh` loads every module before it starts and runs everything from `main()`, which bash parses in full first, so a backend checkout that replaces those files mid-run is safe.
 
 ## Settings
 
@@ -45,6 +46,7 @@ A failed fetch, checkout, build or migration stops the run before step 12, so th
 | Install folder (no spaces) | `~/.config/moviebrowser3/install-dir` | `~/prod_codes/MovieBrowser3` |
 | Backend and frontend repo | `MOVIEBROWSER3_BACKEND_REPO`, `MOVIEBROWSER3_FRONTEND_REPO` | the GitHub repos |
 | Media folders, one per prompt | `MOVIEBROWSER3_MEDIA_DIRS` (`:`-separated) | none |
+| Backup folder | `BACKUP_PATH` | `<install folder>/backups` |
 | App port | `WEB_PORT`, `APP_URL` | 8780 |
 | Reachable from the network? | `WEB_BIND` (`0.0.0.0` or `127.0.0.1`) | no |
 | Database port, VLC bridge port | `DB_PORT`, `VLC_BRIDGE_PORT`, `VLC_BRIDGE_URL` | 7564, 8767 |
@@ -73,6 +75,7 @@ When settings change between versions:
 | `web/current/` | The frontend being served. `web/next/` exists only during an update. |
 | `data/postgres/` | The database. |
 | `storage/app/` | Laravel's local storage, including `storage/app/videos` while `video_base_path` is empty. |
+| `backups/` | The database backups, unless `BACKUP_PATH` names another folder. |
 | `vlc_bridge.py`, `windows/` | The bridge, its task script and the update `.bat`. |
 | `moviebrowser3`, `lib/` | The control command and the modules it shares with the installer. |
 | `.bridge-installed` | Checksum of the bridge files and port that were last registered. |
@@ -87,11 +90,21 @@ Windows drives appear as `/mnt/<letter>` (drvfs). WSL only mounts drives present
 
 ## Scheduled Jobs
 
-`scheduler` runs `schedule:work`, which only queues what `routes/console.php` schedules; `queue` does the work, so `scheduler` needs no media folders.
+`scheduler` runs `schedule:work`, which only queues what `routes/console.php` schedules; `queue` does the work, so `scheduler` needs no media or backup folders.
 
+- **Hourly:** `CreateScheduledBackupJob`, see [Backups](#backups).
 - **Daily:** `CheckEpisodeVideoFilesJob` refreshes every episode's stored `has_video_file`, 200 episodes per job so VLC tracking keeps running on the shared worker. Admins can start it with `POST /api/v1/video-files/check` and follow it with `GET` on the same path. Each run is a row in `video_file_checks`. Starting one while another runs answers 422 `video_file_check_running`, a unique index backs that up for simultaneous starts, and a run that fails reports `video_file_check_failed`. If the worker is killed before it can report that, the run counts as dead after 5 minutes without progress, so it can't block the next one.
 - While any episode expects a file, a video base folder that doesn't exist or can't be read stops the check: starting one answers 422 `video_base_path_unavailable`, and a run already going (or the daily one) ends with that code without changing anything further.
 - An empty base folder doesn't stop it: the check flags those episodes as missing and finishes without an error, and the status's `missing_video_files_count` shows the result: episodes whose uploaded file is gone, not ones that never had a file. A drive that isn't mounted looks like an empty folder in the containers, so nearly everything showing as missing usually means that. The next check with the drive back restores the flags.
+
+## Backups
+
+The backend dumps the database with `pg_dump --format=custom` into `BACKUP_PATH`, as `moviebrowser3-<UTC Ymd-His>[-<label>].dump`. The image installs `postgresql-client-17` from the PostgreSQL apt repo, because pg_dump refuses a newer server and Debian's is older; `tests/Unit/PostgresClientVersionTest.php` keeps it equal to the `postgres` image. The folder is mounted at its host path into `backend` and `queue`, so the names and paths match on the host.
+
+- **When:** every hour the scheduler queues `CreateScheduledBackupJob`, and `queue` dumps once the newest dump, whoever made it, is older than `BACKUP_INTERVAL_HOURS` (24); it takes a second or two. Hourly rather than at a fixed time, because the PC is often off at night. Also before every update (`-before-update`), before a restore (`-before-restore`) and on `moviebrowser3 backup`, which run `backups:create` in a one-off container.
+- **Retention:** after each dump, only the newest `BACKUP_KEEP` (14) dumps stay. The before-restore dump skips this (`--no-prune`), since it could delete the very dump being restored. Other files in the folder are never touched. A dump is written as its own `.partial` and renamed when complete; partials older than twice the dump timeout are removed.
+- **API:** admins list the dumps, newest first, with `GET /api/v1/backups`. A failed scheduled backup only shows in the queue's log (`moviebrowser3 logs queue`) and as no new dump in the list. `POST` dumps within the request: 201 with the new dump, 422 `backup_dir_unavailable` when the folder is missing or not writable (often an unmounted drive), or 500 `backup_failed`. Nothing records runs, so two at once just make two dumps.
+- **Restore:** `moviebrowser3 restore <name or path> [--yes]` asks for `yes`, opens the dump, stops `backend`, `queue` and `scheduler`, backs up the current database, then in the db container turns the dump into SQL with `pg_restore` and runs it with `psql --single-transaction` after dropping the `public` schema. The SQL is complete before `psql` starts, so a truncated dump changes nothing. Then it migrates (an older backup has an older schema) and starts everything again.
 
 ## Serving
 
@@ -130,5 +143,6 @@ The installer registers and restarts the bridge only when the checksum of `vlc_b
 - **Playback answers 503 "The VLC bridge … did not answer":** the bridge isn't running (for example after `wsl --shutdown`). Run `moviebrowser3 bridge start`, or on Windows run the task from Task Scheduler. On Linux, check `systemctl --user status moviebrowser3-vlc-bridge`.
 - **VLC opens, but the playing episode is never tracked:** mirrored networking is off. Set `networkingMode=mirrored` under `[wsl2]` in `%UserProfile%\.wslconfig`, then run `wsl --shutdown`.
 - **Videos are missing:** the disk isn't mounted in WSL, or it was mounted after the containers started. Mount it, then `moviebrowser3 restart`.
+- **No new backups, or the update stops at the database backup:** the backup folder's drive isn't mounted, or the folder isn't writable by the host user. Mount it, `moviebrowser3 restart`, then `moviebrowser3 backup`.
 - **One-off commands:** `moviebrowser3 artisan <command>`, e.g. `moviebrowser3 artisan migrate:status`.
 - **MovieBrowser2 import:** `moviebrowser3 import-moviebrowser2 <export .json> <folder>` runs `moviebrowser2:import-shows` in a one-off container with the export and the MovieBrowser2 folder mounted read-only (the folder at its host path, passed as `--source-root`), so it needn't be a media folder.
