@@ -30,11 +30,17 @@ return DB::transaction(function () use ($data): X {
   - `EpisodePlayback/OpenVlcPlaylistAction`, `EpisodePlayback/RequestVlcStatusAction`, `EpisodePlayback/RequestVlcBridgeAction`, `EpisodePlayback/CheckVlcBinaryAction`
   - `CreateEpisodePlaybackAction`: opens VLC before its transaction so the slow launch holds no lock and a failed launch saves no progress
   - `LoginUserAction`: its anti-brute-force delay must not hold a transaction; the token write goes through `IssueAuthTokenAction`
-  - read-only `ShowWatchProgress/StreamShowWatchProgressAction` (polls for up to an hour) and the change lists it polls (`ShowWatchProgress/ListChangedShowWatchProgressAction`, `ShowEntryWatchStatus/ListChangedShowEntryWatchStatusesAction`), `AppVersion/*` (GitHub release check, cache only), `Dashboard/GetDashboardStatsAction`, `EpisodePlayback/ResolveEphemeralPortRangeAction`, `Setup/GetSetupStatusAction`, `Setup/CheckSetupSettingsAction`, `LegacyImport/CheckLegacyShowImportAction` and `LegacyImport/ResolveLegacyEpisodeSourcePathAction`
+  - read-only `VideoRelocation/GetVideoRelocationAction`, `ShowWatchProgress/StreamShowWatchProgressAction` (polls for up to an hour) and the change lists it polls (`ShowWatchProgress/ListChangedShowWatchProgressAction`, `ShowEntryWatchStatus/ListChangedShowEntryWatchStatusesAction`), `AppVersion/*` (GitHub release check, cache only), `Dashboard/GetDashboardStatsAction`, `EpisodePlayback/ResolveEphemeralPortRangeAction`, `Setup/GetSetupStatusAction`, `Setup/CheckSetupSettingsAction`, `LegacyImport/CheckLegacyShowImportAction` and `LegacyImport/ResolveLegacyEpisodeSourcePathAction`
+
+## Guards
+
+- Each precondition is checked in one place: the action that must not run without it, when the action has other callers (jobs, the scheduler, commands) or a unique index decides; otherwise the request or middleware. Never check it in the request, the middleware and the action alike.
+- A blocking state (something else is running) throws an exception that renders its own 409 code and implements `ShouldntReport`; callers that can't show it, like the scheduler, simply let it end the run.
 
 ## Helpers
 
 - Logic that must not live on models (paths, setting lookups) goes in read-only helper actions, e.g. `ResolveEpisodeVideoPathAction::run($episode)`.
+- `video_base_path` changes only through a video relocation (`CreateVideoRelocationAction`): `RelocateVideoFilesJob` moves one episode's file per job outside any transaction (`RelocateEpisodeVideoAction`, safe to repeat), switches the setting once all moved, and on failure moves everything back. Never relocate inside a request or a transaction.
 - `ResolveVideoBasePathAction` memoizes with `once()` from a static method; actions that change that setting call `Once::flush()`. `queue:work` never flushes it, so jobs that resolve video paths flush first.
 - An unmounted drive makes every file look missing, so confirm `CheckVideoBasePathAction` before acting on a missing file. The video file check is the exception: only a base folder that doesn't exist or can't be read (`CheckVideoBasePathExistsAction`) stops it. An empty one is a normal result, because its stored flags repair themselves on the next run.
 - Video paths must stay valid on Windows, because a Windows `vlc.exe` opens them: `ResolveEpisodeVideoPathAction` replaces `\ / : * ? " < > |` and strips trailing dots and spaces. Changing those rules changes every computed path, so existing files need moving too, and never from a migration.

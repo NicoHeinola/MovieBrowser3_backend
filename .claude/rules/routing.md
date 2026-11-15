@@ -11,6 +11,7 @@ applyTo: 'routes/api.php'
 - Everything sits under `v1`. Read routes (`index`, `show`) go in the `auth:sanctum` group, write routes in the `['auth:sanctum', 'admin']` group, with the same `apiResource` registered twice.
 - Register resources with `apiResource` or `apiSingleton` (one per parent), not hand-written `Route::put/delete` lines. Plain `Route::post/delete` stays only for existing non-CRUD cases such as `shows.categories`.
 - Child resources are shallow; multi-word URIs are kebab-case.
+- Every route that stores, moves, deletes or plays video files gets `video-files-idle` (whole resource, or `middlewareFor` its methods): it answers 409 `video_relocation_running` while a video folder relocation moves files. Routes whose action already guards that state (starting a file check or a relocation) don't repeat it in middleware.
 
 ```php
 // inside Route::middleware('auth:sanctum')

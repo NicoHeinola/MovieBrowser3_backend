@@ -63,7 +63,7 @@ test('a rule object goes out under its own code', function () {
         ->assertUnprocessable()
         ->assertJsonPath('code', 'unique_ignoring_case');
 
-    $setting = Setting::query()->updateOrCreate(['key' => 'video_base_path'], ['value' => '/videos', 'type' => 'string']);
+    $setting = Setting::query()->findOrFail('vlc_media_player_path');
 
     patchJson("/api/v1/settings/{$setting->key}", ['value' => 'relative/path'])
         ->assertUnprocessable()

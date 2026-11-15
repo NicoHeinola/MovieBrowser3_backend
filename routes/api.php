@@ -20,6 +20,7 @@ use App\Http\Controllers\ShowTitleController;
 use App\Http\Controllers\ShowWatchProgressStreamController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VideoFileCheckController;
+use App\Http\Controllers\VideoRelocationController;
 use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\WebsiteTagController;
 use Illuminate\Support\Facades\Route;
@@ -42,7 +43,7 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('show-sections', ShowSectionController::class)->only(['index', 'show']);
         Route::apiResource('shows', ShowController::class)->only(['index', 'show']);
         Route::apiSingleton('show-entries.watch-status', ShowEntryWatchStatusController::class)->only(['update', 'destroy'])->destroyable();
-        Route::apiSingleton('episodes.playback', EpisodePlaybackController::class)->creatable()->only(['store']);
+        Route::apiSingleton('episodes.playback', EpisodePlaybackController::class)->creatable()->only(['store'])->middleware('video-files-idle');
         Route::get('watch-progress/stream', [ShowWatchProgressStreamController::class, 'show'])->name('watch-progress.stream');
 
         Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->only(['index', 'show']);
@@ -57,13 +58,14 @@ Route::prefix('v1')->group(function (): void {
         Route::post('shows/{show}/categories', [ShowCategoryController::class, 'store'])->name('shows.categories.store');
         Route::delete('shows/{show}/categories/{category}', [ShowCategoryController::class, 'destroy'])->name('shows.categories.destroy');
 
-        Route::delete('shows', [ShowController::class, 'destroyMany'])->name('shows.destroy-many');
-        Route::apiResource('shows', ShowController::class)->except(['index', 'show']);
+        // `video-files-idle`: writes that move, store or delete video files wait for a video folder relocation to end
+        Route::delete('shows', [ShowController::class, 'destroyMany'])->name('shows.destroy-many')->middleware('video-files-idle');
+        Route::apiResource('shows', ShowController::class)->except(['index', 'show'])->middlewareFor('destroy', 'video-files-idle');
 
-        Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->except(['index', 'show']);
-        Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->except(['index', 'show']);
+        Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->except(['index', 'show'])->middlewareFor(['update', 'destroy'], 'video-files-idle');
+        Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->except(['index', 'show'])->middleware('video-files-idle');
         Route::apiResource('shows.links', ShowLinkController::class)->shallow()->except(['index', 'show']);
-        Route::apiResource('shows.titles', ShowTitleController::class)->shallow()->except(['index', 'show']);
+        Route::apiResource('shows.titles', ShowTitleController::class)->shallow()->except(['index', 'show'])->middleware('video-files-idle');
 
         Route::patch('settings/{setting}', [SettingController::class, 'update'])->name('settings.update');
 
@@ -81,5 +83,6 @@ Route::prefix('v1')->group(function (): void {
         Route::post('setup/complete', [SetupCompletionController::class, 'store'])->name('setup.complete.store');
 
         Route::apiSingleton('video-files/check', VideoFileCheckController::class)->creatable()->names('video-files.check')->only(['show', 'store']);
+        Route::apiSingleton('video-files/relocation', VideoRelocationController::class)->creatable()->names('video-files.relocation')->only(['show', 'store']);
     });
 });

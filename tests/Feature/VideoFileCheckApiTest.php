@@ -72,20 +72,18 @@ test('an admin queues the check and gets an empty 202', function () {
     Queue::assertPushed(CheckEpisodeVideoFilesJob::class, fn (CheckEpisodeVideoFilesJob $job): bool => $job->afterId === 0);
 });
 
-test('video file check answers 422 with a code when the base folder does not exist', function () {
-    Queue::fake();
+test('a check started without a reachable base folder ends with a code', function () {
     actingAsAdmin();
-    Episode::factory()->create();
+    $episode = Episode::factory()->create();
 
-    postJson('/api/v1/video-files/check')
-        ->assertUnprocessable()
-        ->assertExactJson([
-            'code' => 'video_base_path_unavailable',
-            'params' => [],
-            'errors' => ['video_base_path' => [['code' => 'video_base_path_unavailable', 'params' => []]]],
-        ]);
+    postJson('/api/v1/video-files/check')->assertAccepted();
 
-    Queue::assertNothingPushed();
+    getJson('/api/v1/video-files/check')
+        ->assertJsonPath('running', false)
+        ->assertJsonPath('error.code', 'video_base_path_unavailable');
+
+    expect(getJson('/api/v1/video-files/check')->getContent())->toContain('"params":{}')
+        ->and($episode->fresh()->has_video_file)->toBeTrue();
 });
 
 test('an unreadable base folder stops the check like a missing one', function () {
@@ -93,18 +91,10 @@ test('an unreadable base folder stops the check like a missing one', function ()
         $this->markTestSkipped('Root can read every folder.');
     }
 
-    Queue::fake();
-    actingAsAdmin();
     $episode = episodeWithVideoFile();
     chmod(videoBasePathForTests(), 0);
 
     try {
-        postJson('/api/v1/video-files/check')
-            ->assertUnprocessable()
-            ->assertJsonPath('code', 'video_base_path_unavailable');
-
-        Queue::assertNothingPushed();
-
         runVideoFileCheck();
     } finally {
         // The folder must be readable again for the cleanup after each test
@@ -302,20 +292,13 @@ test('the status is empty before any check ran', function () {
         ]);
 });
 
-test('pressing the button again during a check answers 422 with a code and starts nothing', function () {
+test('pressing the button again during a check starts nothing new', function () {
     Queue::fake();
     actingAsAdmin();
     mountVideoBasePath();
 
     postJson('/api/v1/video-files/check')->assertAccepted();
-
-    postJson('/api/v1/video-files/check')
-        ->assertUnprocessable()
-        ->assertExactJson([
-            'code' => 'video_file_check_running',
-            'params' => [],
-            'errors' => ['video_file_check' => [['code' => 'video_file_check_running', 'params' => []]]],
-        ]);
+    postJson('/api/v1/video-files/check')->assertAccepted();
 
     Queue::assertPushedTimes(CheckEpisodeVideoFilesJob::class, 1);
 });
@@ -380,19 +363,6 @@ test('a library that expects no files checks fine without a base folder', functi
         ->assertJsonPath('error', null);
 
     expect($episode->fresh()->has_video_file)->toBeFalse();
-});
-
-test('a check stopped by a missing base folder reports the code', function () {
-    actingAsAdmin();
-    Episode::factory()->create();
-
-    CreateVideoFileCheckAction::run();
-
-    getJson('/api/v1/video-files/check')
-        ->assertJsonPath('running', false)
-        ->assertJsonPath('error.code', 'video_base_path_unavailable');
-
-    expect(getJson('/api/v1/video-files/check')->getContent())->toContain('"params":{}');
 });
 
 test('the database allows only one running check', function () {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ApiErrorCode;
+use App\Http\Middleware\EnsureNoVideoRelocationRunning;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Resources\Validation\ValidationErrorResource;
 use Illuminate\Auth\AuthenticationException;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
+            'video-files-idle' => EnsureNoVideoRelocationRunning::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

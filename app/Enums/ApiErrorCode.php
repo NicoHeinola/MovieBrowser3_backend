@@ -9,4 +9,6 @@ enum ApiErrorCode: string
 {
     case Unauthenticated = 'unauthenticated';
     case Forbidden = 'forbidden';
+    case VideoRelocationRunning = 'video_relocation_running';
+    case VideoFileCheckRunning = 'video_file_check_running';
 }

@@ -37,8 +37,8 @@ enum ValidationErrorCode: string
     case LastAdmin = 'last_admin';
     case NoVideoFile = 'no_video_file';
     case OnlyPrimaryTitle = 'only_primary_title';
+    case VideoBasePathNeedsRelocation = 'video_base_path_needs_relocation';
     case VideoBasePathUnavailable = 'video_base_path_unavailable';
-    case VideoFileCheckRunning = 'video_file_check_running';
 
     case Invalid = 'invalid';
 }
