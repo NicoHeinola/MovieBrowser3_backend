@@ -316,3 +316,18 @@ test('a failed base path relocation restores moved files and the old setting', f
     File::deleteDirectory($oldBasePath);
     File::deleteDirectory($newBasePath);
 });
+
+test('the VLC path must name vlc or vlc.exe', function (string $path) {
+    actingAsAdmin();
+
+    patchJson('/api/v1/settings/vlc_media_player_path', ['value' => $path])
+        ->assertUnprocessable()
+        ->assertExactJson([
+            'code' => 'vlc_wrong_binary',
+            'params' => ['path' => $path],
+            'errors' => ['value' => [['code' => 'vlc_wrong_binary', 'params' => ['path' => $path]]]],
+        ]);
+})->with([
+    'a shell' => '/bin/sh',
+    'a script named like vlc' => '/usr/bin/vlc.sh',
+]);

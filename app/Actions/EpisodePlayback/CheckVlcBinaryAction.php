@@ -17,6 +17,14 @@ class CheckVlcBinaryAction
     ) {}
 
     /**
+     * Whether the file is called `vlc` or `vlc.exe`, so the setting can only ever start VLC, whichever launcher runs it.
+     */
+    public static function isVlcName(string $binary): bool
+    {
+        return in_array(strtolower(basename($binary)), ['vlc', 'vlc.exe'], true);
+    }
+
+    /**
      * Checks that VLC can be started from $binary, a path or a name on the PATH (`vlc` when empty), the way playback
      * would start it. With the bridge launcher the bridge checks it, because the container can't see vlc.exe.
      */
@@ -34,7 +42,7 @@ class CheckVlcBinaryAction
             return SetupCheckData::passed();
         }
 
-        if (!in_array(strtolower(basename($binary)), ['vlc', 'vlc.exe'], true)) {
+        if (!self::isVlcName($binary)) {
             return SetupCheckData::failed(SetupCheckCode::VlcWrongBinary, ['path' => $binary]);
         }
 

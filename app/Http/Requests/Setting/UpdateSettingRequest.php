@@ -5,6 +5,7 @@ namespace App\Http\Requests\Setting;
 use App\Enums\SettingKey;
 use App\Models\Setting\Setting;
 use App\Rules\AbsolutePath;
+use App\Rules\VlcBinary;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -41,9 +42,11 @@ class UpdateSettingRequest extends FormRequest
             // Empty means `vlc` on the PATH. `vlc` itself stays valid: GET /setup detects it and the wizard saves it
             if ($setting->key === SettingKey::VlcMediaPlayerPath->value) {
                 $rules['value'] = [
+                    'bail',
                     'nullable',
                     'string',
                     Rule::when($this->input('value') !== 'vlc', [new AbsolutePath]),
+                    new VlcBinary,
                 ];
             }
 
