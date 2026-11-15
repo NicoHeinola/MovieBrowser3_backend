@@ -37,6 +37,7 @@ Route::prefix('v1')->group(function (): void {
 
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
         Route::apiResource('show-sections', ShowSectionController::class)->only(['index', 'show']);
         Route::apiResource('shows', ShowController::class)->only(['index', 'show']);
@@ -49,8 +50,6 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('shows.links', ShowLinkController::class)->shallow()->only(['index', 'show']);
         Route::apiResource('shows.titles', ShowTitleController::class)->shallow()->only(['index', 'show']);
     });
-
-    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
 
     Route::middleware(['auth:sanctum', 'admin'])->group(function (): void {
         Route::apiResource('categories', CategoryController::class)->except(['index', 'show']);

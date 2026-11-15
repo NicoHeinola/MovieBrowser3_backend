@@ -12,8 +12,13 @@ use function Pest\Laravel\getJson;
 use function Pest\Laravel\patchJson;
 use function Pest\Laravel\withToken;
 
-test('any user can list settings', function () {
+test('listing settings requires authentication', function () {
+    getJson('/api/v1/settings')->assertUnauthorized();
+});
+
+test('any signed-in user can list settings', function () {
     Setting::factory()->count(2)->create();
+    withToken(User::factory()->create()->createToken('test-token')->plainTextToken);
 
     $response = getJson('/api/v1/settings')
         ->assertOk()
