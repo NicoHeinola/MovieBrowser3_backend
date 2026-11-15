@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Setup;
 
 use App\Enums\SettingKey;
+use App\Enums\ValidationErrorCode;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -34,7 +35,7 @@ class StoreSetupCheckRequest extends FormRequest
             function (Validator $validator): void {
                 if (!$this->hasAny(self::CHECKABLE)) {
                     foreach (self::CHECKABLE as $key) {
-                        $validator->errors()->add($key, 'Send video_base_path, vlc_media_player_path or both.');
+                        $validator->errors()->add($key, ValidationErrorCode::Required->value);
                     }
                 }
             },

@@ -86,6 +86,21 @@ test('it checks only the values that were sent and saves nothing', function () {
     expect(Setting::query()->whereKey('vlc_media_player_path')->value('value'))->toBe('');
 });
 
+test('a check without any value to check answers required for both', function () {
+    actingAsAdmin();
+
+    postJson('/api/v1/setup/checks', [])
+        ->assertUnprocessable()
+        ->assertExactJson([
+            'code' => 'required',
+            'params' => [],
+            'errors' => [
+                'video_base_path' => [['code' => 'required', 'params' => []]],
+                'vlc_media_player_path' => [['code' => 'required', 'params' => []]],
+            ],
+        ]);
+});
+
 test('an empty VLC path is checked as vlc on the PATH', function () {
     fakeBridgeWithVlcAt('vlc');
     actingAsAdmin();

@@ -2,6 +2,7 @@
 
 use App\Enums\VlcLaunchCode;
 use App\Exceptions\VlcLaunchException;
+use App\Http\Resources\Validation\ValidationErrorResource;
 use App\Models\Category\Category;
 use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
@@ -9,6 +10,7 @@ use App\Models\Show\Show;
 use App\Models\ShowTitle\ShowTitle;
 use App\Models\User\User;
 use App\Models\WebsiteTag\WebsiteTag;
+use Illuminate\Validation\ValidationException;
 
 use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\getJson;
@@ -97,11 +99,13 @@ test('playing an episode without a video file sends a code', function () {
 });
 
 test('a plain text error added by hand goes out as invalid', function () {
-    actingAsAdmin();
+    $exception = ValidationException::withMessages(['field' => ['Some text.']]);
 
-    postJson('/api/v1/setup/checks', [])
-        ->assertUnprocessable()
-        ->assertJsonPath('code', 'invalid');
+    expect(ValidationErrorResource::make($exception)->response()->getData(true))->toBe([
+        'code' => 'invalid',
+        'params' => [],
+        'errors' => ['field' => [['code' => 'invalid', 'params' => []]]],
+    ]);
 });
 
 test('a vlc launch failure renders its code and params, not its log message', function () {

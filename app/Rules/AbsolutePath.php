@@ -2,15 +2,15 @@
 
 namespace App\Rules;
 
+use App\Enums\ValidationErrorCode;
 use Closure;
-use Illuminate\Contracts\Validation\ValidationRule;
 
-class AbsolutePath implements ValidationRule
+class AbsolutePath extends CodedRule
 {
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!str_starts_with((string) $value, '/')) {
-            $fail('The :attribute must be an absolute path.');
+            $this->failWith($fail, ValidationErrorCode::AbsolutePath);
         }
     }
 }

@@ -2,11 +2,11 @@
 
 namespace App\Rules;
 
+use App\Enums\ValidationErrorCode;
 use Closure;
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\DB;
 
-class UniqueIgnoringCase implements ValidationRule
+class UniqueIgnoringCase extends CodedRule
 {
     public function __construct(
         private string $table,
@@ -27,7 +27,7 @@ class UniqueIgnoringCase implements ValidationRule
             ->exists();
 
         if ($taken) {
-            $fail('The :attribute has already been taken.');
+            $this->failWith($fail, ValidationErrorCode::UniqueIgnoringCase);
         }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Validation;
 
 use App\Enums\ValidationErrorCode;
+use App\Rules\CodedRule;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Arr;
@@ -17,8 +18,8 @@ use Illuminate\Validation\ValidationException;
 class ValidationErrorResource extends JsonResource
 {
     /**
-     * The top-level code and params repeat the first error, so a caller showing a single message doesn't have to look
-     * through the fields.
+     * Laravel's rules are known by name; our own rules and hand-added errors carry their code in the message. The
+     * top-level code and params repeat the first error, so a caller showing a single message needn't look further.
      *
      * @return array<string, mixed>
      */
@@ -29,54 +30,61 @@ class ValidationErrorResource extends JsonResource
 
         foreach ($this->resource->errors() as $field => $messages) {
             $fieldErrors = [
-                ...$this->fromFailedRules($failedRules[$field] ?? []),
-                ...$this->fromMessages($messages),
+                ...$this->fromLaravelRules($failedRules[$field] ?? []),
+                ...array_filter(array_map($this->fromMessage(...), $messages)),
             ];
 
-            // Errors added by hand with plain text have neither a rule nor a code
-            $errors[$field] = $fieldErrors ?: [$this->error(ValidationErrorCode::Invalid)];
+            // Plain text added by hand has neither a rule nor a code
+            $errors[$field] = $fieldErrors ?: [$this->error(ValidationErrorCode::Invalid->value)];
         }
 
         return [...Arr::first(Arr::first($errors)), 'errors' => $errors];
     }
 
     /**
-     * The validator names each failed rule: `Max` for a built-in one, the class name for a rule object.
+     * The validator names each failed rule: `Max` for a built-in one, the class name for a rule object such as
+     * `Rule::enum`. Our own rules are skipped here: their message carries the code.
      *
      * @param  array<string, list<mixed>>  $rules
      * @return list<array{code: string, params: object}>
      */
-    private function fromFailedRules(array $rules): array
+    private function fromLaravelRules(array $rules): array
     {
-        return array_map(function (string $rule, array $parameters): array {
+        $rules = array_filter($rules, fn (string $rule): bool => !is_subclass_of($rule, CodedRule::class), ARRAY_FILTER_USE_KEY);
+
+        return array_values(array_map(function (string $rule, array $parameters): array {
             $code = ValidationErrorCode::tryFrom(Str::snake(class_basename($rule))) ?? ValidationErrorCode::Invalid;
 
             // Only the limits are worth showing; other rules' parameters are internals such as table names
             $hasLimit = in_array($code, [ValidationErrorCode::Min, ValidationErrorCode::Max], true);
 
-            return $this->error($code, $hasLimit ? ['value' => (string) $parameters[0]] : []);
-        }, array_keys($rules), $rules);
+            return $this->error($code->value, $hasLimit ? ['value' => (string) $parameters[0]] : []);
+        }, array_keys($rules), $rules));
     }
 
     /**
-     * Errors raised outside a rule (ValidationException::withMessages, an `after` hook) use the code as their message.
+     * A CodedRule's message is its code and params as JSON; a hand-added one (`withMessages`, an `after` hook) is a
+     * bare ValidationErrorCode value. Anything else is Laravel's own text, already covered by its rule.
      *
-     * @param  list<string>  $messages
-     * @return list<array{code: string, params: object}>
+     * @return array{code: string, params: object}|null
      */
-    private function fromMessages(array $messages): array
+    private function fromMessage(string $message): ?array
     {
-        $codes = array_filter(array_map(ValidationErrorCode::tryFrom(...), $messages));
+        $coded = json_decode($message, true);
 
-        return array_values(array_map($this->error(...), $codes));
+        if (is_array($coded) && isset($coded['code'])) {
+            return $this->error($coded['code'], $coded['params'] ?? []);
+        }
+
+        return ValidationErrorCode::tryFrom($message) ? $this->error($message) : null;
     }
 
     /**
      * @param  array<string, string>  $params
      * @return array{code: string, params: object}
      */
-    private function error(ValidationErrorCode $code, array $params = []): array
+    private function error(string $code, array $params = []): array
     {
-        return ['code' => $code->value, 'params' => (object) $params];
+        return ['code' => $code, 'params' => (object) $params];
     }
 }
