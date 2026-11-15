@@ -1,7 +1,10 @@
 <?php
 
+use App\Actions\Episode\DeleteEpisodeAction;
+use App\Actions\Episode\UpdateEpisodeAction;
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Actions\Episode\VideoFile\StoreVideoFileAction;
+use App\Dtos\Episode\UpdateEpisodeData;
 use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
 use App\Models\Show\Show;
@@ -611,3 +614,73 @@ test('an episode cannot move to an entry of another show or a missing entry', fu
     'entry of another show' => fn (): int => ShowEntry::factory()->create()->id,
     'missing entry' => 999999,
 ]);
+
+/**
+ * Runs $work in a transaction that then fails, the way a later error in the same request would.
+ */
+function failAfter(Closure $work): void
+{
+    expect(fn () => DB::transaction(function () use ($work): void {
+        $work();
+
+        throw new RuntimeException('Simulated failure');
+    }))->toThrow(RuntimeException::class, 'Simulated failure');
+}
+
+test('a rolled back rename moves the video back to its old path', function () {
+    $base = useTestVideoBasePath();
+    $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $folder = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1";
+    $path = putVideoFile("$folder/{$episode->id}_Episode 1.mkv", 'bytes');
+
+    failAfter(fn () => UpdateEpisodeAction::run(UpdateEpisodeData::from(['episode' => $episode, 'name' => 'Pilot'])));
+
+    expect(File::get($path))->toBe('bytes')
+        ->and(File::exists("$folder/{$episode->id}_Pilot.mkv"))->toBeFalse()
+        ->and($episode->fresh()->name)->toBe('Episode 1');
+});
+
+test('a rolled back move to another entry puts the video back and prunes the new folder', function () {
+    $base = useTestVideoBasePath();
+    $show = Show::factory()->create();
+    $from = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
+    $to = ShowEntry::factory()->for($show)->create(['name' => 'Season 2']);
+    $episode = Episode::factory()->for($from, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $path = putVideoFile("$base/{$show->id}_{$show->id}/{$from->id}_Season 1/{$episode->id}_Episode 1.mkv", 'bytes');
+
+    failAfter(fn () => UpdateEpisodeAction::run(UpdateEpisodeData::from(['episode' => $episode, 'show_entry_id' => $to->id])));
+
+    expect(File::get($path))->toBe('bytes')
+        ->and(File::isDirectory("$base/{$show->id}_{$show->id}/{$to->id}_Season 2"))->toBeFalse()
+        ->and($episode->fresh()->show_entry_id)->toBe($from->id);
+});
+
+test('a rolled back re-upload with another extension keeps the old video and removes the new one', function () {
+    $base = useTestVideoBasePath();
+    $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $folder = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1";
+    $oldPath = putVideoFile("$folder/{$episode->id}_Episode 1.mkv", 'old-bytes');
+
+    failAfter(fn () => UpdateEpisodeAction::run(UpdateEpisodeData::from([
+        'episode' => $episode,
+        'file' => UploadedFile::fake()->createWithContent('ep1.mp4', 'new-bytes'),
+    ])));
+
+    expect(File::get($oldPath))->toBe('old-bytes')
+        ->and(File::exists("$folder/{$episode->id}_Episode 1.mp4"))->toBeFalse()
+        ->and($episode->fresh()->filename)->toBe('ep1.mkv');
+});
+
+test('a rolled back episode delete keeps its video', function () {
+    $base = useTestVideoBasePath();
+    $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
+    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
+    $path = putVideoFile("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv", 'bytes');
+
+    failAfter(fn () => DeleteEpisodeAction::run($episode));
+
+    expect(File::get($path))->toBe('bytes');
+    assertDatabaseHas('episodes', ['id' => $episode->id]);
+});

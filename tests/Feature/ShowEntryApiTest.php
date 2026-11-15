@@ -1,11 +1,14 @@
 <?php
 
+use App\Actions\ShowEntry\UpdateShowEntryAction;
+use App\Dtos\ShowEntry\UpdateShowEntryData;
 use App\Enums\ShowEntryType;
 use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
 use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\User\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 use function Pest\Laravel\assertDatabaseCount;
@@ -267,4 +270,23 @@ test('renaming a show entry moves all of its episodes and leaves other entries a
     expect(File::get("$newDirectory/{$episodes[1]->id}_Episode 2.mkv"))->toBe('two');
     expect(File::isDirectory("$base/{$show->id}_{$show->id}/{$entry->id}_Season 1"))->toBeFalse();
     expect(File::get($otherPath))->toBe('other');
+});
+
+test('a rolled back entry rename moves every video back', function () {
+    $base = useTestVideoBasePath();
+    $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
+    $folder = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1";
+    $episodes = Episode::factory()->for($entry, 'entry')->count(2)->sequence(['name' => 'One'], ['name' => 'Two'])->create(['filename' => 'ep.mkv']);
+    $paths = $episodes->map(fn (Episode $episode): string => putVideoFile("$folder/{$episode->id}_{$episode->name}.mkv", $episode->name));
+
+    expect(fn () => DB::transaction(function () use ($entry): void {
+        UpdateShowEntryAction::run(UpdateShowEntryData::from(['show_entry' => $entry, 'name' => 'Renamed']));
+
+        throw new RuntimeException('Simulated failure');
+    }))->toThrow(RuntimeException::class, 'Simulated failure');
+
+    expect(File::get($paths[0]))->toBe('One')
+        ->and(File::get($paths[1]))->toBe('Two')
+        ->and(File::isDirectory("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Renamed"))->toBeFalse()
+        ->and($entry->fresh()->name)->toBe('Season 1');
 });
