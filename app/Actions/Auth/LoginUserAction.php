@@ -18,7 +18,11 @@ class LoginUserAction
 
     public function handle(LoginUserData $data): AuthTokenData
     {
-        $user = User::where('username', $data->username)->first();
+        // Usernames ignore case; an exact match wins for accounts that differed only by case before that
+        $user = User::query()
+            ->usernameIgnoringCase($data->username)
+            ->orderByRaw('username = ? desc', [$data->username])
+            ->first();
 
         $startedAt = microtime(true);
 

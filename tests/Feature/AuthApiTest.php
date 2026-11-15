@@ -164,3 +164,30 @@ test('a zero sanctum expiration issues tokens that do not expire', function () {
 
     getJson('/api/v1/auth/me')->assertOk();
 });
+
+test('login ignores the case of the username', function () {
+    config(['auth.login_wait_duration_ms' => 0]);
+    User::factory()->create(['username' => 'AdaLovelace', 'password' => 'password123']);
+
+    postJson('/api/v1/auth/login', ['username' => 'adaLOVELACE', 'password' => 'password123'])
+        ->assertOk()
+        ->assertJsonPath('user.username', 'AdaLovelace');
+});
+
+test('login prefers the exact username when older accounts differ only by case', function () {
+    config(['auth.login_wait_duration_ms' => 0]);
+    User::factory()->create(['username' => 'ada', 'password' => 'first-password']);
+    User::factory()->create(['username' => 'Ada', 'password' => 'second-password']);
+
+    postJson('/api/v1/auth/login', ['username' => 'Ada', 'password' => 'second-password'])
+        ->assertOk()
+        ->assertJsonPath('user.username', 'Ada');
+});
+
+test('registration rejects a username that differs only by case', function () {
+    User::factory()->create(['username' => 'admin2']);
+
+    postJson('/api/v1/auth/register', ['username' => 'AdMIn2', 'password' => 'secret', 'password_confirmation' => 'secret'])
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.username.0.code', 'unique_ignoring_case');
+});

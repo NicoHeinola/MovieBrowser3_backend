@@ -304,3 +304,20 @@ test('a non admin cannot list or view users', function () {
     getJson('/api/v1/users')->assertForbidden();
     getJson("/api/v1/users/{$user->id}")->assertForbidden();
 });
+
+test('usernames that differ only by case are taken on create and update', function () {
+    actingAsAdmin();
+    User::factory()->create(['username' => 'ada']);
+    $other = User::factory()->create(['username' => 'grace']);
+
+    postJson('/api/v1/users', ['username' => 'ADA', 'password' => 'secret', 'password_confirmation' => 'secret'])
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.username.0.code', 'unique_ignoring_case');
+
+    patchJson("/api/v1/users/{$other->id}", ['username' => 'Ada'])
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.username.0.code', 'unique_ignoring_case');
+
+    // Changing only the case of your own name is fine
+    patchJson("/api/v1/users/{$other->id}", ['username' => 'Grace'])->assertOk();
+});
