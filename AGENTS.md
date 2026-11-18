@@ -45,7 +45,13 @@ tests/Feature/XApiTest.php
 - Size the version from the last release, and never step twice: a `fix` keeps the patch step, a `feat` raises it to the next minor, a breaking change (`!`) to the next major. The commit that needs the bigger step bumps `VERSION`; `tests/Unit/VersionTest.php` enforces it.
 - No backend changelog: user-visible backend changes get a line in the frontend changelog.
 - When a frontend release needs new API, release the backend first.
-- Releasing follows the `release` skill.
+- Releasing follows the global `release` skill, and only on the user's explicit request. Backend specifics:
+  - Version to release: `VERSION`. Before the first tag, "since the last release" means all history.
+  - Checks: `composer lint:check` and `php artisan test --compact`.
+  - No release commit: tag the checked commit. A wrong step is fixed first with a `chore(release): set X.Y.Z` commit.
+  - Next version: set `VERSION` to the next patch and run `php artisan test --compact tests/Unit/VersionTest.php`.
+  - Release notes: `--generate-notes`.
+  - Report: installs pick it up on their next `moviebrowser3 update`. A frontend release that needs this API goes after it.
 
 ## Commit Messages
 
@@ -63,7 +69,7 @@ Conventional Commits: `type(scope): short summary`.
 `.claude/` is the single source of truth. Copilot reads it too; `.github/copilot-instructions.md` and `.github/skills` are symlinks into it.
 
 - **Rules** (`.claude/rules/*.md`): "files matching X should look like Y". Each rule has a `paths` list and the same globs in `applyTo` for Copilot.
-- **Skills** (`.claude/skills/<name>/SKILL.md`): reusable workflows such as building a CRUD resource, changing schema or writing tests.
+- **Skills** (`.claude/skills/<name>/SKILL.md`): project-specific workflows such as building a CRUD resource or changing schema. Generic workflows (tests, releases, reviews, tickets) are global Claude skills; their project specifics live in this file and the rules.
 - When a change introduces or removes a durable convention, ownership boundary, endpoint pattern or workflow, update the affected rules or skills in the same change.
 - Keep customizations concise. Record conventions, not feature behavior the code already shows. Do not add cross-file reference lists when the rules already load for matching files.
 
