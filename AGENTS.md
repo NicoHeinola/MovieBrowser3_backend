@@ -17,6 +17,20 @@ Guidance for AI coding agents (Claude Code and Copilot). File-specific rules liv
 - `composer lint:check` / `composer lint:fix`: Pint, `laravel` preset (`!$x` without a space after `!`).
 - Run `composer lint:fix` and the relevant tests before calling work done.
 
+## Run locally
+
+- Dev database: Postgres from `docker-compose.yml` (container `moviebrowser3_backend-db-1`, port 7563, database `moviebrowser3`). Start it from the main checkout only; a worktree's folder name would make a second Compose project with clashing ports.
+- A separate copy of the app (a ticket or a test) gets its own database in that same container, cloned from the dev one, and its own port:
+
+  ```bash
+  docker exec moviebrowser3_backend-db-1 createdb -U moviebrowser <db>
+  docker exec moviebrowser3_backend-db-1 sh -c 'pg_dump -U moviebrowser moviebrowser3 | psql -q -U moviebrowser <db>'
+  ```
+
+  Then set `DB_DATABASE=<db>`, `APP_URL=http://localhost:<port>` and add the frontend's `localhost:<port>` to `SANCTUM_STATEFUL_DOMAINS` in its `.env`, run `php artisan migrate`, and start `composer dev -- --port=<port>`. Drop it with `docker exec moviebrowser3_backend-db-1 dropdb -U moviebrowser --force <db>`.
+- Queue, cache and sessions use the `database` driver, so a separate database keeps them apart too.
+- Video files are not copied: `video_base_path` is a database setting, so a clone still points at the shared dev folder (`/mnt/g/New_Vid_Dev3`). Before work that moves or deletes video files, point the clone's setting at a scratch folder with a few test files.
+
 ## Architecture
 
 Request → controller → action → model, with resources shaping the output. Requests validate, controllers orchestrate, actions hold application logic, models represent the database only, resources shape payloads.
