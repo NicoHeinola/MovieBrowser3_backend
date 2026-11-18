@@ -4,11 +4,13 @@ use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Actions\EpisodePlayback\OpenVlcPlaylistAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
 use App\Enums\SetupCheckCode;
+use App\Enums\WatchStatus;
 use App\Exceptions\VlcLaunchException;
 use App\Jobs\TrackVlcPlaybackJob;
 use App\Models\Episode\Episode;
 use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
+use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
 use Illuminate\Support\Facades\Queue;
@@ -267,6 +269,53 @@ test('a failed VLC launch keeps the previous progress', function () {
     Queue::assertNothingPushed();
 
     assertDatabaseHas('show_watch_progress', ['user_id' => $user->id, 'episode_id' => $first->id]);
+    assertDatabaseCount('show_entry_watch_statuses', 0);
+});
+
+test('playing an episode marks its entry as watching', function (?WatchStatus $before) {
+    $user = actingAsPlaybackUser();
+    [$episode] = playableEpisodes(ShowEntry::factory()->create(), 1);
+    if ($before !== null) {
+        ShowEntryWatchStatus::factory()->create(['show_entry_id' => $episode->show_entry_id, 'user_id' => $user->id, 'status' => $before]);
+    }
+    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->andReturn(fakeVlcConnection());
+
+    postJson("/api/v1/episodes/{$episode->id}/playback")->assertCreated();
+
+    assertDatabaseCount('show_entry_watch_statuses', 1);
+    assertDatabaseHas('show_entry_watch_statuses', ['show_entry_id' => $episode->show_entry_id, 'user_id' => $user->id, 'status' => WatchStatus::Watching->value]);
+})->with([
+    'no status' => [null],
+    'plan to watch' => [WatchStatus::PlanToWatch],
+    'on hold' => [WatchStatus::OnHold],
+    'dropped' => [WatchStatus::Dropped],
+    'already watching' => [WatchStatus::Watching],
+]);
+
+test('rewatching a completed entry keeps it completed', function () {
+    $user = actingAsPlaybackUser();
+    [$episode] = playableEpisodes(ShowEntry::factory()->create(), 1);
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $episode->show_entry_id, 'user_id' => $user->id, 'status' => WatchStatus::Completed]);
+    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->andReturn(fakeVlcConnection());
+
+    postJson("/api/v1/episodes/{$episode->id}/playback")->assertCreated();
+
+    assertDatabaseHas('show_entry_watch_statuses', ['show_entry_id' => $episode->show_entry_id, 'status' => WatchStatus::Completed->value]);
+});
+
+test('playing marks only the played entry and user as watching', function () {
+    $user = actingAsPlaybackUser();
+    $other = User::factory()->create();
+    [$episode] = playableEpisodes(ShowEntry::factory()->create(), 1);
+    $otherEntry = ShowEntry::factory()->create(['show_id' => $episode->entry->show_id]);
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $episode->show_entry_id, 'user_id' => $other->id, 'status' => WatchStatus::PlanToWatch]);
+    ShowEntryWatchStatus::factory()->create(['show_entry_id' => $otherEntry->id, 'user_id' => $user->id, 'status' => WatchStatus::PlanToWatch]);
+    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->andReturn(fakeVlcConnection());
+
+    postJson("/api/v1/episodes/{$episode->id}/playback")->assertCreated();
+
+    assertDatabaseHas('show_entry_watch_statuses', ['show_entry_id' => $episode->show_entry_id, 'user_id' => $other->id, 'status' => WatchStatus::PlanToWatch->value]);
+    assertDatabaseHas('show_entry_watch_statuses', ['show_entry_id' => $otherEntry->id, 'user_id' => $user->id, 'status' => WatchStatus::PlanToWatch->value]);
 });
 
 test('deleting the current episode keeps the show progress', function () {

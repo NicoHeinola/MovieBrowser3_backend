@@ -5,6 +5,7 @@ namespace App\Actions\EpisodePlayback;
 use App\Actions\Episode\UpdateEpisodeVideoFileStatusAction;
 use App\Actions\Episode\VideoFile\CheckVideoBasePathAction;
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
+use App\Actions\ShowEntryWatchStatus\StartWatchingEntryOnPlaybackAction;
 use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
 use App\Dtos\ShowWatchProgress\WatchPositionData;
 use App\Enums\ValidationErrorCode;
@@ -27,11 +28,13 @@ class CreateEpisodePlaybackAction
         private readonly UpdateShowWatchProgressAction $updateShowWatchProgressAction,
         private readonly UpdateEpisodeVideoFileStatusAction $updateEpisodeVideoFileStatusAction,
         private readonly CheckVideoBasePathAction $checkVideoBasePathAction,
+        private readonly StartWatchingEntryOnPlaybackAction $startWatchingEntryOnPlaybackAction,
     ) {}
 
     /**
-     * Plays the episode in VLC with the rest of its entry in the playlist, remembers it as the user's progress and
-     * starts following the VLC window so later episodes played there are remembered too.
+     * Plays the episode in VLC with the rest of its entry in the playlist, remembers it as the user's progress, marks
+     * the entry as watching and starts following the VLC window so later episodes played there are remembered too.
+     * The playlist never leaves the entry, so marking it once here covers the whole playback.
      *
      * When the user's progress is already on this episode, VLC resumes at the saved position, unless $fromStart is set.
      *
@@ -54,6 +57,8 @@ class CreateEpisodePlaybackAction
                 $user,
                 $resume ? new WatchPositionData($resume->position_seconds, $resume->duration_seconds) : null,
             );
+
+            $this->startWatchingEntryOnPlaybackAction->handle($episode, $user);
 
             TrackVlcPlaybackJob::queueNextCheck($user, $vlc)->afterCommit();
 
