@@ -55,6 +55,10 @@ arch('actions are *Action classes using AsAction')
         ->values()
         ->all());
 
+arch('services only talk to their outside system')
+    ->expect('App\\Services')
+    ->not->toUse(['App\\Actions', 'App\\Models', 'App\\Http']);
+
 arch('enums are string-backed')
     ->expect('App\Enums')
     ->toBeStringBackedEnums();

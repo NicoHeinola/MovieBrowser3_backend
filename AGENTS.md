@@ -33,7 +33,7 @@ Guidance for AI coding agents (Claude Code and Copilot). File-specific rules liv
 
 ## Architecture
 
-Request → controller → action → model, with resources shaping the output. Requests validate, controllers orchestrate, actions hold application logic, models represent the database only, resources shape payloads.
+Request → controller → action → model, with resources shaping the output. Requests validate, controllers orchestrate, actions hold application logic, models represent the database only, resources shape payloads. Outside systems (torrent sites, other websites and APIs) are reached through a service in `app/Services/<System>/`, which actions call.
 
 Layout per domain `X`:
 

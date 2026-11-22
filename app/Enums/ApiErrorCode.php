@@ -3,7 +3,7 @@
 namespace App\Enums;
 
 /**
- * Why a request was turned away before it reached a controller. The frontend turns each code into translated text.
+ * Why a request was turned away or could not be answered. The frontend turns each code into translated text.
  */
 enum ApiErrorCode: string
 {
@@ -12,4 +12,5 @@ enum ApiErrorCode: string
     case VideoRelocationRunning = 'video_relocation_running';
     case VideoFileCheckRunning = 'video_file_check_running';
     case VideoDurationScanRunning = 'video_duration_scan_running';
+    case TorrentSiteUnavailable = 'torrent_site_unavailable';
 }
