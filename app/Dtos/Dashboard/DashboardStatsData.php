@@ -15,6 +15,7 @@ class DashboardStatsData extends Data
         public int $websitesCount,
         public int $usersCount,
         public int $videoFilesTotalBytes,
+        public int $videoFilesTotalSeconds,
         public ?int $diskTotalBytes,
         public ?int $diskFreeBytes,
     ) {}

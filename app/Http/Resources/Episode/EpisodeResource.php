@@ -23,6 +23,7 @@ class EpisodeResource extends JsonResource
             'filename' => $this->filename,
             'has_video_file' => $this->has_video_file,
             'video_file_size' => $this->video_file_size,
+            'video_duration_seconds' => $this->video_duration_seconds,
             'sequence_number' => $this->sequence_number,
             'file_path' => ResolveEpisodeVideoPathAction::run($this->resource),
         ];

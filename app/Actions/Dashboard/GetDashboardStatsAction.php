@@ -38,6 +38,7 @@ class GetDashboardStatsAction
             websitesCount: Website::query()->count(),
             usersCount: User::query()->count(),
             videoFilesTotalBytes: (int) Episode::query()->where('has_video_file', true)->sum('video_file_size'),
+            videoFilesTotalSeconds: (int) Episode::query()->where('has_video_file', true)->sum('video_duration_seconds'),
             diskTotalBytes: $hasBaseFolder ? $this->resolveTotalDiskSpaceAction->handle($basePath) : null,
             diskFreeBytes: $hasBaseFolder ? $this->resolveFreeDiskSpaceAction->handle($basePath) : null,
         );

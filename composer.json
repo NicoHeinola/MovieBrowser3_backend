@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4.0",
+        "james-heinrich/getid3": "^1.9.28",
         "laravel/framework": "^13.40.0",
         "laravel/sanctum": "^4.3.3",
         "laravel/tinker": "^3.0.2",

@@ -33,6 +33,20 @@ test('dashboard stats sum video file sizes and report the video disk space', fun
         ->assertJsonPath('disk_free_bytes', 400);
 });
 
+test('dashboard stats add up the known lengths of episodes with a file', function () {
+    actingAsAdmin();
+
+    $episodes = Episode::factory()->for(ShowEntry::factory()->for(Show::factory()), 'entry');
+    $episodes->create(['video_duration_seconds' => 1440]);
+    $episodes->create(['video_duration_seconds' => 1500]);
+    $episodes->create(['video_duration_seconds' => null]);
+    $episodes->create(['has_video_file' => false, 'video_duration_seconds' => 9999]);
+
+    getJson('/api/v1/dashboard-stats')
+        ->assertOk()
+        ->assertJsonPath('video_files_total_seconds', 2940);
+});
+
 test('dashboard stats leave disk space unknown when the video folder does not exist', function () {
     actingAsAdmin();
     Setting::query()->whereKey('video_base_path')->update(['value' => '/nonexistent/moviebrowser-videos']);
@@ -73,6 +87,7 @@ test('an admin can read the dashboard stats', function () {
             'websites_count' => 2,
             'users_count' => User::query()->count(),
             'video_files_total_bytes' => 0,
+            'video_files_total_seconds' => 0,
             'disk_total_bytes' => null,
             'disk_free_bytes' => null,
         ]);

@@ -15,6 +15,7 @@ class UpdateEpisodeVideoFileSizesAction
      * Stores measured video file sizes, keyed by episode id; null marks the file missing.
      * Only changed rows are written, one update per distinct size: every missing file shares one,
      * and found sizes only differ on the first measurement or after a file was replaced.
+     * A missing or replaced file forgets its length, which no longer fits; a first measurement keeps it.
      *
      * @param  Collection<int, Episode>  $episodes
      * @param  Collection<int, int|null>  $sizes
@@ -29,11 +30,30 @@ class UpdateEpisodeVideoFileSizesAction
                 ->each(function (Collection $group) use ($sizes): void {
                     $size = $sizes[$group->first()->id];
 
-                    Episode::query()->whereKey($group->pluck('id'))->update([
-                        'has_video_file' => $size !== null,
-                        'video_file_size' => $size,
-                    ]);
+                    // A stored size that changes means another file; none stored yet is just a first measurement
+                    [$stale, $measured] = $group->partition(fn (Episode $episode): bool => $size === null || $episode->video_file_size !== null);
+
+                    $this->update($measured, $size);
+                    // Leaving the queue too, so a scan reading the old file doesn't store its length
+                    $this->update($stale, $size, ['video_duration_seconds' => null, 'video_duration_queued_at' => null]);
                 });
         });
+    }
+
+    /**
+     * @param  Collection<int, Episode>  $episodes
+     * @param  array<string, null>  $forget
+     */
+    private function update(Collection $episodes, ?int $size, array $forget = []): void
+    {
+        if ($episodes->isEmpty()) {
+            return;
+        }
+
+        Episode::query()->whereKey($episodes->pluck('id'))->update([
+            'has_video_file' => $size !== null,
+            'video_file_size' => $size,
+            ...$forget,
+        ]);
     }
 }

@@ -16,4 +16,20 @@ return [
 
     'check_stale_after_seconds' => 300,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Episode Length Scan
+    |--------------------------------------------------------------------------
+    |
+    | A length scan reads its queued episodes in chunks, one job each, and a
+    | chunk stops taking files after `duration_scan_chunk_seconds`, so a slow
+    | drive can't hit the worker's 60 second timeout. Stale works as for the
+    | check: keep it well above the time one chunk takes.
+    |
+    */
+
+    'duration_scan_chunk_seconds' => 20,
+
+    'duration_scan_stale_after_seconds' => 300,
+
 ];

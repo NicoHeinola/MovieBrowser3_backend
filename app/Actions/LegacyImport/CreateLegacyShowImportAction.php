@@ -3,6 +3,7 @@
 namespace App\Actions\LegacyImport;
 
 use App\Actions\Category\CreateCategoryAction;
+use App\Actions\Episode\QueueEpisodeVideoDurationsAction;
 use App\Actions\Episode\VideoFile\CopyVideoFileAction;
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Dtos\Category\CreateCategoryData;
@@ -35,6 +36,7 @@ class CreateLegacyShowImportAction
         private readonly CreateCategoryAction $createCategoryAction,
         private readonly ResolveEpisodeVideoPathAction $resolveEpisodeVideoPathAction,
         private readonly ResolveLegacyEpisodeSourcePathAction $resolveLegacyEpisodeSourcePathAction,
+        private readonly QueueEpisodeVideoDurationsAction $queueEpisodeVideoDurationsAction,
     ) {}
 
     /**
@@ -115,6 +117,11 @@ class CreateLegacyShowImportAction
                 if ($onFileCopied !== null) {
                     $onFileCopied($sourcePath, $bytes);
                 }
+            }
+
+            // Lengths are read in the background once the show is in; any that fail show up under "Read missing lengths"
+            if ($copies !== []) {
+                DB::afterCommit(fn () => $this->queueEpisodeVideoDurationsAction->handle(showIds: [$show->id]));
             }
 
             return $import;

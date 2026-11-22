@@ -23,6 +23,7 @@ class DashboardStatsResource extends JsonResource
             'websites_count' => $this->websitesCount,
             'users_count' => $this->usersCount,
             'video_files_total_bytes' => $this->videoFilesTotalBytes,
+            'video_files_total_seconds' => $this->videoFilesTotalSeconds,
             'disk_total_bytes' => $this->diskTotalBytes,
             'disk_free_bytes' => $this->diskFreeBytes,
         ];

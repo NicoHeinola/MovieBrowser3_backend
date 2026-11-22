@@ -11,4 +11,5 @@ enum ApiErrorCode: string
     case Forbidden = 'forbidden';
     case VideoRelocationRunning = 'video_relocation_running';
     case VideoFileCheckRunning = 'video_file_check_running';
+    case VideoDurationScanRunning = 'video_duration_scan_running';
 }

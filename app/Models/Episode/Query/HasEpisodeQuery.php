@@ -24,6 +24,16 @@ trait HasEpisodeQuery
         $query->where('has_video_file', false)->where('filename', '!=', '');
     }
 
+    /**
+     * Episodes with a file but no length: never read, unreadable, or left waiting by a scan that stopped.
+     */
+    public function scopeUnknownVideoDuration(Builder $query): void
+    {
+        $query->where('has_video_file', true)
+            ->where('filename', '!=', '')
+            ->whereNull('video_duration_seconds');
+    }
+
     public static function getAllowedFilters(): array
     {
         return [

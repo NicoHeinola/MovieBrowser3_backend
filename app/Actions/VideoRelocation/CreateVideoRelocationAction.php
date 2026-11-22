@@ -3,10 +3,12 @@
 namespace App\Actions\VideoRelocation;
 
 use App\Actions\Episode\VideoFile\ResolveVideoBasePathAction;
+use App\Exceptions\VideoDurationScanRunningException;
 use App\Exceptions\VideoFileCheckRunningException;
 use App\Exceptions\VideoRelocationRunningException;
 use App\Jobs\RelocateVideoFilesJob;
 use App\Models\Episode\Episode;
+use App\Models\VideoDurationScan\VideoDurationScan;
 use App\Models\VideoFileCheck\VideoFileCheck;
 use App\Models\VideoRelocation\VideoRelocation;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +29,7 @@ class CreateVideoRelocationAction
      *
      * @throws VideoRelocationRunningException when another one is running
      * @throws VideoFileCheckRunningException a running check would see the moving files as missing
+     * @throws VideoDurationScanRunningException a running length scan would fail to read the moving files
      */
     public function handle(string $toPath): VideoRelocation
     {
@@ -35,6 +38,10 @@ class CreateVideoRelocationAction
         return DB::transaction(function () use ($toPath): VideoRelocation {
             if (VideoFileCheck::query()->active()->exists()) {
                 throw new VideoFileCheckRunningException;
+            }
+
+            if (VideoDurationScan::query()->active()->exists()) {
+                throw new VideoDurationScanRunningException;
             }
 
             $fromPath = $this->resolveVideoBasePathAction->handle();

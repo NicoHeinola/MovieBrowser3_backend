@@ -23,7 +23,8 @@ class CheckEpisodeVideoFilesAction
     ) {}
 
     /**
-     * Refreshes `has_video_file` and `video_file_size` for the next chunk of episodes after $afterId.
+     * Refreshes `has_video_file` and `video_file_size` for the next chunk of episodes after $afterId. It only records what
+     * it finds: a missing or replaced file loses its length, and reading lengths again is left to the admin.
      *
      * Returns the id to continue after, or null when the check ended: nothing left, or the base folder doesn't exist.
      * An empty base folder is a normal result: its episodes are simply missing, and the next check repairs the flags.

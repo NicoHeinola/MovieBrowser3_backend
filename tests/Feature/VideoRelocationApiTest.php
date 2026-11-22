@@ -8,6 +8,7 @@ use App\Models\Setting\Setting;
 use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\User\User;
+use App\Models\VideoDurationScan\VideoDurationScan;
 use App\Models\VideoFileCheck\VideoFileCheck;
 use App\Models\VideoRelocation\VideoRelocation;
 use Illuminate\Support\Facades\File;
@@ -184,6 +185,15 @@ test('the new folder must be inside a mounted media folder', function () {
         ->assertUnprocessable()
         ->assertJsonPath('code', 'path_outside_media_folders')
         ->assertJsonPath('params.folders', '/mnt/d, /mnt/e');
+});
+
+test('a relocation waits for a running episode length scan', function () {
+    actingAsAdmin();
+    VideoDurationScan::factory()->create();
+
+    postJson('/api/v1/video-files/relocation', ['video_base_path' => $this->newBasePath])
+        ->assertConflict()
+        ->assertExactJson(['code' => 'video_duration_scan_running', 'params' => []]);
 });
 
 test('a relocation waits for a running video file check', function () {

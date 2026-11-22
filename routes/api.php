@@ -20,6 +20,7 @@ use App\Http\Controllers\ShowSectionController;
 use App\Http\Controllers\ShowTitleController;
 use App\Http\Controllers\ShowWatchProgressStreamController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VideoDurationScanController;
 use App\Http\Controllers\VideoFileCheckController;
 use App\Http\Controllers\VideoRelocationController;
 use App\Http\Controllers\WebsiteController;
@@ -84,6 +85,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('setup/complete', [SetupCompletionController::class, 'store'])->name('setup.complete.store');
 
         Route::apiSingleton('video-files/check', VideoFileCheckController::class)->creatable()->names('video-files.check')->only(['show', 'store']);
+        Route::apiSingleton('video-files/duration-scan', VideoDurationScanController::class)->creatable()->names('video-files.duration-scan')->only(['show', 'store']);
         Route::apiSingleton('video-files/relocation', VideoRelocationController::class)->creatable()->names('video-files.relocation')->only(['show', 'store']);
 
         Route::apiResource('backups', BackupController::class)->only(['index', 'store']);

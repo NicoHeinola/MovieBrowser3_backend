@@ -15,6 +15,7 @@ use App\Models\Show\Show;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\User\User;
+use App\Models\VideoDurationScan\VideoDurationScan;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -153,6 +154,9 @@ test('it imports a show and copies its videos without touching the originals', f
     expect($episodes->pluck('name')->all())->toBe(['Episode 1', 'Episode 2'])
         ->and($episodes->pluck('filename')->all())->toBe(['episode_1_101.mkv', 'episode_2_102.mkv'])
         ->and($episodes->pluck('video_file_size')->all())->toBe([strlen('original-101'), strlen('original-102')]);
+
+    // The copies' lengths are read in the background once the show is in
+    expect(VideoDurationScan::query()->sole()->only(['read', 'total']))->toBe(['read' => 2, 'total' => 2]);
 
     $copy = ResolveEpisodeVideoPathAction::run($episodes[0]);
     expect($copy)->toBe(videoBasePathForTests()."/{$show->id}_Show 1/{$entry->id}_Season 1/{$episodes[0]->id}_Episode 1.mkv")

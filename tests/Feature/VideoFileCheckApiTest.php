@@ -371,14 +371,13 @@ test('the database allows only one running check', function () {
     expect(fn () => VideoFileCheck::factory()->create())->toThrow(UniqueConstraintViolationException::class);
 });
 
-test('each run keeps its own row', function () {
+test('a finished check replaces the previous result', function () {
     mountVideoBasePath();
 
     CreateVideoFileCheckAction::run();
     CreateVideoFileCheckAction::run();
 
-    expect(VideoFileCheck::query()->whereNotNull('finished_at')->count())->toBe(2)
-        ->and(VideoFileCheck::query()->where('running', true)->count())->toBe(0);
+    expect(VideoFileCheck::query()->sole()->finished_at)->not->toBeNull();
 });
 
 test('a job of a check deleted as stale ends without doing anything', function () {
