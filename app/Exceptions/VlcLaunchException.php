@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use App\Enums\SetupCheckCode;
 use App\Enums\VlcLaunchCode;
+use App\Http\Resources\ApiError\ApiErrorDetail;
 use Illuminate\Http\JsonResponse;
 use RuntimeException;
 
@@ -25,6 +26,6 @@ class VlcLaunchException extends RuntimeException
 
     public function render(): JsonResponse
     {
-        return response()->json(['code' => $this->errorCode->value, 'params' => (object) $this->params], 503);
+        return ApiErrorDetail::response($this->errorCode, 503, $this->params);
     }
 }

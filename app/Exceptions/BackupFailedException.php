@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Enums\BackupErrorCode;
+use App\Http\Resources\ApiError\ApiErrorDetail;
 use Illuminate\Http\JsonResponse;
 use RuntimeException;
 
@@ -23,6 +24,6 @@ class BackupFailedException extends RuntimeException
     {
         $status = $this->errorCode === BackupErrorCode::DirUnavailable ? 422 : 500;
 
-        return response()->json(['code' => $this->errorCode, 'params' => (object) []], $status);
+        return ApiErrorDetail::response($this->errorCode, $status);
     }
 }

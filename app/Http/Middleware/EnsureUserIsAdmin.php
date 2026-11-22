@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Enums\ApiErrorCode;
+use App\Http\Resources\ApiError\ApiErrorDetail;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,17 +16,11 @@ class EnsureUserIsAdmin
         $user = $request->user();
 
         if ($user === null) {
-            return response()->json([
-                'code' => ApiErrorCode::Unauthenticated,
-                'params' => (object) [],
-            ], 401);
+            return ApiErrorDetail::response(ApiErrorCode::Unauthenticated, 401);
         }
 
         if (!$user->is_admin) {
-            return response()->json([
-                'code' => ApiErrorCode::Forbidden,
-                'params' => (object) [],
-            ], 403);
+            return ApiErrorDetail::response(ApiErrorCode::Forbidden, 403);
         }
 
         return $next($request);

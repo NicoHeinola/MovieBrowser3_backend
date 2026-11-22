@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Enums\ApiErrorCode;
+use App\Http\Resources\ApiError\ApiErrorDetail;
 use Illuminate\Contracts\Debug\ShouldntReport;
 use Illuminate\Http\JsonResponse;
 use RuntimeException;
@@ -19,6 +20,6 @@ class VideoRelocationRunningException extends RuntimeException implements Should
 
     public function render(): JsonResponse
     {
-        return response()->json(['code' => ApiErrorCode::VideoRelocationRunning, 'params' => (object) []], 409);
+        return ApiErrorDetail::response(ApiErrorCode::VideoRelocationRunning, 409);
     }
 }

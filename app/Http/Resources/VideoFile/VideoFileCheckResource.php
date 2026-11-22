@@ -3,6 +3,7 @@
 namespace App\Http\Resources\VideoFile;
 
 use App\Dtos\VideoFile\VideoFileCheckData;
+use App\Http\Resources\ApiError\ApiErrorDetail;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,9 +20,7 @@ class VideoFileCheckResource extends JsonResource
             'checked' => $this->checked,
             'total' => $this->total,
             'finished_at' => $this->finishedAt?->toJSON(),
-            'error' => $this->errorCode !== null
-                ? ['code' => $this->errorCode->value, 'params' => (object) []]
-                : null,
+            'error' => $this->errorCode !== null ? ApiErrorDetail::make($this->errorCode) : null,
             'missing_video_files_count' => $this->missingVideoFilesCount,
         ];
     }

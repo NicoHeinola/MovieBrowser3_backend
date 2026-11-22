@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Validation;
 
 use App\Enums\ValidationErrorCode;
+use App\Http\Resources\ApiError\ApiErrorDetail;
 use App\Rules\CodedRule;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -85,6 +86,6 @@ class ValidationErrorResource extends JsonResource
      */
     private function error(string $code, array $params = []): array
     {
-        return ['code' => $code, 'params' => (object) $params];
+        return ApiErrorDetail::make($code, $params);
     }
 }

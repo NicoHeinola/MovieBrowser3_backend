@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Enums\ApiErrorCode;
+use App\Http\Resources\ApiError\ApiErrorDetail;
 use Illuminate\Contracts\Debug\ShouldntReport;
 use Illuminate\Http\JsonResponse;
 use RuntimeException;
@@ -19,6 +20,6 @@ class VideoFileCheckRunningException extends RuntimeException implements Shouldn
 
     public function render(): JsonResponse
     {
-        return response()->json(['code' => ApiErrorCode::VideoFileCheckRunning, 'params' => (object) []], 409);
+        return ApiErrorDetail::response(ApiErrorCode::VideoFileCheckRunning, 409);
     }
 }
