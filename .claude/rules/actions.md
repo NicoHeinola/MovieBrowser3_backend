@@ -7,8 +7,8 @@ applyTo: 'app/Actions/**/*.php'
 
 # Action Rules
 
-- One use case per action, `Lorisleiva\Actions\Concerns\AsAction`, named `*Action` with CRUD verbs (`Create`, `Update`, `Delete`; not `Set` or `Clear`).
-- Explicit `handle()` signatures: models and scalars directly, a DTO for grouped payloads or values that always travel together (see the DTO rules). A child create takes the parent first: `handle(Show $show, CreateXData $data)`. Never pass request objects.
+- One use case per action, with CRUD verbs (`Create`, `Update`, `Delete`; not `Set` or `Clear`). `tests/Unit/ArchitectureTest.php` checks the rest of this file's checkable rules: the `*Action` suffix and `AsAction` trait, no request objects, no SPL iterators, unreported "already running" exceptions.
+- Explicit `handle()` signatures: models and scalars directly, a DTO for grouped payloads or values that always travel together (see the DTO rules). A child create takes the parent first: `handle(Show $show, CreateXData $data)`.
 - Return models, DTOs or simple values, never HTTP payloads. Actions must work from controllers, jobs, commands or tests.
 - Create uses `X::query()->create([...explicit snake_case keys...])`; delete calls `$x->delete()`. Partial updates fill through the fillable allowlist and return `fresh()`:
 
@@ -36,7 +36,7 @@ return DB::transaction(function () use ($data): X {
 ## Guards
 
 - Each precondition is checked in one place: the action that must not run without it, when the action has other callers (jobs, the scheduler, commands) or a unique index decides; otherwise the request or middleware. Never check it in the request, the middleware and the action alike.
-- A blocking state (something else is running) throws an exception that renders its own 409 code and implements `ShouldntReport`; callers that can't show it, like the scheduler, simply let it end the run.
+- A blocking state (something else is running) throws a `*RunningException` that renders its own 409 code; callers that can't show it, like the scheduler, simply let it end the run.
 
 ## Helpers
 
@@ -45,5 +45,5 @@ return DB::transaction(function () use ($data): X {
 - `ResolveVideoBasePathAction` memoizes with `once()` from a static method; actions that change that setting call `Once::flush()`. `queue:work` never flushes it, so jobs that resolve video paths flush first.
 - Video lengths are read only by the length scan job (`ReadEpisodeVideoDurationsJob`, time-boxed chunks), never in a request or a transaction: a Windows drive under WSL can be slow or gone. Anything that adds or replaces a file through the app queues its episodes with `QueueEpisodeVideoDurationsAction` after commit; `CreateVideoDurationScanAction` only starts a scan for what is already queued. The file check only records: a missing or replaced file loses its length, and the admin reads missing lengths from Settings.
 - An unmounted drive makes every file look missing, so confirm `CheckVideoBasePathAction` before acting on a missing file. The video file check is the exception: only a base folder that doesn't exist or can't be read (`CheckVideoBasePathExistsAction`) stops it. An empty one is a normal result, because its stored flags repair themselves on the next run.
-- List folders with `File::files()` / `File::directories()` or `scandir`, never SPL iterators (`FilesystemIterator`, `RecursiveDirectoryIterator`): on a Windows drive under WSL (drvfs, where production keeps its videos) they silently skip entries, so a folder can look empty and get pruned. `File::deleteDirectory` uses one internally, so call it only on a folder already confirmed empty.
+- List folders with `File::files()` / `File::directories()` or `scandir`: SPL iterators silently skip entries on a Windows drive under WSL (drvfs, where production keeps its videos), so a folder can look empty and get pruned. `File::deleteDirectory` uses one internally, so call it only on a folder already confirmed empty.
 - Video paths must stay valid on Windows, because a Windows `vlc.exe` opens them: `ResolveEpisodeVideoPathAction` replaces `\ / : * ? " < > |` and strips trailing dots and spaces. Changing those rules changes every computed path, so existing files need moving too, and never from a migration.

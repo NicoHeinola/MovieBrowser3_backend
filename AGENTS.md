@@ -8,7 +8,7 @@ Guidance for AI coding agents (Claude Code and Copilot). File-specific rules liv
 - Use Composer, Artisan and Pest for project commands and validation.
 - Prefer extending existing namespaces and patterns before creating new top-level structure.
 - Preserve existing API response fields and status codes unless the task explicitly changes the contract.
-- Every new `env()` key gets a commented line in `.env.example` in the same change, and in `deploy/.env.production` when production should set it.
+- Every new `env()` key gets a commented line in `.env.example` (`tests/Unit/ArchitectureTest.php` checks it), and in `deploy/.env.production` when production should set it.
 
 ## Commands
 
@@ -51,6 +51,7 @@ tests/Feature/XApiTest.php
 - Routes live in `routes/api.php` under `v1`: reads in the `auth:sanctum` group, writes in the `['auth:sanctum', 'admin']` group.
 - Every action that writes to the database wraps `handle()` in `DB::transaction`; `tests/Unit/ActionTransactionTest.php` enforces it.
 - Enums are string-backed and live in `app/Enums`.
+- `tests/Unit/ArchitectureTest.php` checks the layer rules that code can show (models don't use actions, actions get no requests, resources don't touch the disk, ...). A new checkable rule goes there, not only into prose.
 
 ## Releases
 
