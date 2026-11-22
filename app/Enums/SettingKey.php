@@ -12,4 +12,8 @@ enum SettingKey: string
     case VideoBasePath = 'video_base_path';
     case VlcMediaPlayerPath = 'vlc_media_player_path';
     case SetupCompletedAt = 'setup_completed_at';
+    case QBittorrentUrl = 'qbittorrent_url';
+    case QBittorrentUsername = 'qbittorrent_username';
+    case QBittorrentPassword = 'qbittorrent_password';
+    case DownloadPath = 'download_path';
 }

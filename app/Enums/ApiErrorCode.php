@@ -16,4 +16,5 @@ enum ApiErrorCode: string
     case ShowTemplateNotFound = 'show_template_not_found';
     case ShowTemplateUnavailable = 'show_template_unavailable';
     case MalUnavailable = 'mal_unavailable';
+    case QBittorrentUnavailable = 'qbittorrent_unavailable';
 }

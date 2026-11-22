@@ -20,4 +20,9 @@ enum SetupCheckCode: string
     case VlcBridgeOutdated = 'vlc_bridge_outdated';
     case VlcBridgeUnauthorized = 'vlc_bridge_unauthorized';
     case VlcBridgeRejected = 'vlc_bridge_rejected';
+    case UrlRequired = 'url_required';
+    case QBittorrentUnreachable = 'qbittorrent_unreachable';
+    case QBittorrentLoginFailed = 'qbittorrent_login_failed';
+    case QBittorrentBanned = 'qbittorrent_banned';
+    case QBittorrentOutdated = 'qbittorrent_outdated';
 }

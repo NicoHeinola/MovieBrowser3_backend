@@ -17,6 +17,22 @@ use function Pest\Laravel\withToken;
 /**
  * Fakes the VLC bridge so only $existing passes its check-binary check.
  */
+/**
+ * Fakes qBittorrent's Web API: it lets in admin / secret only, and reports $version.
+ */
+function fakeQBittorrent(string $version = 'v5.1.0'): void
+{
+    Http::fake(function (Request $request) use ($version) {
+        if (str_ends_with($request->url(), '/api/v2/auth/login')) {
+            return $request['username'] === 'admin' && $request['password'] === 'secret'
+                ? Http::response('Ok.', 200, ['Set-Cookie' => 'SID=session-id; HttpOnly; path=/'])
+                : Http::response('Fails.');
+        }
+
+        return $request->hasHeader('Cookie', 'SID=session-id') ? Http::response($version) : Http::response('Forbidden', 403);
+    });
+}
+
 function fakeBridgeWithVlcAt(?string $existing): void
 {
     config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767', 'vlc.bridge_token' => 'bridge-token']);
@@ -97,6 +113,8 @@ test('a check without any value to check answers required for both', function ()
             'errors' => [
                 'video_base_path' => [['code' => 'required', 'params' => []]],
                 'vlc_media_player_path' => [['code' => 'required', 'params' => []]],
+                'qbittorrent_url' => [['code' => 'required', 'params' => []]],
+                'download_path' => [['code' => 'required', 'params' => []]],
             ],
         ]);
 });
@@ -257,4 +275,61 @@ test('setup_completed_at can only be set to a date or cleared', function () {
 
     patchJson('/api/v1/settings/setup_completed_at', ['value' => ''])->assertOk();
     getJson('/api/v1/setup')->assertOk()->assertJsonPath('completed_at', null);
+});
+
+test('qBittorrent passes when its address and login work', function () {
+    fakeQBittorrent();
+    actingAsAdmin();
+
+    postJson('/api/v1/setup/checks', ['qbittorrent_url' => 'http://127.0.0.1:8080/', 'qbittorrent_username' => 'admin', 'qbittorrent_password' => 'secret'])
+        ->assertOk()
+        ->assertExactJson(['qbittorrent_url' => ['ok' => true, 'code' => null, 'params' => []]]);
+
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'http://127.0.0.1:8080/api/v2/app/version');
+    expect(Setting::query()->whereKey('qbittorrent_url')->value('value'))->toBe('');
+});
+
+test('a qBittorrent check without a password uses the saved one', function () {
+    fakeQBittorrent();
+    actingAsAdmin();
+    patchJson('/api/v1/settings/qbittorrent_password', ['value' => 'secret'])->assertOk();
+
+    postJson('/api/v1/setup/checks', ['qbittorrent_url' => 'http://127.0.0.1:8080', 'qbittorrent_username' => 'admin'])
+        ->assertJsonPath('qbittorrent_url.ok', true);
+    postJson('/api/v1/setup/checks', ['qbittorrent_url' => 'http://127.0.0.1:8080', 'qbittorrent_username' => 'admin', 'qbittorrent_password' => 'typo'])
+        ->assertJsonPath('qbittorrent_url.code', 'qbittorrent_login_failed');
+});
+
+test('it says why qBittorrent can not be used', function (Closure $fake, array $values, string $code, array $params) {
+    $fake();
+    actingAsAdmin();
+
+    postJson('/api/v1/setup/checks', [...['qbittorrent_url' => 'http://127.0.0.1:8080', 'qbittorrent_username' => 'admin', 'qbittorrent_password' => 'secret'], ...$values])
+        ->assertOk()
+        ->assertExactJson(['qbittorrent_url' => ['ok' => false, 'code' => $code, 'params' => $params]]);
+})->with([
+    'no address' => [fn () => fakeQBittorrent(), ['qbittorrent_url' => ''], 'url_required', []],
+    'wrong login' => [fn () => fakeQBittorrent(), ['qbittorrent_password' => 'wrong'], 'qbittorrent_login_failed', []],
+    'banned' => [fn () => Http::fake(['*' => Http::response('Your IP address has been banned.', 403)]), [], 'qbittorrent_banned', []],
+    'closed' => [fn () => Http::fake(fn () => throw new ConnectionException('Connection refused')), [], 'qbittorrent_unreachable', []],
+    'not qBittorrent' => [fn () => Http::fake(['*' => Http::response('Not found', 404)]), [], 'qbittorrent_unreachable', []],
+    'too old' => [fn () => fakeQBittorrent('v4.6.7'), [], 'qbittorrent_outdated', ['version' => '4.6.7', 'minimum_version' => '5.0']],
+]);
+
+test('the qBittorrent address must be a web address to check it', function () {
+    actingAsAdmin();
+
+    postJson('/api/v1/setup/checks', ['qbittorrent_url' => 'localhost:8080'])->assertUnprocessable()->assertJsonValidationErrors(['qbittorrent_url']);
+});
+
+test('a download folder is checked like the video folder', function () {
+    $base = videoBasePathForTests();
+    config(['deploy.media_folders' => [$base]]);
+    actingAsAdmin();
+
+    postJson('/api/v1/setup/checks', ['download_path' => "{$base}/Downloads"])
+        ->assertOk()
+        ->assertExactJson(['download_path' => ['ok' => true, 'code' => null, 'params' => []]]);
+    postJson('/api/v1/setup/checks', ['download_path' => '/elsewhere'])
+        ->assertJsonPath('download_path.code', 'path_outside_media_folders');
 });

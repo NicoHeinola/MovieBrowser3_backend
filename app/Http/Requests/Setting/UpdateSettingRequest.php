@@ -5,6 +5,7 @@ namespace App\Http\Requests\Setting;
 use App\Enums\SettingKey;
 use App\Models\Setting\Setting;
 use App\Rules\AbsolutePath;
+use App\Rules\MediaFolderPath;
 use App\Rules\VideoBasePathNeedsRelocation;
 use App\Rules\VlcBinary;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,7 +29,7 @@ class UpdateSettingRequest extends FormRequest
             match ($setting->type) {
                 'number' => $rules['value'][] = 'numeric',
                 'json' => $rules['value'][] = 'array',
-                'string' => $rules['value'][] = 'string',
+                'string', 'secret' => $rules['value'][] = 'string',
                 default => null,
             };
 
@@ -45,6 +46,15 @@ class UpdateSettingRequest extends FormRequest
 
             if ($setting->key === SettingKey::VideoBasePath->value) {
                 $rules['value'] = [new VideoBasePathNeedsRelocation];
+            }
+
+            // Empty turns downloads off
+            if ($setting->key === SettingKey::QBittorrentUrl->value) {
+                $rules['value'] = ['nullable', 'string', 'url:http,https'];
+            }
+
+            if ($setting->key === SettingKey::DownloadPath->value) {
+                $rules['value'] = ['bail', 'nullable', 'string', Rule::when(filled($this->input('value')), [new MediaFolderPath])];
             }
 
             // Read back as a date by the setup wizard; empty means "not set up"

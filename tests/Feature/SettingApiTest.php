@@ -2,6 +2,7 @@
 
 use App\Models\Setting\Setting;
 use App\Models\User\User;
+use Illuminate\Support\Facades\Crypt;
 
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\getJson;
@@ -18,7 +19,7 @@ test('any signed-in user can list settings', function () {
 
     $response = getJson('/api/v1/settings')
         ->assertOk()
-        ->assertJsonCount(5 + 2, 'data'); // 5 seeded + 2 factory
+        ->assertJsonCount(9 + 2, 'data'); // 9 seeded + 2 factory
 
     $data = $response->json('data');
     $keys = collect($data)->pluck('key')->all();
@@ -145,3 +146,61 @@ test('the VLC path must name vlc or vlc.exe', function (string $path) {
     'a shell' => '/bin/sh',
     'a script named like vlc' => '/usr/bin/vlc.sh',
 ]);
+
+test('the qBittorrent password is stored encrypted and never sent back', function () {
+    actingAsAdmin();
+
+    patchJson('/api/v1/settings/qbittorrent_password', ['value' => 'hunter2'])
+        ->assertOk()
+        ->assertJsonPath('value', null)
+        ->assertJsonPath('is_set', true);
+
+    $stored = Setting::query()->whereKey('qbittorrent_password')->toBase()->value('value');
+    expect($stored)->not->toContain('hunter2')
+        ->and(Crypt::decryptString($stored))->toBe('hunter2');
+
+    $listed = collect(getJson('/api/v1/settings')->json('data'))->firstWhere('key', 'qbittorrent_password');
+    expect($listed)->toMatchArray(['value' => null, 'type' => 'secret', 'is_set' => true]);
+
+    patchJson('/api/v1/settings/qbittorrent_password', ['value' => ''])->assertOk()->assertJsonPath('is_set', false);
+    expect(Setting::query()->whereKey('qbittorrent_password')->toBase()->value('value'))->toBe('');
+});
+
+test('a secret saved with another app key counts as not set', function () {
+    actingAsAdmin();
+    Setting::query()->whereKey('qbittorrent_password')->toBase()->update(['value' => 'eyJpdiI6Im5vdCBhIHJlYWwgcGF5bG9hZCJ9']);
+
+    $listed = collect(getJson('/api/v1/settings')->assertOk()->json('data'))->firstWhere('key', 'qbittorrent_password');
+
+    expect($listed['is_set'])->toBeFalse();
+});
+
+test('only settings of type secret say whether they are set', function () {
+    actingAsAdmin();
+
+    $listed = collect(getJson('/api/v1/settings')->json('data'))->firstWhere('key', 'qbittorrent_url');
+
+    expect($listed)->not->toHaveKey('is_set');
+});
+
+test('the qBittorrent address must be a web address or empty', function () {
+    actingAsAdmin();
+
+    patchJson('/api/v1/settings/qbittorrent_url', ['value' => 'localhost:8080'])
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.value.0.code', 'url');
+    patchJson('/api/v1/settings/qbittorrent_url', ['value' => 'http://127.0.0.1:8080'])->assertOk()->assertJsonPath('value', 'http://127.0.0.1:8080');
+    patchJson('/api/v1/settings/qbittorrent_url', ['value' => ''])->assertOk()->assertJsonPath('value', '');
+});
+
+test('the download folder must be one the app can write to, or empty', function () {
+    $base = videoBasePathForTests();
+    config(['deploy.media_folders' => [$base]]);
+    actingAsAdmin();
+
+    patchJson('/api/v1/settings/download_path', ['value' => '/elsewhere/Downloads'])
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.value.0.code', 'path_outside_media_folders');
+    patchJson('/api/v1/settings/download_path', ['value' => "{$base}/Downloads"])->assertOk()->assertJsonPath('value', "{$base}/Downloads");
+    patchJson('/api/v1/settings/download_path', ['value' => ''])->assertOk()->assertJsonPath('value', '');
+});

@@ -3,7 +3,7 @@
 namespace App\Http\Requests\VideoRelocation;
 
 use App\Enums\SettingKey;
-use App\Rules\VideoBasePath;
+use App\Rules\MediaFolderPath;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreVideoRelocationRequest extends FormRequest
@@ -14,7 +14,7 @@ class StoreVideoRelocationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            SettingKey::VideoBasePath->value => ['bail', 'required', 'string', new VideoBasePath],
+            SettingKey::VideoBasePath->value => ['bail', 'required', 'string', new MediaFolderPath],
         ];
     }
 }

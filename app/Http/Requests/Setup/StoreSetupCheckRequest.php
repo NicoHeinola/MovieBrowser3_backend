@@ -10,7 +10,12 @@ use Illuminate\Validation\Validator;
 
 class StoreSetupCheckRequest extends FormRequest
 {
-    private const array CHECKABLE = [SettingKey::VideoBasePath->value, SettingKey::VlcMediaPlayerPath->value];
+    private const array CHECKABLE = [
+        SettingKey::VideoBasePath->value,
+        SettingKey::VlcMediaPlayerPath->value,
+        SettingKey::QBittorrentUrl->value,
+        SettingKey::DownloadPath->value,
+    ];
 
     /**
      * @return array<string, list<string>>
@@ -21,6 +26,10 @@ class StoreSetupCheckRequest extends FormRequest
         return [
             SettingKey::VideoBasePath->value => ['sometimes', 'nullable', 'string'],
             SettingKey::VlcMediaPlayerPath->value => ['sometimes', 'nullable', 'string'],
+            SettingKey::QBittorrentUrl->value => ['sometimes', 'nullable', 'string', 'url:http,https'],
+            SettingKey::QBittorrentUsername->value => ['sometimes', 'nullable', 'string'],
+            SettingKey::QBittorrentPassword->value => ['sometimes', 'nullable', 'string'],
+            SettingKey::DownloadPath->value => ['sometimes', 'nullable', 'string'],
         ];
     }
 
