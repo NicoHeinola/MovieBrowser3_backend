@@ -10,6 +10,7 @@ class CreateShowEntryData extends Data
     public function __construct(
         public ShowEntryType $type,
         public string $name,
+        public ?string $url,
         public int $sortOrder,
     ) {}
 }

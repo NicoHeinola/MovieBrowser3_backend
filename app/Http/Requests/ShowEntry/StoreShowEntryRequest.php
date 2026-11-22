@@ -16,6 +16,7 @@ class StoreShowEntryRequest extends FormRequest
         return [
             'type' => ['required', 'string', Rule::enum(ShowEntryType::class)],
             'name' => ['required', 'string', 'max:255'],
+            'url' => ['nullable', 'string', 'url:http,https', 'max:2048'],
             'sort_order' => ['required', 'integer', 'min:0'],
         ];
     }

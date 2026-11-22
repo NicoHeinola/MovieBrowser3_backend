@@ -20,12 +20,13 @@ final class NekoBtShowTemplateMapper
 
         return new ShowTemplateData(
             sourceUrl: $url,
-            titles: $this->titles($this->text($media['title'] ?? null), [
+            // nekoBT's own title first; `GetShowTemplateAction` picks which ones to keep
+            titles: array_values(array_filter(array_map($this->text(...), [
                 $media['title'] ?? null,
                 $anilist['title']['english'] ?? null,
                 $anilist['title']['romaji'] ?? null,
                 ...(is_array($media['alternate_titles'] ?? null) ? $media['alternate_titles'] : []),
-            ]),
+            ]))),
             // nekoBT's overview is plain text, so it comes before AniList's HTML description
             description: $this->text($media['overview'] ?? null) ?? $this->text($this->plainText($anilist['description'] ?? null)),
             // AniList's wide banner; nekoBT has none of its own
@@ -38,28 +39,6 @@ final class NekoBtShowTemplateMapper
                 fn (mixed $genre): bool => is_string($genre) && $genre !== '',
             )),
         );
-    }
-
-    /**
-     * The titles to keep, in order and without repeats (ignoring case): only ones in Latin script, since a show is
-     * searched by those, and native-script titles (Japanese, Russian) would crowd the list.
-     *
-     * @param  string|null  $mainTitle  nekoBT's own title, kept whatever its script when no title is in Latin script
-     * @param  list<mixed>  $candidates
-     * @return list<string>
-     */
-    private function titles(?string $mainTitle, array $candidates): array
-    {
-        $titles = collect($candidates)
-            ->map(fn (mixed $title): ?string => $this->text($title))
-            ->filter(fn (?string $title): bool => $title !== null
-                && preg_match('/^[\p{Latin}\p{N}\p{P}\p{S}\p{Zs}]+$/u', $title) === 1)
-            ->unique(fn (string $title): string => mb_strtolower($title))
-            ->values()
-            ->all();
-
-        // A show always gets a title to start from
-        return $titles === [] && $mainTitle !== null ? [$mainTitle] : $titles;
     }
 
     /**

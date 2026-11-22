@@ -16,6 +16,7 @@ class UpdateShowEntryRequest extends FormRequest
         return [
             'type' => ['sometimes', 'required', 'string', Rule::enum(ShowEntryType::class)],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'url' => ['sometimes', 'nullable', 'string', 'url:http,https', 'max:2048'],
             'sort_order' => ['sometimes', 'required', 'integer', 'min:0'],
         ];
     }

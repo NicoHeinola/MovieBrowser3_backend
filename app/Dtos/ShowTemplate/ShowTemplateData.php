@@ -11,7 +11,8 @@ class ShowTemplateData extends Data
      * here is saved until the user saves the show. Seasons and episodes aren't part of it: the user adds those.
      *
      * @param  string  $sourceUrl  The page the template was made from
-     * @param  list<string>  $titles  The show's titles, the one to show first
+     * @param  list<string>  $titles  The show's titles, the one to show first. Sources list every title they know;
+     *                                `GetShowTemplateAction` keeps the Latin-script ones
      * @param  list<string>  $genres  The source's genre names, matched to the app's categories later
      */
     public function __construct(

@@ -9,7 +9,7 @@ use function Pest\Laravel\withToken;
 
 beforeEach(function () {
     Http::preventStrayRequests();
-    config(['nekobt.base_url' => 'https://nekobt.test']);
+    config(['nekobt.base_url' => 'https://nekobt.test', 'mal.base_url' => 'https://mal.test']);
 });
 
 /**
@@ -24,6 +24,19 @@ function nekoBtMediaAnswer(string $kind, ?callable $change = null): array
     $answer = json_decode(file_get_contents(base_path("tests/Fixtures/nekobt/media-{$kind}.json")), true);
 
     return $change !== null ? $change($answer) : $answer;
+}
+
+/**
+ * A saved, trimmed MyAnimeList anime page, optionally changed before it's sent.
+ *
+ * @param  int  $id  `16498` (Shingeki no Kyojin: English title and synonyms) or `50265` (Spy x Family: neither)
+ * @param  callable(string): string|null  $change
+ */
+function malAnimePage(int $id, ?callable $change = null): string
+{
+    $page = file_get_contents(base_path("tests/Fixtures/mal/anime-{$id}.html"));
+
+    return $change !== null ? $change($page) : $page;
 }
 
 function showTemplateUrl(string $url): string
@@ -173,4 +186,93 @@ test('when nekoBT can not answer the template is unavailable', function (callabl
     'server error' => fn () => fn () => Http::response('error code: 502', 502),
     'error answer' => fn () => fn () => Http::response(['error' => true, 'message' => 'Something broke.'], 400),
     'unexpected answer' => fn () => fn () => Http::response('<html>Just a moment...</html>'),
+]);
+
+test('a MAL anime page becomes a show template', function () {
+    actingAsAdmin();
+    $action = Category::factory()->create(['name' => 'Action', 'value' => 'action']);
+    Http::fake(['mal.test/anime/16498' => Http::response(malAnimePage(16498))]);
+
+    getJson(showTemplateUrl('https://mal.test/anime/16498/Shingeki_no_Kyojin'))
+        ->assertOk()
+        ->assertJsonPath('source_url', 'https://mal.test/anime/16498/Shingeki_no_Kyojin')
+        // The page's title, English and the synonyms; the Japanese one isn't in Latin script
+        ->assertJsonPath('titles', ['Shingeki no Kyojin', 'Attack on Titan', 'AoT', 'SnK'])
+        ->assertJsonPath('description', fn (string $description): bool => str_starts_with($description, 'Centuries ago, mankind was slaughtered')
+            && str_ends_with($description, 'before the last walls are breached.')
+            && !str_contains($description, 'MAL Rewrite')
+            // The fixture's indentation is source formatting, not text
+            && !str_contains($description, '  '))
+        ->assertJsonPath('banner_url', null)
+        ->assertJsonPath('card_image_url', 'https://cdn.myanimelist.net/images/anime/10/47347l.jpg')
+        ->assertJsonPath('preview_url', null)
+        ->assertJsonPath('categories.0.id', $action->id)
+        // Genres, themes and the demographic
+        ->assertJsonPath('unmatched_genres', ['Award Winning', 'Drama', 'Suspense', 'Gore', 'Military', 'Survival', 'Shounen']);
+});
+
+test('a MAL anime page without an English title or synonyms keeps its own title, and a Japanese one in Latin script', function () {
+    actingAsAdmin();
+    Http::fake(['mal.test/anime/50265' => Http::response(malAnimePage(50265))]);
+
+    getJson(showTemplateUrl('https://www.mal.test/anime/50265'))
+        ->assertOk()
+        ->assertJsonPath('titles', ['Spy x Family', 'SPY×FAMILY'])
+        ->assertJsonPath('card_image_url', 'https://cdn.myanimelist.net/images/anime/1441/122795l.jpg');
+});
+
+test('a MAL synopsis keeps its paragraphs, and a missing one stays empty', function () {
+    actingAsAdmin();
+    Http::fake(['mal.test/anime/50265' => Http::sequence()
+        ->push(malAnimePage(50265, fn (string $page): string => preg_replace(
+            '#<p itemprop="description">.*?</p>#s',
+            "<p itemprop=\"description\">First part.<br />\n<br />\nSecond &amp; last part.<br />\n<br />\n(Source: Somewhere)</p>",
+            $page,
+        )))
+        ->push(malAnimePage(50265, fn (string $page): string => preg_replace(
+            '#<p itemprop="description">.*?</p>#s',
+            '<p itemprop="description">No synopsis information has been added to this title.</p>',
+            $page,
+        ))),
+    ]);
+
+    getJson(showTemplateUrl('https://mal.test/anime/50265'))
+        ->assertOk()
+        ->assertJsonPath('description', "First part.\n\nSecond & last part.\n\n(Source: Somewhere)");
+    getJson(showTemplateUrl('https://mal.test/anime/50265'))->assertOk()->assertJsonPath('description', null);
+});
+
+test('links MAL does not read as an anime page are turned away', function (string $url) {
+    actingAsAdmin();
+
+    getJson(showTemplateUrl($url))
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.url.0.code', 'unsupported_show_template_url');
+    Http::assertNothingSent();
+})->with([
+    'a manga page' => ['https://mal.test/manga/23390/Shingeki_no_Kyojin'],
+    'the search page' => ['https://mal.test/search/all?q=spy'],
+    'an anime without an id' => ['https://mal.test/anime/season'],
+]);
+
+test('an anime page MAL does not have is not found', function () {
+    actingAsAdmin();
+    Http::fake(['mal.test/*' => Http::response('<html>404</html>', 404)]);
+
+    getJson(showTemplateUrl('https://mal.test/anime/99999999'))
+        ->assertNotFound()
+        ->assertExactJson(['code' => 'show_template_not_found', 'params' => []]);
+});
+
+test('when MAL can not answer the template is unavailable', function (callable $answer) {
+    actingAsAdmin();
+    Http::fake(['mal.test/*' => $answer()]);
+
+    getJson(showTemplateUrl('https://mal.test/anime/16498'))
+        ->assertStatus(502)
+        ->assertExactJson(['code' => 'show_template_unavailable', 'params' => []]);
+})->with([
+    'no connection' => fn () => fn () => Http::failedConnection(),
+    'server error' => fn () => fn () => Http::response('error code: 502', 502),
+    'a page without a title' => fn () => fn () => Http::response('<html><body>Just a moment...</body></html>'),
 ]);

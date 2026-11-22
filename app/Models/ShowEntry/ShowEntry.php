@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['show_id', 'type', 'name', 'sort_order'])]
+#[Fillable(['show_id', 'type', 'name', 'url', 'sort_order'])]
 class ShowEntry extends Model
 {
     /** @use HasFactory<ShowEntryFactory> */

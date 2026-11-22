@@ -16,6 +16,7 @@ class UpdateShowEntryData extends Data
         public ShowEntry $showEntry,
         public ShowEntryType|Optional $type,
         public string|Optional $name,
+        public string|Optional|null $url,
         public int|Optional $sortOrder,
     ) {}
 }

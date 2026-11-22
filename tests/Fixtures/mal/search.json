@@ -1,0 +1,57 @@
+{
+  "categories": [
+    {
+      "type": "anime",
+      "items": [
+        {
+          "id": 59027,
+          "type": "anime",
+          "name": "Spy x Family Season 3",
+          "url": "https://myanimelist.net/anime/59027/Spy_x_Family_Season_3",
+          "image_url": "https://cdn.myanimelist.net/r/116x180/images/anime/1697/151793.jpg?s=cdf1b0f6f33a5d4cbc96404c7185125d",
+          "thumbnail_url": "https://cdn.myanimelist.net/r/116x76/images/anime/1697/151793.jpg?s=f4287a7c20c80c9e2bee195c4eeb7630",
+          "payload": {
+            "media_type": "TV",
+            "start_year": 2025,
+            "aired": "Oct 4, 2025 to Dec 27, 2025",
+            "score": "8.21",
+            "status": "Finished Airing"
+          },
+          "es_score": 275.39435
+        },
+        {
+          "id": 50265,
+          "type": "anime",
+          "name": "Spy x Family",
+          "url": "https://myanimelist.net/anime/50265/Spy_x_Family",
+          "image_url": "https://cdn.myanimelist.net/r/116x180/images/anime/1441/122795.jpg?s=d29759cb0589c6ef9b7edf698f72367b",
+          "thumbnail_url": "https://cdn.myanimelist.net/r/116x76/images/anime/1441/122795.jpg?s=95ee486d55b0548371cb494a38ebc872",
+          "payload": {
+            "media_type": "TV",
+            "start_year": 2022,
+            "aired": "Apr 9, 2022 to Jun 25, 2022",
+            "score": "8.40",
+            "status": "Finished Airing"
+          },
+          "es_score": 239.4175
+        },
+        {
+          "id": 50602,
+          "type": "anime",
+          "name": "Spy x Family Part 2",
+          "url": "https://myanimelist.net/anime/50602/Spy_x_Family_Part_2",
+          "image_url": "https://cdn.myanimelist.net/r/116x180/images/anime/1111/127508.jpg?s=4c57370d6ce7e1c34852fc328aaa72f3",
+          "thumbnail_url": "https://cdn.myanimelist.net/r/116x76/images/anime/1111/127508.jpg?s=a9b953af16021a9ad6037e04cc501a9c",
+          "payload": {
+            "media_type": "TV",
+            "start_year": 2022,
+            "aired": "Oct 1, 2022 to Dec 24, 2022",
+            "score": "8.19",
+            "status": "Finished Airing"
+          },
+          "es_score": 206.21144
+        }
+      ]
+    }
+  ]
+}

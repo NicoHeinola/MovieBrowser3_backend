@@ -21,6 +21,7 @@ class ShowEntryResource extends JsonResource
             'show_id' => $this->show_id,
             'type' => $this->type,
             'name' => $this->name,
+            'url' => $this->url,
             'sort_order' => $this->sort_order,
             'watch_status' => ShowEntryWatchStatusResource::make($this->whenLoaded('watchStatuses', fn () => $this->watchStatuses->first())),
             'episodes' => EpisodeResource::collection($this->whenLoaded('episodes')),

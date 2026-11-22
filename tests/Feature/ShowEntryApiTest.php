@@ -290,3 +290,54 @@ test('a rolled back entry rename moves every video back', function () {
         ->and(File::isDirectory("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Renamed"))->toBeFalse()
         ->and($entry->fresh()->name)->toBe('Season 1');
 });
+
+test('an entry can hold a link to an outside page, and starts without one', function () {
+    actingAsAdmin();
+    $show = Show::factory()->create();
+
+    $withoutLink = postJson("/api/v1/shows/{$show->id}/entries", ['type' => 'season', 'name' => 'Season 1', 'sort_order' => 1])
+        ->assertCreated()
+        ->assertJsonPath('url', null);
+
+    postJson("/api/v1/shows/{$show->id}/entries", [
+        'type' => 'season',
+        'name' => 'Season 2',
+        'sort_order' => 2,
+        'url' => 'https://myanimelist.net/anime/25777/Shingeki_no_Kyojin_Season_2',
+    ])
+        ->assertCreated()
+        ->assertJsonPath('url', 'https://myanimelist.net/anime/25777/Shingeki_no_Kyojin_Season_2');
+
+    getJson("/api/v1/entries/{$withoutLink->json('id')}")->assertOk()->assertJsonPath('url', null);
+    assertDatabaseHas('show_entries', ['name' => 'Season 2', 'url' => 'https://myanimelist.net/anime/25777/Shingeki_no_Kyojin_Season_2']);
+});
+
+test('updating an entry changes or clears its link, and leaves it alone when left out', function () {
+    actingAsAdmin();
+    $entry = ShowEntry::factory()->create(['url' => 'https://myanimelist.net/anime/16498']);
+
+    patchJson("/api/v1/entries/{$entry->id}", ['sort_order' => 7])
+        ->assertOk()
+        ->assertJsonPath('url', 'https://myanimelist.net/anime/16498');
+
+    patchJson("/api/v1/entries/{$entry->id}", ['url' => 'https://myanimelist.net/anime/25777'])
+        ->assertOk()
+        ->assertJsonPath('url', 'https://myanimelist.net/anime/25777');
+
+    patchJson("/api/v1/entries/{$entry->id}", ['url' => null])->assertOk()->assertJsonPath('url', null);
+    assertDatabaseHas('show_entries', ['id' => $entry->id, 'url' => null]);
+});
+
+test('an entry link must be a web address', function (mixed $url) {
+    actingAsAdmin();
+    $entry = ShowEntry::factory()->create();
+
+    patchJson("/api/v1/entries/{$entry->id}", ['url' => $url])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['url']);
+})->with([
+    'not a link' => ['myanimelist anime 16498'],
+    'another scheme' => ['javascript:alert(1)'],
+    'too long' => ['https://myanimelist.net/'.str_repeat('a', 2048)],
+    'not text' => [[1]],
+]);

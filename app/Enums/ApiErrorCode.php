@@ -15,4 +15,5 @@ enum ApiErrorCode: string
     case TorrentSiteUnavailable = 'torrent_site_unavailable';
     case ShowTemplateNotFound = 'show_template_not_found';
     case ShowTemplateUnavailable = 'show_template_unavailable';
+    case MalUnavailable = 'mal_unavailable';
 }

@@ -18,6 +18,7 @@ class CreateShowEntryAction
             return $show->entries()->create([
                 'type' => $data->type,
                 'name' => $data->name,
+                'url' => $data->url,
                 'sort_order' => $data->sortOrder,
             ]);
         });

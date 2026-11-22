@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardStatsController;
 use App\Http\Controllers\EpisodeController;
 use App\Http\Controllers\EpisodePlaybackController;
+use App\Http\Controllers\MalAnimeController;
 use App\Http\Controllers\NekoBtTorrentController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SetupCheckController;
@@ -77,6 +78,7 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('website-tags', WebsiteTagController::class);
 
         Route::apiResource('nekobt-torrents', NekoBtTorrentController::class)->only(['index']);
+        Route::apiResource('mal-anime', MalAnimeController::class)->only(['index']);
         // A show described by an outside page, for the show editor to start from; nothing is saved
         Route::apiSingleton('show-template', ShowTemplateController::class)->only(['show']);
 
