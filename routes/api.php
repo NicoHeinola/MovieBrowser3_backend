@@ -18,6 +18,7 @@ use App\Http\Controllers\ShowEntryController;
 use App\Http\Controllers\ShowEntryWatchStatusController;
 use App\Http\Controllers\ShowLinkController;
 use App\Http\Controllers\ShowSectionController;
+use App\Http\Controllers\ShowTemplateController;
 use App\Http\Controllers\ShowTitleController;
 use App\Http\Controllers\ShowWatchProgressStreamController;
 use App\Http\Controllers\UserController;
@@ -76,6 +77,8 @@ Route::prefix('v1')->group(function (): void {
         Route::apiResource('website-tags', WebsiteTagController::class);
 
         Route::apiResource('nekobt-torrents', NekoBtTorrentController::class)->only(['index']);
+        // A show described by an outside page, for the show editor to start from; nothing is saved
+        Route::apiSingleton('show-template', ShowTemplateController::class)->only(['show']);
 
         Route::apiResource('users', UserController::class)->except(['update']);
 

@@ -32,6 +32,7 @@ enum ValidationErrorCode: string
 
     case AbsolutePath = 'absolute_path';
     case UniqueIgnoringCase = 'unique_ignoring_case';
+    case UnsupportedShowTemplateUrl = 'unsupported_show_template_url';
 
     case InvalidCredentials = 'invalid_credentials';
     case LastAdmin = 'last_admin';

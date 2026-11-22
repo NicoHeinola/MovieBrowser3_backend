@@ -13,4 +13,6 @@ enum ApiErrorCode: string
     case VideoFileCheckRunning = 'video_file_check_running';
     case VideoDurationScanRunning = 'video_duration_scan_running';
     case TorrentSiteUnavailable = 'torrent_site_unavailable';
+    case ShowTemplateNotFound = 'show_template_not_found';
+    case ShowTemplateUnavailable = 'show_template_unavailable';
 }

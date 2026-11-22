@@ -1,0 +1,50 @@
+{
+  "error": false,
+  "data": {
+    "id": "m134",
+    "title": "Saga of Tanya the Evil - the Movie -",
+    "year": 2019,
+    "genres": [
+      "Action",
+      "Fantasy"
+    ],
+    "overview": "In 1926, Tanya and her battalion return home from defeating remnants of the Republic's army. However, when they arrive they receive word of a massive mobilization near the border with the Russy Federa",
+    "status": "ended",
+    "banner_url": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100878-npKVJvggmK6a.jpg",
+    "runtime": 98,
+    "tmdbId": 553839,
+    "imdbId": "tt9507276",
+    "alternate_titles": [
+      "Youjo Senki Movie",
+      "Gekijouban Youjo Senki",
+      "Военная хроника маленькой девочки: фильм",
+      "Yōjo Senki Movie",
+      "Колдунья в погонах. Фильм",
+      "谭雅战记 剧场版",
+      "Saga of Tanya the Evil: La película"
+    ],
+    "anilist": {
+      "primary": {
+        "id": 100878,
+        "title": {
+          "romaji": "Youjo Senki Movie",
+          "english": "Saga of Tanya the Evil - the Movie -",
+          "native": "劇場版 幼女戦記",
+          "synonyms": [
+            "Колдунья в погонах. Фильм"
+          ]
+        },
+        "description": "In 1926, Tanya and her battalion return home from defeating remnants of the Republic's army. However, when they arrive they receive word of a massive mobilizati",
+        "banner_image": "https://s4.anilist.co/file/anilistcdn/media/anime/banner/100878-Lslq3VqoNanU.jpg",
+        "cover_image": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx100878-npKVJvggmK6a.jpg",
+        "format": "MOVIE"
+      }
+    },
+    "notes": null,
+    "series": {
+      "media_id": "s1453",
+      "title": "Saga of Tanya the Evil"
+    },
+    "episodes": []
+  }
+}
