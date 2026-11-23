@@ -41,5 +41,10 @@ enum ValidationErrorCode: string
     case VideoBasePathNeedsRelocation = 'video_base_path_needs_relocation';
     case VideoBasePathUnavailable = 'video_base_path_unavailable';
 
+    case FileIndexInvalid = 'file_index_invalid';
+    case FileAlreadyPicked = 'file_already_picked';
+    case EpisodeNotInShow = 'episode_not_in_show';
+    case EpisodeAlreadyDownloading = 'episode_already_downloading';
+    case NotEnoughDiskSpace = 'not_enough_disk_space';
     case Invalid = 'invalid';
 }

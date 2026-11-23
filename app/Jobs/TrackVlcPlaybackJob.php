@@ -3,12 +3,12 @@
 namespace App\Jobs;
 
 use App\Actions\Episode\VideoFile\ResolveEpisodeFromVideoFileAction;
-use App\Actions\EpisodePlayback\RequestVlcStatusAction;
 use App\Actions\ShowEntryWatchStatus\CompleteEntryOnLastEpisodeAction;
 use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
 use App\Dtos\ShowWatchProgress\WatchPositionData;
 use App\Models\User\User;
+use App\Services\Vlc\VlcService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Foundation\Queue\Queueable;
@@ -39,12 +39,12 @@ class TrackVlcPlaybackJob implements ShouldQueue
     }
 
     public function handle(
-        RequestVlcStatusAction $requestVlcStatusAction,
+        VlcService $vlcService,
         ResolveEpisodeFromVideoFileAction $resolveEpisodeFromVideoFileAction,
         UpdateShowWatchProgressAction $updateShowWatchProgressAction,
         CompleteEntryOnLastEpisodeAction $completeEntryOnLastEpisodeAction,
     ): void {
-        $status = $requestVlcStatusAction->handle($this->vlc);
+        $status = $vlcService->getStatus($this->vlc);
 
         // VLC no longer answers: the window was closed, so there is nothing left to follow.
         if ($status === null) {

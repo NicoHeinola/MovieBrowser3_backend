@@ -17,4 +17,7 @@ enum ApiErrorCode: string
     case ShowTemplateUnavailable = 'show_template_unavailable';
     case MalUnavailable = 'mal_unavailable';
     case QBittorrentUnavailable = 'qbittorrent_unavailable';
+    case DownloadClientNotConfigured = 'download_client_not_configured';
+    case DownloadExists = 'download_exists';
+    case DownloadNotInClient = 'download_not_in_client';
 }

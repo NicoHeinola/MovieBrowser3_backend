@@ -59,6 +59,14 @@ arch('services only talk to their outside system')
     ->expect('App\\Services')
     ->not->toUse(['App\\Actions', 'App\\Models', 'App\\Http']);
 
+arch('outside systems are reached through a service\'s Saloon connector')
+    ->expect('Saloon')
+    ->toOnlyBeUsedIn('App\\Services');
+
+arch('nothing calls an outside system with the plain HTTP client')
+    ->expect(['Illuminate\\Support\\Facades\\Http', 'Illuminate\\Http\\Client'])
+    ->not->toBeUsed();
+
 arch('enums are string-backed')
     ->expect('App\Enums')
     ->toBeStringBackedEnums();

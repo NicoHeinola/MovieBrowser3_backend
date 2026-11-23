@@ -8,6 +8,8 @@ use App\Enums\SetupCheckCode;
 use App\Enums\VlcLaunchCode;
 use App\Exceptions\VlcLaunchException;
 use App\Models\Setting\Setting;
+use App\Services\Vlc\VlcService;
+use App\Services\VlcBridge\VlcBridgeService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Sleep;
@@ -31,8 +33,8 @@ class OpenVlcPlaylistAction
     private const int PORT_RANGE_END = 49151;
 
     public function __construct(
-        private readonly RequestVlcStatusAction $requestVlcStatusAction,
-        private readonly RequestVlcBridgeAction $requestVlcBridgeAction,
+        private readonly VlcService $vlcService,
+        private readonly VlcBridgeService $vlcBridgeService,
         private readonly ResolveEphemeralPortRangeAction $resolveEphemeralPortRangeAction,
     ) {}
 
@@ -64,7 +66,7 @@ class OpenVlcPlaylistAction
                 ? array_filter(['command' => 'in_play', 'input' => $input, 'option' => $startSeconds > 0 ? "start-time={$startSeconds}" : null])
                 : ['command' => 'in_enqueue', 'input' => $input];
 
-            $status = $this->requestVlcStatusAction->handle($vlc, $command);
+            $status = $this->vlcService->getStatus($vlc, $command);
 
             if ($status === null) {
                 throw new VlcLaunchException('VLC was closed before the playlist was built.', VlcLaunchCode::VlcClosedEarly);
@@ -100,11 +102,7 @@ class OpenVlcPlaylistAction
     private function launch(string $binary, VlcConnectionData $vlc): void
     {
         if ($this->usesBridge()) {
-            $this->requestVlcBridgeAction->handle('launch', [
-                'binary' => $binary,
-                'port' => $vlc->port,
-                'password' => $vlc->password,
-            ]);
+            $this->vlcBridgeService->launch($binary, $vlc->port, $vlc->password);
 
             return;
         }
@@ -133,7 +131,7 @@ class OpenVlcPlaylistAction
     private function waitUntilReady(VlcConnectionData $vlc): void
     {
         for ($attempt = 0; $attempt < self::STARTUP_ATTEMPTS; $attempt++) {
-            if ($this->requestVlcStatusAction->handle($vlc) !== null) {
+            if ($this->vlcService->getStatus($vlc) !== null) {
                 return;
             }
 
@@ -184,7 +182,7 @@ class OpenVlcPlaylistAction
     private function toWindowsPaths(array $paths): array
     {
         if ($this->usesBridge()) {
-            return $this->requestVlcBridgeAction->handle('windows-paths', ['paths' => $paths])['paths'];
+            return $this->vlcBridgeService->toWindowsPaths($paths);
         }
 
         return array_map(function (string $path): string {

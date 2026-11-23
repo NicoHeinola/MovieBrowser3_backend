@@ -1,0 +1,23 @@
+[
+    {
+        "index": 0,
+        "name": "[anonymous] Mushoku Tensei (2021) S01/[anonymous] Mushoku Tensei S01E01 [1715F359].mkv",
+        "size": 2000000000,
+        "progress": 0.5,
+        "priority": 1
+    },
+    {
+        "index": 1,
+        "name": "[anonymous] Mushoku Tensei (2021) S01/[anonymous] Mushoku Tensei S01E02 [0225665E].mkv",
+        "size": 2000000000,
+        "progress": 0,
+        "priority": 1
+    },
+    {
+        "index": 2,
+        "name": "[anonymous] Mushoku Tensei (2021) S01/Extras/NCOP1.mkv",
+        "size": 300000000,
+        "progress": 0,
+        "priority": 1
+    }
+]

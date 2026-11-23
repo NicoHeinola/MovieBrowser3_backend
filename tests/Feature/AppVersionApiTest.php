@@ -1,16 +1,16 @@
 <?php
 
 use App\Models\User\User;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
+use Saloon\Http\Faking\MockResponse;
+use Saloon\Laravel\Facades\Saloon;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\travel;
 use function Pest\Laravel\withToken;
 
 beforeEach(function () {
-    Http::preventStrayRequests();
+    Saloon::fake([]);
     config([
         'releases.backend_repo_url' => 'https://github.com/owner/backend',
         'releases.frontend_repo_url' => 'git@github.com:owner/frontend.git',
@@ -19,12 +19,12 @@ beforeEach(function () {
 
 function fakeGithubReleases(string $backendTag, string $frontendTag): void
 {
-    Http::fake([
-        'api.github.com/repos/owner/backend/releases/latest' => Http::response([
+    Saloon::fake([
+        'api.github.com/repos/owner/backend/releases/latest' => MockResponse::make([
             'tag_name' => $backendTag,
             'html_url' => "https://github.com/owner/backend/releases/tag/{$backendTag}",
         ]),
-        'api.github.com/repos/owner/frontend/releases/latest' => Http::response([
+        'api.github.com/repos/owner/frontend/releases/latest' => MockResponse::make([
             'tag_name' => $frontendTag,
             'html_url' => "https://github.com/owner/frontend/releases/tag/{$frontendTag}",
         ]),
@@ -42,7 +42,7 @@ test('the app version requires an admin', function () {
     withToken(User::factory()->create()->createToken('test-token')->plainTextToken);
 
     getJson('/api/v1/app-version')->assertForbidden();
-    Http::assertNothingSent();
+    Saloon::assertNothingSent();
 });
 
 test('an admin can read the running version and the latest releases', function () {
@@ -73,26 +73,26 @@ test('github answers are cached between requests', function () {
     getJson('/api/v1/app-version')->assertOk();
     getJson('/api/v1/app-version')->assertOk()->assertJsonPath('backend.latest', '9.0.0');
 
-    Http::assertSentCount(2);
+    Saloon::assertSentCount(2);
 
     // Past the cache time GitHub is asked again
     travel(config('releases.cache_seconds') + 1)->seconds();
     getJson('/api/v1/app-version')->assertOk();
 
-    Http::assertSentCount(4);
+    Saloon::assertSentCount(4);
 });
 
 test('a failed github check returns no latest release, and is retried sooner', function () {
-    // Earlier Http::fake stubs win over later ones, so one fake switches from failing to answering
+    // One fake switches from failing to answering
     $online = false;
-    Http::fake([
+    Saloon::fake([
         // By reference: an arrow function would freeze $online at false
         'api.github.com/repos/owner/backend/*' => function () use (&$online) {
             return $online
-                ? Http::response(['tag_name' => 'v9.0.0', 'html_url' => 'https://github.com/owner/backend/releases/tag/v9.0.0'])
-                : Http::response(['message' => 'rate limited'], 403);
+                ? MockResponse::make(['tag_name' => 'v9.0.0', 'html_url' => 'https://github.com/owner/backend/releases/tag/v9.0.0'])
+                : MockResponse::make(['message' => 'rate limited'], 403);
         },
-        'api.github.com/repos/owner/frontend/*' => fn () => throw new ConnectionException('offline'),
+        'api.github.com/repos/owner/frontend/*' => saloonConnectionRefused(),
     ]);
     actingAsAdmin();
 
@@ -106,7 +106,7 @@ test('a failed github check returns no latest release, and is retried sooner', f
 
     // The failure is cached too, so an offline install doesn't call GitHub on every request
     getJson('/api/v1/app-version')->assertOk();
-    Http::assertSentCount(1);
+    Saloon::assertSentCount(1);
 
     travel(config('releases.failure_cache_seconds') + 1)->seconds();
     $online = true;
@@ -123,7 +123,7 @@ test('a repo that is not on GitHub is not checked', function () {
         ->assertJsonPath('backend.latest', null)
         ->assertJsonPath('frontend.latest', '8.1.0');
 
-    Http::assertSentCount(1);
+    Saloon::assertSentCount(1);
 });
 
 test('a release tag that is not vX.Y.Z counts as no release', function () {

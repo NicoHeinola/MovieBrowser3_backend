@@ -8,16 +8,19 @@ use App\Dtos\ShowTemplate\ShowTemplateData;
 use App\Exceptions\ShowTemplateNotFoundException;
 use App\Exceptions\ShowTemplateUnavailableException;
 use App\Exceptions\TorrentSiteUnavailableException;
+use App\Services\NekoBt\Requests\GetMediaRequest;
+use App\Services\NekoBt\Requests\SearchTorrentsRequest;
 use App\Services\ShowTemplateSource;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Saloon\Exceptions\Request\FatalRequestException;
+use Saloon\Http\Request;
+use Saloon\Http\Response;
 
 /**
  * Talks to nekoBT, an anime torrent tracker, through its public JSON API: it searches its torrents, and describes the
  * show behind one of its media pages (`/media/s1453` for a series, `/media/m134` for a movie) as a show template.
- * The mappers next to it translate nekoBT's answers; this class only asks and checks the answers.
+ * The connector and requests next to it describe the calls and the mappers translate nekoBT's answers; this class only
+ * asks and checks the answers.
  */
 class NekoBtService implements ShowTemplateSource
 {
@@ -36,7 +39,7 @@ class NekoBtService implements ShowTemplateSource
      */
     public function getTorrents(NekoBtSearchData $search): NekoBtTorrentPageData
     {
-        $response = $this->request('/api/v1/torrents/search', $this->torrents->searchQuery($search, self::PER_PAGE));
+        $response = $this->send(new SearchTorrentsRequest($this->torrents->searchQuery($search, self::PER_PAGE)));
 
         if ($response === null || !$this->isAnswer($response) || !is_array($response->json('data.results'))) {
             $this->logFailure($response);
@@ -55,7 +58,7 @@ class NekoBtService implements ShowTemplateSource
     public function getShowTemplate(string $url): ShowTemplateData
     {
         $mediaId = $this->mediaId($url) ?? throw new ShowTemplateNotFoundException;
-        $response = $this->request("/api/v1/media/{$mediaId}");
+        $response = $this->send(new GetMediaRequest($mediaId));
 
         // A mistyped or removed id is the user's to fix, not nekoBT being down
         if ($response?->status() === 404) {
@@ -85,16 +88,15 @@ class NekoBtService implements ShowTemplateSource
     }
 
     /**
-     * Sends a GET to the API.
+     * Sends a request to the API.
      *
-     * @param  array<string, string|int>  $query
      * @return Response|null The answer, or null when nekoBT didn't answer (logged)
      */
-    private function request(string $path, array $query = []): ?Response
+    private function send(Request $request): ?Response
     {
         try {
-            return Http::acceptJson()->timeout(config('nekobt.timeout_seconds'))->get(config('nekobt.base_url').$path, $query);
-        } catch (ConnectionException $exception) {
+            return (new NekoBtConnector)->send($request);
+        } catch (FatalRequestException $exception) {
             Log::warning("nekoBT did not answer: {$exception->getMessage()}");
 
             return null;
@@ -103,7 +105,7 @@ class NekoBtService implements ShowTemplateSource
 
     /**
      * Whether a response is a successful API answer. The API wraps every answer in `{ error, data }` and reports
-     * failures as `{ error: true, message }`.
+     * failures as `{ error: true, message }`. A bot check answers with an HTML page instead.
      */
     private function isAnswer(Response $response): bool
     {

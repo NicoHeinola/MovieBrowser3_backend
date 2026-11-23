@@ -11,4 +11,6 @@ enum QBittorrentFailure: string
     case LoginFailed = 'login_failed';
     /** qBittorrent bans an address for a while after too many failed logins */
     case Banned = 'banned';
+    /** qBittorrent turned a torrent down, such as a link that isn't a torrent */
+    case TorrentRejected = 'torrent_rejected';
 }

@@ -26,6 +26,7 @@ class EpisodeResource extends JsonResource
             'video_duration_seconds' => $this->video_duration_seconds,
             'sequence_number' => $this->sequence_number,
             'file_path' => ResolveEpisodeVideoPathAction::run($this->resource),
+            'download' => EpisodeDownloadResource::make($this->whenLoaded('downloadPick')),
         ];
     }
 }

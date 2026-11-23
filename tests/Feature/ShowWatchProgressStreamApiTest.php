@@ -13,9 +13,10 @@ use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Sleep;
+use Saloon\Http\Faking\MockResponse;
+use Saloon\Laravel\Facades\Saloon;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\withToken;
@@ -137,7 +138,7 @@ test('the entry completed by the vlc job is sent', function () {
     $episode = Episode::factory()->create();
 
     beforeStreamPoll(1, function () use ($user, $episode): void {
-        Http::fake(['127.0.0.1:*' => Http::response([
+        Saloon::fake(['127.0.0.1:*' => MockResponse::make([
             'state' => 'playing',
             'time' => 1400,
             'length' => 1440,
@@ -183,7 +184,7 @@ test('vlc moving to the next episode sends the show again', function () {
     beforeStreamPoll(1, fn () => UpdateShowWatchProgressAction::run($first, $user));
     // The tracking job run by the queue worker finds VLC playing the second episode.
     beforeStreamPoll(3, function () use ($user, $second): void {
-        Http::fake(['127.0.0.1:*' => Http::response([
+        Saloon::fake(['127.0.0.1:*' => MockResponse::make([
             'state' => 'playing',
             'information' => ['category' => ['meta' => ['filename' => "{$second->id}_episode.mkv"]]],
         ])]);

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Episode;
 
+use App\Actions\Download\ReleaseEpisodeDownloadsAction;
 use App\Actions\Episode\VideoFile\DeleteVideoFileAction;
 use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Models\Episode\Episode;
@@ -15,16 +16,20 @@ class DeleteEpisodeVideosAction
     public function __construct(
         private readonly DeleteVideoFileAction $deleteVideoFileAction,
         private readonly ResolveEpisodeVideoPathAction $resolveEpisodeVideoPathAction,
+        private readonly ReleaseEpisodeDownloadsAction $releaseEpisodeDownloadsAction,
     ) {}
 
     /**
      * Resolve paths now, while the episode relations still exist, and delete the files only
-     * once the surrounding transaction commits so a rollback keeps them on disk.
+     * once the surrounding transaction commits so a rollback keeps them on disk. Torrent files still
+     * downloading for the episodes stop then too.
      *
      * @param  iterable<Episode>  $episodes
      */
     public function handle(iterable $episodes): void
     {
+        $this->releaseEpisodeDownloadsAction->handle($episodes);
+
         $videoPaths = collect($episodes)
             ->filter(fn (Episode $episode): bool => $episode->filename !== '')
             ->map(fn (Episode $episode): string => $this->resolveEpisodeVideoPathAction->handle($episode))

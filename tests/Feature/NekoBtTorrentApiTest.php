@@ -2,16 +2,17 @@
 
 use App\Dtos\NekoBt\NekoBtSearchData;
 use App\Models\User\User;
-use Illuminate\Http\Client\Request;
+use App\Services\NekoBt\Requests\SearchTorrentsRequest;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Saloon\Http\Faking\MockResponse;
+use Saloon\Laravel\Facades\Saloon;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\withToken;
 
 beforeEach(function () {
-    Http::preventStrayRequests();
+    Saloon::fake([]);
     config(['nekobt.base_url' => 'https://nekobt.test']);
 });
 
@@ -34,12 +35,12 @@ test('nekoBT torrent search requires an admin', function () {
     withToken(User::factory()->create()->createToken('test-token')->plainTextToken);
 
     getJson('/api/v1/nekobt-torrents')->assertForbidden();
-    Http::assertNothingSent();
+    Saloon::assertNothingSent();
 });
 
 test('an admin gets a page of torrents', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer())]);
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer())]);
 
     getJson('/api/v1/nekobt-torrents?filter[search]=tanya the evil')
         ->assertOk()
@@ -85,22 +86,22 @@ test('an admin gets a page of torrents', function () {
 
 test('the search defaults to the biggest torrents first', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer())]);
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer())]);
 
     getJson('/api/v1/nekobt-torrents')->assertOk();
 
-    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://nekobt.test/api/v1/torrents/search?query=&sort_by=filesize&limit=50&offset=0');
+    expect(saloonSentUrls())->toContain('https://nekobt.test/api/v1/torrents/search?query=&sort_by=filesize&limit=50&offset=0');
 });
 
 test('the sort and page reach nekoBT in its own words', function (string $sort, string $sortBy) {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer())]);
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer())]);
 
     getJson("/api/v1/nekobt-torrents?filter[search]=one piece&sort={$sort}&page[number]=3")
         ->assertOk()
         ->assertJsonPath('meta.current_page', 3);
 
-    Http::assertSent(fn (Request $request): bool => $request->url() === "https://nekobt.test/api/v1/torrents/search?query=one%20piece&sort_by={$sortBy}&limit=50&offset=100");
+    expect(saloonSentUrls())->toContain("https://nekobt.test/api/v1/torrents/search?query=one%20piece&sort_by={$sortBy}&limit=50&offset=100");
 })->with([
     ['best', 'best'],
     ['-date', 'latest'],
@@ -114,7 +115,7 @@ test('the sort and page reach nekoBT in its own words', function (string $sort, 
 
 test('the filters reach nekoBT in its own words', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer())]);
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer())]);
 
     $query = http_build_query([
         'filter' => [
@@ -131,40 +132,36 @@ test('the filters reach nekoBT in its own words', function () {
 
     getJson("/api/v1/nekobt-torrents?{$query}")->assertOk();
 
-    Http::assertSent(function (Request $request): bool {
-        parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $sent);
-
-        return $sent === [
-            'query' => '',
-            'sort_by' => 'filesize',
-            'limit' => '50',
-            'offset' => '0',
-            'batch' => 'true',
-            'levels' => '3,2',
-            'video_type' => '14,13',
-            'video_codec' => '2',
-            'audio_lang' => 'es-419',
-            'otl' => 'true',
-            'mtl' => 'false',
-            'hardsub' => 'false',
-        ];
-    });
+    expect(array_map(strval(...), saloonSent(SearchTorrentsRequest::class)->sole()['request']->query()->all()))->toBe([
+        'query' => '',
+        'sort_by' => 'filesize',
+        'limit' => '50',
+        'offset' => '0',
+        'batch' => 'true',
+        'levels' => '3,2',
+        'video_type' => '14,13',
+        'video_codec' => '2',
+        'audio_lang' => 'es-419',
+        'otl' => 'true',
+        'mtl' => 'false',
+        'hardsub' => 'false',
+    ]);
 });
 
 test('filtered searches are cached apart', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer())]);
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer())]);
 
     getJson('/api/v1/nekobt-torrents?filter[batch]=true')->assertOk();
     getJson('/api/v1/nekobt-torrents?filter[batch]=false')->assertOk();
     getJson('/api/v1/nekobt-torrents?filter[batch]=true')->assertOk();
 
-    Http::assertSentCount(2);
+    Saloon::assertSentCount(2);
 });
 
 test('the last page has no next link', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer(function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer(function (array $answer): array {
         $answer['data']['more'] = false;
 
         return $answer;
@@ -175,7 +172,7 @@ test('the last page has no next link', function () {
 
 test('hidden and deleted uploads are left out', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer(function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer(function (array $answer): array {
         $answer['data']['results'][0]['hidden'] = true;
         $answer['data']['results'][1]['deleted'] = 1767019033060;
 
@@ -190,7 +187,7 @@ test('hidden and deleted uploads are left out', function () {
 
 test('an upload without groups takes its group from the title', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer(function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer(function (array $answer): array {
         $answer['data']['results'][0]['groups'] = [];
         $answer['data']['results'][1]['groups'] = [];
         $answer['data']['results'][1]['title'] = 'Saga of Tanya the Evil - The Movie';
@@ -206,7 +203,7 @@ test('an upload without groups takes its group from the title', function () {
 
 test('details nekoBT leaves out or numbers it does not know come back empty', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer(function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer(function (array $answer): array {
         $answer['data']['results'][0]['level'] = 9;
         $answer['data']['results'][0]['video_type'] = 99;
         unset($answer['data']['results'][0]['video_codec'], $answer['data']['results'][0]['audio_lang']);
@@ -226,7 +223,7 @@ test('details nekoBT leaves out or numbers it does not know come back empty', fu
 
 test('private uploads without a public magnet are left out', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer(function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer(function (array $answer): array {
         $answer['data']['results'][2]['magnet'] = null;
         $answer['data']['results'][2]['private_magnet'] = 'magnet:?xt=urn:btih:private';
 
@@ -238,7 +235,7 @@ test('private uploads without a public magnet are left out', function () {
 
 test('missing details get defaults, and results missing what every torrent has are skipped', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer(function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer(function (array $answer): array {
         unset($answer['data']['more']);
         unset(
             $answer['data']['results'][0]['comment_count'],
@@ -272,7 +269,7 @@ test('missing details get defaults, and results missing what every torrent has a
 
 test('the deepest page has no next link, even when nekoBT has more', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer())]);
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer())]);
 
     getJson('/api/v1/nekobt-torrents?page[number]=100')
         ->assertOk()
@@ -282,7 +279,7 @@ test('the deepest page has no next link, even when nekoBT has more', function ()
 
 test('a cached page from before an update changed its shape is fetched again', function (callable $staleCache) {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer())]);
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer())]);
     $key = 'torrents.nekobt.'.hash('xxh128', (string) json_encode(NekoBtSearchData::fromQuery([])->toArray()));
 
     // A fresh page as the cache holds it, changed the way an update would have outdated it
@@ -291,7 +288,7 @@ test('a cached page from before an update changed its shape is fetched again', f
 
     getJson('/api/v1/nekobt-torrents')->assertOk()->assertJsonCount(3, 'data');
 
-    Http::assertSentCount(2);
+    Saloon::assertSentCount(2);
 })->with([
     'a missing field' => fn () => fn (array $page): array => ['torrents' => [['id' => '1']], 'page' => 1],
     'a renamed enum case' => fn () => function (array $page): array {
@@ -308,7 +305,7 @@ test('a cached page from before an update changed its shape is fetched again', f
 
 test('a torrent without a media page has no media link', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer(function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer(function (array $answer): array {
         $answer['data']['results'][0]['media_id'] = null;
 
         return $answer;
@@ -319,21 +316,21 @@ test('a torrent without a media page has no media link', function () {
 
 test('when nekoBT can not answer the search is unavailable', function (callable $answer) {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => $answer()]);
+    Saloon::fake(['nekobt.test/*' => $answer()]);
 
     getJson('/api/v1/nekobt-torrents')
         ->assertStatus(502)
         ->assertExactJson(['code' => 'torrent_site_unavailable', 'params' => ['site' => 'nekobt']]);
 })->with([
-    'no connection' => fn () => fn () => Http::failedConnection(),
-    'server error' => fn () => fn () => Http::response('error code: 502', 502),
-    'error answer' => fn () => fn () => Http::response(['error' => true, 'message' => "Data provided was invalid: 'limit' must be <= 100."], 400),
-    'unexpected answer' => fn () => fn () => Http::response('<html>Just a moment...</html>'),
+    'no connection' => fn () => fn () => saloonConnectionRefused(),
+    'server error' => fn () => fn () => MockResponse::make('error code: 502', 502),
+    'error answer' => fn () => fn () => MockResponse::make(['error' => true, 'message' => "Data provided was invalid: 'limit' must be <= 100."], 400),
+    'unexpected answer' => fn () => fn () => MockResponse::make('<html>Just a moment...</html>'),
 ]);
 
 test('a repeated search is answered from the cache', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtSearchAnswer())]);
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtSearchAnswer())]);
 
     getJson('/api/v1/nekobt-torrents?filter[search]=tanya')->assertOk();
     getJson('/api/v1/nekobt-torrents?filter[search]=tanya')
@@ -344,15 +341,12 @@ test('a repeated search is answered from the cache', function () {
         ->assertJsonPath('data.0.audio_languages', ['ja', 'en'])
         ->assertJsonPath('links.next', fn (?string $next): bool => $next !== null);
 
-    Http::assertSentCount(1);
+    Saloon::assertSentCount(1);
 });
 
 test('a failed search is not cached', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::sequence()
-        ->push('error code: 502', 502)
-        ->push(nekoBtSearchAnswer()),
-    ]);
+    Saloon::fake(['nekobt.test/*' => saloonSequence([MockResponse::make('error code: 502', 502), MockResponse::make(nekoBtSearchAnswer())])]);
 
     getJson('/api/v1/nekobt-torrents')->assertStatus(502);
     getJson('/api/v1/nekobt-torrents')->assertOk()->assertJsonCount(3, 'data');
@@ -362,7 +356,7 @@ test('nekoBT torrent search validates its query', function (string $query, strin
     actingAsAdmin();
 
     getJson("/api/v1/nekobt-torrents?{$query}")->assertUnprocessable()->assertJsonValidationErrors([$field]);
-    Http::assertNothingSent();
+    Saloon::assertNothingSent();
 })->with([
     'unknown sort' => ['sort=-title', 'sort'],
     'best has no direction' => ['sort=-best', 'sort'],

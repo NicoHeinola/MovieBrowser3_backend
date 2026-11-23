@@ -1,0 +1,15 @@
+[
+    {
+        "hash": "12c03cf9cc60ea7c13931e0195fa54903d8af85f",
+        "name": "[anonymous] Mushoku Tensei (2021) S01 (1080p BD Remux)",
+        "state": "downloading",
+        "progress": 0.25,
+        "size": 4000000000,
+        "downloaded": 1000000000,
+        "dlspeed": 5000000,
+        "eta": 600,
+        "has_metadata": true,
+        "category": "moviebrowser3",
+        "save_path": "D:\\MovieBrowser3\\Downloads"
+    }
+]

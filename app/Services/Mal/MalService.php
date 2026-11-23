@@ -7,17 +7,19 @@ use App\Dtos\ShowTemplate\ShowTemplateData;
 use App\Exceptions\MalUnavailableException;
 use App\Exceptions\ShowTemplateNotFoundException;
 use App\Exceptions\ShowTemplateUnavailableException;
+use App\Services\Mal\Requests\GetAnimePageRequest;
+use App\Services\Mal\Requests\SearchAnimeRequest;
 use App\Services\ShowTemplateSource;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Saloon\Exceptions\Request\FatalRequestException;
+use Saloon\Http\Request;
+use Saloon\Http\Response;
 
 /**
  * Talks to MyAnimeList (MAL), an anime database: it searches its anime, and describes the show behind one of its
  * anime pages (`/anime/16498/Shingeki_no_Kyojin`) as a show template. MAL's public API needs a client id, so both
- * use what its website uses: the search box's JSON and the anime page's HTML. The mappers next to it translate the
- * answers; this class only asks and checks the answers.
+ * use what its website uses: the search box's JSON and the anime page's HTML. The connector and requests next to it
+ * describe the calls and the mappers translate the answers; this class only asks and checks the answers.
  */
 class MalService implements ShowTemplateSource
 {
@@ -35,7 +37,7 @@ class MalService implements ShowTemplateSource
      */
     public function searchAnime(string $search): array
     {
-        $response = $this->request('/search/prefix.json', ['type' => 'anime', 'keyword' => $search, 'v' => 1]);
+        $response = $this->send(new SearchAnimeRequest($search));
 
         if ($response === null || !$response->successful() || !is_array($response->json('categories'))) {
             $this->logFailure($response);
@@ -54,7 +56,7 @@ class MalService implements ShowTemplateSource
     public function getShowTemplate(string $url): ShowTemplateData
     {
         $animeId = $this->animeId($url) ?? throw new ShowTemplateNotFoundException;
-        $response = $this->request("/anime/{$animeId}");
+        $response = $this->send(new GetAnimePageRequest($animeId));
 
         // A mistyped or removed id is the user's to fix, not MAL being down
         if ($response?->status() === 404) {
@@ -85,16 +87,15 @@ class MalService implements ShowTemplateSource
     }
 
     /**
-     * Sends a GET to MAL.
+     * Sends a request to MAL.
      *
-     * @param  array<string, string|int>  $query
      * @return Response|null The answer, or null when MAL didn't answer (logged)
      */
-    private function request(string $path, array $query = []): ?Response
+    private function send(Request $request): ?Response
     {
         try {
-            return Http::timeout(config('mal.timeout_seconds'))->get(config('mal.base_url').$path, $query);
-        } catch (ConnectionException $exception) {
+            return (new MalConnector)->send($request);
+        } catch (FatalRequestException $exception) {
             Log::warning("MyAnimeList did not answer: {$exception->getMessage()}");
 
             return null;

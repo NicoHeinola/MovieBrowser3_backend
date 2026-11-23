@@ -5,6 +5,7 @@ namespace App\Actions\EpisodePlayback;
 use App\Dtos\Setup\SetupCheckData;
 use App\Enums\SetupCheckCode;
 use App\Exceptions\VlcBridgeException;
+use App\Services\VlcBridge\VlcBridgeService;
 use Illuminate\Support\Facades\Process;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -13,7 +14,7 @@ class CheckVlcBinaryAction
     use AsAction;
 
     public function __construct(
-        private readonly RequestVlcBridgeAction $requestVlcBridgeAction,
+        private readonly VlcBridgeService $vlcBridgeService,
     ) {}
 
     /**
@@ -34,7 +35,7 @@ class CheckVlcBinaryAction
 
         if (config('vlc.launcher') === 'bridge') {
             try {
-                $this->requestVlcBridgeAction->handle('check-binary', ['binary' => $binary]);
+                $this->vlcBridgeService->checkBinary($binary);
             } catch (VlcBridgeException $exception) {
                 return SetupCheckData::failed($exception->checkCode, $exception->params);
             }

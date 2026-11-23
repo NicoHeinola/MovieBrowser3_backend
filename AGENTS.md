@@ -29,11 +29,12 @@ Guidance for AI coding agents (Claude Code and Copilot). File-specific rules liv
 
   Then set `DB_DATABASE=<db>`, `APP_URL=http://localhost:<port>` and add the frontend's `localhost:<port>` to `SANCTUM_STATEFUL_DOMAINS` in its `.env`, run `php artisan migrate`, and start `composer dev -- --port=<port>`. Drop it with `docker exec moviebrowser3_backend-db-1 dropdb -U moviebrowser --force <db>`.
 - Queue, cache and sessions use the `database` driver, so a separate database keeps them apart too.
+- Never run `migrate:fresh`, `db:wipe` or other resetting commands in a checkout: there is no `.env.testing`, so even `--env=testing` hits that checkout's own database. Tests need none of it; `phpunit.xml` gives them in-memory SQLite.
 - Video files are not copied: `video_base_path` is a database setting, so a clone still points at the shared dev folder (`/mnt/g/New_Vid_Dev3`). Before work that moves or deletes video files, point the clone's setting at a scratch folder with a few test files.
 
 ## Architecture
 
-Request → controller → action → model, with resources shaping the output. Requests validate, controllers orchestrate, actions hold application logic, models represent the database only, resources shape payloads. Outside systems (torrent sites, other websites and APIs) are reached through a service in `app/Services/<System>/`, which actions call.
+Request → controller → action → model, with resources shaping the output. Requests validate, controllers orchestrate, actions hold application logic, models represent the database only, resources shape payloads. Outside systems (torrent sites, other websites and APIs, qBittorrent, the VLC bridge) are reached through a service in `app/Services/<System>/`, built on a Saloon connector, which actions call.
 
 Layout per domain `X`:
 

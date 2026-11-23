@@ -2,12 +2,17 @@
 
 use App\Models\Setting\Setting;
 use App\Models\User\User;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\Request;
+use App\Services\QBittorrent\QBittorrentConnector;
+use App\Services\QBittorrent\Requests\GetVersionRequest;
+use App\Services\QBittorrent\Requests\LogInRequest;
+use App\Services\VlcBridge\Requests\CheckBinaryRequest;
+use App\Services\VlcBridge\VlcBridgeConnector;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
+use Saloon\Http\Faking\MockResponse;
+use Saloon\Http\PendingRequest;
+use Saloon\Laravel\Facades\Saloon;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\patchJson;
@@ -15,30 +20,32 @@ use function Pest\Laravel\postJson;
 use function Pest\Laravel\withToken;
 
 /**
- * Fakes the VLC bridge so only $existing passes its check-binary check.
- */
-/**
  * Fakes qBittorrent's Web API: it lets in admin / secret only, and reports $version.
  */
 function fakeQBittorrent(string $version = 'v5.1.0'): void
 {
-    Http::fake(function (Request $request) use ($version) {
-        if (str_ends_with($request->url(), '/api/v2/auth/login')) {
-            return $request['username'] === 'admin' && $request['password'] === 'secret'
-                ? Http::response('Ok.', 200, ['Set-Cookie' => 'SID=session-id; HttpOnly; path=/'])
-                : Http::response('Fails.');
+    Saloon::fake([QBittorrentConnector::class => function (PendingRequest $request) use ($version): MockResponse {
+        if ($request->getRequest() instanceof LogInRequest) {
+            $login = saloonFields($request);
+
+            return $login['username'] === 'admin' && $login['password'] === 'secret'
+                ? MockResponse::make('Ok.', 200, ['Set-Cookie' => 'SID=session-id; HttpOnly; path=/'])
+                : MockResponse::make('Fails.');
         }
 
-        return $request->hasHeader('Cookie', 'SID=session-id') ? Http::response($version) : Http::response('Forbidden', 403);
-    });
+        return $request->headers()->get('Cookie') === 'SID=session-id' ? MockResponse::make($version) : MockResponse::make('Forbidden', 403);
+    }]);
 }
 
+/**
+ * Fakes the VLC bridge so only $existing passes its check-binary check.
+ */
 function fakeBridgeWithVlcAt(?string $existing): void
 {
     config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767', 'vlc.bridge_token' => 'bridge-token']);
-    Http::fake(fn (Request $request) => $request['binary'] === $existing
-        ? Http::response(status: 204)
-        : Http::response(['message' => "VLC was not found at {$request['binary']}.", 'code' => 'vlc_not_found'], 422));
+    Saloon::fake([VlcBridgeConnector::class => fn (PendingRequest $request): MockResponse => saloonFields($request)['binary'] === $existing
+        ? MockResponse::make(status: 204)
+        : MockResponse::make(['message' => 'VLC was not found at '.saloonFields($request)['binary'].'.', 'code' => 'vlc_not_found'], 422)]);
 }
 
 test('setup requires an admin', function () {
@@ -75,8 +82,9 @@ test('it suggests the first usual VLC location the bridge finds', function () {
         ->assertOk()
         ->assertJsonPath('detected_vlc_media_player_path', '/mnt/c/Program Files (x86)/VideoLAN/VLC/vlc.exe');
 
-    Http::assertSent(fn (Request $request): bool => $request->url() === 'http://127.0.0.1:8767/check-binary'
-        && $request->hasHeader('Authorization', 'Bearer bridge-token'));
+    $sent = saloonSent(CheckBinaryRequest::class)->first()['request'];
+    expect($sent->getUrl())->toBe('http://127.0.0.1:8767/check-binary')
+        ->and($sent->headers()->get('Authorization'))->toBe('Bearer bridge-token');
 });
 
 test('without the bridge it finds vlc on the PATH', function () {
@@ -130,7 +138,7 @@ test('an empty VLC path is checked as vlc on the PATH', function () {
 
 test('it says when the bridge is too old to check VLC', function () {
     config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767']);
-    Http::fake(['127.0.0.1:8767/check-binary' => Http::response(['message' => 'Not found.'], 404)]);
+    Saloon::fake(['127.0.0.1:8767/check-binary' => MockResponse::make(['message' => 'Not found.'], 404)]);
     actingAsAdmin();
 
     postJson('/api/v1/setup/checks', ['vlc_media_player_path' => '/mnt/c/vlc/vlc.exe'])
@@ -139,7 +147,7 @@ test('it says when the bridge is too old to check VLC', function () {
 
 test('it explains why the bridge cannot check VLC', function () {
     config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767']);
-    Http::fake(fn () => throw new ConnectionException('Connection refused'));
+    Saloon::fake([saloonConnectionRefused()]);
     actingAsAdmin();
 
     postJson('/api/v1/setup/checks', ['vlc_media_player_path' => '/mnt/c/vlc/vlc.exe'])
@@ -151,7 +159,7 @@ test('it explains why the bridge cannot check VLC', function () {
 
 test('it sends the code for each way the bridge turns a VLC check down', function (int $status, array $body, string $code, array $params) {
     config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767']);
-    Http::fake(['127.0.0.1:8767/check-binary' => Http::response($body, $status)]);
+    Saloon::fake(['127.0.0.1:8767/check-binary' => MockResponse::make($body, $status)]);
     actingAsAdmin();
 
     postJson('/api/v1/setup/checks', ['vlc_media_player_path' => '/mnt/c/vlc/other.exe'])
@@ -285,7 +293,7 @@ test('qBittorrent passes when its address and login work', function () {
         ->assertOk()
         ->assertExactJson(['qbittorrent_url' => ['ok' => true, 'code' => null, 'params' => []]]);
 
-    Http::assertSent(fn (Request $request): bool => $request->url() === 'http://127.0.0.1:8080/api/v2/app/version');
+    expect(saloonSent(GetVersionRequest::class)->sole()['request']->getUrl())->toBe('http://127.0.0.1:8080/api/v2/app/version');
     expect(Setting::query()->whereKey('qbittorrent_url')->value('value'))->toBe('');
 });
 
@@ -310,9 +318,10 @@ test('it says why qBittorrent can not be used', function (Closure $fake, array $
 })->with([
     'no address' => [fn () => fakeQBittorrent(), ['qbittorrent_url' => ''], 'url_required', []],
     'wrong login' => [fn () => fakeQBittorrent(), ['qbittorrent_password' => 'wrong'], 'qbittorrent_login_failed', []],
-    'banned' => [fn () => Http::fake(['*' => Http::response('Your IP address has been banned.', 403)]), [], 'qbittorrent_banned', []],
-    'closed' => [fn () => Http::fake(fn () => throw new ConnectionException('Connection refused')), [], 'qbittorrent_unreachable', []],
-    'not qBittorrent' => [fn () => Http::fake(['*' => Http::response('Not found', 404)]), [], 'qbittorrent_unreachable', []],
+    'wrong login, qBittorrent 5.3 and newer' => [fn () => Saloon::fake([QBittorrentConnector::class => MockResponse::make('Unauthorized', 401)]), [], 'qbittorrent_login_failed', []],
+    'banned' => [fn () => Saloon::fake([QBittorrentConnector::class => MockResponse::make('Your IP address has been banned.', 403)]), [], 'qbittorrent_banned', []],
+    'closed' => [fn () => Saloon::fake([QBittorrentConnector::class => saloonConnectionRefused()]), [], 'qbittorrent_unreachable', []],
+    'not qBittorrent' => [fn () => Saloon::fake([QBittorrentConnector::class => MockResponse::make('Not found', 404)]), [], 'qbittorrent_unreachable', []],
     'too old' => [fn () => fakeQBittorrent('v4.6.7'), [], 'qbittorrent_outdated', ['version' => '4.6.7', 'minimum_version' => '5.0']],
 ]);
 

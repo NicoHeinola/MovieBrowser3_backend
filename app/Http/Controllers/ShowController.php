@@ -31,7 +31,7 @@ class ShowController extends Controller
         return [
             'categories',
             'titles',
-            'entries.episodes',
+            'entries.episodes.downloadPick.download',
             'entries.watchStatuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id),
             'watchProgress' => fn (HasMany $query) => $query->where('user_id', $request->user()->id),
             'incomingLinks.sourceShow.titles',

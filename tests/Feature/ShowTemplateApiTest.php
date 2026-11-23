@@ -2,13 +2,14 @@
 
 use App\Models\Category\Category;
 use App\Models\User\User;
-use Illuminate\Support\Facades\Http;
+use Saloon\Http\Faking\MockResponse;
+use Saloon\Laravel\Facades\Saloon;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\withToken;
 
 beforeEach(function () {
-    Http::preventStrayRequests();
+    Saloon::fake([]);
     config(['nekobt.base_url' => 'https://nekobt.test', 'mal.base_url' => 'https://mal.test']);
 });
 
@@ -50,12 +51,12 @@ test('show templates require an admin', function () {
     withToken(User::factory()->create()->createToken('test-token')->plainTextToken);
 
     getJson(showTemplateUrl('https://nekobt.test/media/s1453'))->assertForbidden();
-    Http::assertNothingSent();
+    Saloon::assertNothingSent();
 });
 
 test('a nekoBT series page becomes a show template', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/api/v1/media/s1453' => Http::response(nekoBtMediaAnswer('series'))]);
+    Saloon::fake(['nekobt.test/api/v1/media/s1453' => MockResponse::make(nekoBtMediaAnswer('series'))]);
 
     getJson(showTemplateUrl('https://nekobt.test/media/s1453'))
         ->assertOk()
@@ -71,7 +72,7 @@ test('a nekoBT series page becomes a show template', function () {
 
 test('a nekoBT movie page becomes a show template too, keeping only Latin-script titles', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/api/v1/media/m134' => Http::response(nekoBtMediaAnswer('movie'))]);
+    Saloon::fake(['nekobt.test/api/v1/media/m134' => MockResponse::make(nekoBtMediaAnswer('movie'))]);
 
     getJson(showTemplateUrl('https://nekobt.test/media/m134?ref=search'))
         ->assertOk()
@@ -89,7 +90,7 @@ test('genres match categories by name or value, ignoring case, and the rest are 
     $action = Category::factory()->create(['name' => 'action', 'value' => 'action']);
     $scienceFiction = Category::factory()->create(['name' => 'Science fiction', 'value' => 'sci-fi']);
     Category::factory()->create(['name' => 'Romance', 'value' => 'romance']);
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtMediaAnswer('series', function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtMediaAnswer('series', function (array $answer): array {
         $answer['data']['genres'] = ['Action', 'Sci-Fi', 'Fantasy'];
 
         return $answer;
@@ -103,7 +104,7 @@ test('genres match categories by name or value, ignoring case, and the rest are 
 
 test('missing images and descriptions fall back, then stay empty', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtMediaAnswer('series', function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtMediaAnswer('series', function (array $answer): array {
         unset($answer['data']['anilist']);
         $answer['data']['overview'] = null;
 
@@ -121,7 +122,7 @@ test('missing images and descriptions fall back, then stay empty', function () {
 
 test('without an overview, AniList\'s HTML description becomes plain text', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtMediaAnswer('series', function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtMediaAnswer('series', function (array $answer): array {
         $answer['data']['overview'] = '';
         $answer['data']['anilist']['primary']['description'] = '<i>Tanya</i> &amp; her battalion<br>fight on.';
 
@@ -135,7 +136,7 @@ test('without an overview, AniList\'s HTML description becomes plain text', func
 
 test('a show with no title in Latin script keeps its main title', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(nekoBtMediaAnswer('series', function (array $answer): array {
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(nekoBtMediaAnswer('series', function (array $answer): array {
         $answer['data']['title'] = '幼女戦記';
         $answer['data']['alternate_titles'] = ['Колдунья в погонах'];
         unset($answer['data']['anilist']);
@@ -152,7 +153,7 @@ test('a link no source reads is turned away', function (string $url, string $cod
     getJson(showTemplateUrl($url))
         ->assertUnprocessable()
         ->assertJsonPath('errors.url.0.code', $code);
-    Http::assertNothingSent();
+    Saloon::assertNothingSent();
 })->with([
     'another site' => ['https://anilist.co/anime/21613', 'unsupported_show_template_url'],
     'a nekoBT torrent page' => ['https://nekobt.test/torrents/7338487288586', 'unsupported_show_template_url'],
@@ -167,7 +168,7 @@ test('a request without a link is turned away', function () {
 
 test('a media page nekoBT does not have is not found', function () {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => Http::response(['error' => true, 'message' => 'Media not found.'], 404)]);
+    Saloon::fake(['nekobt.test/*' => MockResponse::make(['error' => true, 'message' => 'Media not found.'], 404)]);
 
     getJson(showTemplateUrl('https://nekobt.test/media/s99999999'))
         ->assertNotFound()
@@ -176,22 +177,22 @@ test('a media page nekoBT does not have is not found', function () {
 
 test('when nekoBT can not answer the template is unavailable', function (callable $answer) {
     actingAsAdmin();
-    Http::fake(['nekobt.test/*' => $answer()]);
+    Saloon::fake(['nekobt.test/*' => $answer()]);
 
     getJson(showTemplateUrl('https://nekobt.test/media/s1453'))
         ->assertStatus(502)
         ->assertExactJson(['code' => 'show_template_unavailable', 'params' => []]);
 })->with([
-    'no connection' => fn () => fn () => Http::failedConnection(),
-    'server error' => fn () => fn () => Http::response('error code: 502', 502),
-    'error answer' => fn () => fn () => Http::response(['error' => true, 'message' => 'Something broke.'], 400),
-    'unexpected answer' => fn () => fn () => Http::response('<html>Just a moment...</html>'),
+    'no connection' => fn () => fn () => saloonConnectionRefused(),
+    'server error' => fn () => fn () => MockResponse::make('error code: 502', 502),
+    'error answer' => fn () => fn () => MockResponse::make(['error' => true, 'message' => 'Something broke.'], 400),
+    'unexpected answer' => fn () => fn () => MockResponse::make('<html>Just a moment...</html>'),
 ]);
 
 test('a MAL anime page becomes a show template', function () {
     actingAsAdmin();
     $action = Category::factory()->create(['name' => 'Action', 'value' => 'action']);
-    Http::fake(['mal.test/anime/16498' => Http::response(malAnimePage(16498))]);
+    Saloon::fake(['mal.test/anime/16498' => MockResponse::make(malAnimePage(16498))]);
 
     getJson(showTemplateUrl('https://mal.test/anime/16498/Shingeki_no_Kyojin'))
         ->assertOk()
@@ -213,7 +214,7 @@ test('a MAL anime page becomes a show template', function () {
 
 test('a MAL anime page without an English title or synonyms keeps its own title, and a Japanese one in Latin script', function () {
     actingAsAdmin();
-    Http::fake(['mal.test/anime/50265' => Http::response(malAnimePage(50265))]);
+    Saloon::fake(['mal.test/anime/50265' => MockResponse::make(malAnimePage(50265))]);
 
     getJson(showTemplateUrl('https://www.mal.test/anime/50265'))
         ->assertOk()
@@ -223,18 +224,18 @@ test('a MAL anime page without an English title or synonyms keeps its own title,
 
 test('a MAL synopsis keeps its paragraphs, and a missing one stays empty', function () {
     actingAsAdmin();
-    Http::fake(['mal.test/anime/50265' => Http::sequence()
-        ->push(malAnimePage(50265, fn (string $page): string => preg_replace(
+    Saloon::fake(['mal.test/anime/50265' => saloonSequence([
+        MockResponse::make(malAnimePage(50265, fn (string $page): string => preg_replace(
             '#<p itemprop="description">.*?</p>#s',
             "<p itemprop=\"description\">First part.<br />\n<br />\nSecond &amp; last part.<br />\n<br />\n(Source: Somewhere)</p>",
             $page,
-        )))
-        ->push(malAnimePage(50265, fn (string $page): string => preg_replace(
+        ))),
+        MockResponse::make(malAnimePage(50265, fn (string $page): string => preg_replace(
             '#<p itemprop="description">.*?</p>#s',
             '<p itemprop="description">No synopsis information has been added to this title.</p>',
             $page,
         ))),
-    ]);
+    ])]);
 
     getJson(showTemplateUrl('https://mal.test/anime/50265'))
         ->assertOk()
@@ -248,7 +249,7 @@ test('links MAL does not read as an anime page are turned away', function (strin
     getJson(showTemplateUrl($url))
         ->assertUnprocessable()
         ->assertJsonPath('errors.url.0.code', 'unsupported_show_template_url');
-    Http::assertNothingSent();
+    Saloon::assertNothingSent();
 })->with([
     'a manga page' => ['https://mal.test/manga/23390/Shingeki_no_Kyojin'],
     'the search page' => ['https://mal.test/search/all?q=spy'],
@@ -257,7 +258,7 @@ test('links MAL does not read as an anime page are turned away', function (strin
 
 test('an anime page MAL does not have is not found', function () {
     actingAsAdmin();
-    Http::fake(['mal.test/*' => Http::response('<html>404</html>', 404)]);
+    Saloon::fake(['mal.test/*' => MockResponse::make('<html>404</html>', 404)]);
 
     getJson(showTemplateUrl('https://mal.test/anime/99999999'))
         ->assertNotFound()
@@ -266,13 +267,13 @@ test('an anime page MAL does not have is not found', function () {
 
 test('when MAL can not answer the template is unavailable', function (callable $answer) {
     actingAsAdmin();
-    Http::fake(['mal.test/*' => $answer()]);
+    Saloon::fake(['mal.test/*' => $answer()]);
 
     getJson(showTemplateUrl('https://mal.test/anime/16498'))
         ->assertStatus(502)
         ->assertExactJson(['code' => 'show_template_unavailable', 'params' => []]);
 })->with([
-    'no connection' => fn () => fn () => Http::failedConnection(),
-    'server error' => fn () => fn () => Http::response('error code: 502', 502),
-    'a page without a title' => fn () => fn () => Http::response('<html><body>Just a moment...</body></html>'),
+    'no connection' => fn () => fn () => saloonConnectionRefused(),
+    'server error' => fn () => fn () => MockResponse::make('error code: 502', 502),
+    'a page without a title' => fn () => fn () => MockResponse::make('<html><body>Just a moment...</body></html>'),
 ]);

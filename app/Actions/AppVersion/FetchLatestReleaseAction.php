@@ -4,16 +4,20 @@ namespace App\Actions\AppVersion;
 
 use App\Dtos\AppVersion\LatestReleaseData;
 use App\Dtos\AppVersion\ReleaseData;
+use App\Exceptions\GitHubUnavailableException;
+use App\Services\GitHub\GitHubService;
 use Carbon\CarbonImmutable;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class FetchLatestReleaseAction
 {
     use AsAction;
+
+    public function __construct(
+        private readonly GitHubService $gitHubService,
+    ) {}
 
     /**
      * The newest GitHub release of a repo, by its git URL (https or ssh), cached. A failed check is cached too, for a
@@ -47,34 +51,10 @@ class FetchLatestReleaseAction
             return null;
         }
 
-        $repo = "{$matches[1]}/{$matches[2]}";
-
         try {
-            $response = Http::withHeaders(['Accept' => 'application/vnd.github+json'])
-                ->timeout(5)
-                ->get("https://api.github.com/repos/{$repo}/releases/latest");
-        } catch (ConnectionException $exception) {
-            Log::warning("Release check for {$repo} failed: {$exception->getMessage()}");
-
+            return $this->gitHubService->getLatestRelease("{$matches[1]}/{$matches[2]}");
+        } catch (GitHubUnavailableException) {
             return null;
         }
-
-        if ($response->failed()) {
-            Log::warning("Release check for {$repo} failed: GitHub answered {$response->status()}");
-
-            return null;
-        }
-
-        // Tags are vX.Y.Z; anything else (another tag name, a missing field) isn't a version to compare
-        $version = ltrim((string) $response->json('tag_name'), 'v');
-        $url = $response->json('html_url');
-
-        if (!preg_match('/^\d+\.\d+\.\d+$/', $version) || !is_string($url)) {
-            Log::warning("Release check for {$repo} found no vX.Y.Z release tag");
-
-            return null;
-        }
-
-        return new ReleaseData($version, $url);
     }
 }

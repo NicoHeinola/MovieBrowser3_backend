@@ -3,6 +3,7 @@
 namespace App\Models\Show\Relations;
 
 use App\Models\Category\Category;
+use App\Models\Download\Download;
 use App\Models\Episode\Episode;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowLink\ShowLink;
@@ -59,5 +60,10 @@ trait HasShowRelations
     public function incomingLinks(): HasMany
     {
         return $this->hasMany(ShowLink::class, 'target_show_id');
+    }
+
+    public function downloads(): HasMany
+    {
+        return $this->hasMany(Download::class);
     }
 }

@@ -4,12 +4,16 @@ use App\Actions\EpisodePlayback\OpenVlcPlaylistAction;
 use App\Actions\EpisodePlayback\ResolveEphemeralPortRangeAction;
 use App\Exceptions\VlcLaunchException;
 use App\Models\Setting\Setting;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Http\Client\Request;
+use App\Services\Vlc\Requests\GetStatusRequest;
+use App\Services\Vlc\VlcConnector;
+use App\Services\VlcBridge\Requests\ConvertToWindowsPathsRequest;
+use App\Services\VlcBridge\Requests\LaunchRequest;
+use App\Services\VlcBridge\VlcBridgeConnector;
 use Illuminate\Process\PendingProcess;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Sleep;
+use Saloon\Http\Faking\MockResponse;
+use Saloon\Laravel\Facades\Saloon;
 
 beforeEach(fn () => Sleep::fake());
 
@@ -28,8 +32,8 @@ function useVlcBinary(string $name): string
  */
 function sentVlcCommands(): array
 {
-    return Http::recorded()
-        ->map(fn (array $pair): array => $pair[0]->data())
+    return saloonSent(GetStatusRequest::class)
+        ->map(fn (array $sent): array => $sent['request']->query()->all())
         ->filter(fn (array $query): bool => isset($query['command']))
         ->map(fn (array $query): string => "{$query['command']} {$query['input']}")
         ->values()
@@ -39,7 +43,7 @@ function sentVlcCommands(): array
 test('it starts VLC with its web interface and builds the playlist through it', function () {
     $binary = useVlcBinary('vlc');
     Process::fake();
-    Http::fake(['127.0.0.1:*' => Http::response(['state' => 'stopped'])]);
+    Saloon::fake(['127.0.0.1:*' => MockResponse::make(['state' => 'stopped'])]);
 
     $vlc = app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv', '/videos/ep 2.mkv', '/videos/ep 3.mkv'], 1);
 
@@ -58,19 +62,20 @@ test('it starts VLC with its web interface and builds the playlist through it', 
         'in_enqueue /videos/ep 3.mkv',
     ]);
 
-    Http::assertSent(fn (Request $request): bool => str_starts_with($request->url(), "http://127.0.0.1:{$vlc->port}/requests/status.json")
-        && $request->hasHeader('Authorization', 'Basic '.base64_encode(":{$vlc->password}")));
+    $status = saloonSent(GetStatusRequest::class)->first()['request'];
+    expect($status->getUrl())->toBe("http://127.0.0.1:{$vlc->port}/requests/status.json")
+        ->and($status->headers()->get('Authorization'))->toBe('Basic '.base64_encode(":{$vlc->password}"));
 });
 
 test('a start time only applies to the episode that plays first', function () {
     useVlcBinary('vlc');
     Process::fake();
-    Http::fake(['127.0.0.1:*' => Http::response(['state' => 'stopped'])]);
+    Saloon::fake(['127.0.0.1:*' => MockResponse::make(['state' => 'stopped'])]);
 
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv', '/videos/ep 2.mkv', '/videos/ep 3.mkv'], 1, 754);
 
-    $options = Http::recorded()
-        ->map(fn (array $pair): array => $pair[0]->data())
+    $options = saloonSent(GetStatusRequest::class)
+        ->map(fn (array $sent): array => $sent['request']->query()->all())
         ->filter(fn (array $query): bool => isset($query['command']))
         ->mapWithKeys(fn (array $query): array => [$query['input'] => $query['option'] ?? null])
         ->all();
@@ -85,17 +90,17 @@ test('a start time only applies to the episode that plays first', function () {
 test('without a start time VLC gets no start-time option', function () {
     useVlcBinary('vlc');
     Process::fake();
-    Http::fake(['127.0.0.1:*' => Http::response(['state' => 'stopped'])]);
+    Saloon::fake(['127.0.0.1:*' => MockResponse::make(['state' => 'stopped'])]);
 
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
 
-    Http::assertNotSent(fn (Request $request): bool => array_key_exists('option', $request->data()));
+    expect(saloonSent(GetStatusRequest::class)->filter(fn (array $sent): bool => array_key_exists('option', $sent['request']->query()->all())))->toBeEmpty();
 });
 
 test('the port skips Linux\'s ephemeral range, where a Windows vlc.exe cannot listen under WSL mirrored networking', function () {
     useVlcBinary('vlc');
     Process::fake();
-    Http::fake(['127.0.0.1:*' => Http::response(['state' => 'stopped'])]);
+    Saloon::fake(['127.0.0.1:*' => MockResponse::make(['state' => 'stopped'])]);
     // Leaves only 49151 free: everything else in the range is Linux's
     ResolveEphemeralPortRangeAction::mock()->shouldReceive('handle')->andReturn([40000, 49150]);
 
@@ -106,7 +111,7 @@ test('the port skips Linux\'s ephemeral range, where a Windows vlc.exe cannot li
 
 test('it falls back to vlc on the PATH when no binary is configured', function () {
     Process::fake();
-    Http::fake(['127.0.0.1:*' => Http::response(['state' => 'stopped'])]);
+    Saloon::fake(['127.0.0.1:*' => MockResponse::make(['state' => 'stopped'])]);
 
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
 
@@ -118,7 +123,7 @@ test('a Windows VLC gets the Windows form of every path', function () {
     Process::fake(fn (PendingProcess $process) => $process->command[0] === 'wslpath'
         ? Process::result(output: 'G:\\videos\\'.basename($process->command[2])."\n")
         : Process::result());
-    Http::fake(['127.0.0.1:*' => Http::response(['state' => 'stopped'])]);
+    Saloon::fake(['127.0.0.1:*' => MockResponse::make(['state' => 'stopped'])]);
 
     app(OpenVlcPlaylistAction::class)->handle(['/mnt/g/videos/ep 1.mkv', '/mnt/g/videos/ep 2.mkv'], 1);
 
@@ -130,10 +135,10 @@ test('a Windows VLC gets the Windows form of every path', function () {
 
 test('it waits for VLC to start answering', function () {
     Process::fake();
-    Http::fake(['127.0.0.1:*' => Http::sequence()
-        ->pushFailedConnection()
-        ->pushFailedConnection()
-        ->whenEmpty(Http::response(['state' => 'stopped']))]);
+    Saloon::fake([VlcConnector::class => saloonSequence(
+        [saloonConnectionRefused(), saloonConnectionRefused()],
+        whenEmpty: MockResponse::make(['state' => 'stopped']),
+    )]);
 
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
 
@@ -143,16 +148,14 @@ test('it waits for VLC to start answering', function () {
 
 test('it fails when VLC never starts answering', function () {
     Process::fake();
-    Http::fake(fn () => throw new ConnectionException('Connection refused'));
+    Saloon::fake([VlcConnector::class => saloonConnectionRefused()]);
 
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
 })->throws(VlcLaunchException::class, 'VLC did not start.');
 
 test('it fails when VLC is closed while the playlist is built', function () {
     Process::fake();
-    Http::fake(['127.0.0.1:*' => Http::sequence()
-        ->push(['state' => 'stopped'])
-        ->pushFailedConnection()]);
+    Saloon::fake([VlcConnector::class => saloonSequence([MockResponse::make(['state' => 'stopped']), saloonConnectionRefused()])]);
 
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
 })->throws(VlcLaunchException::class, 'VLC was closed before the playlist was built.');
@@ -183,20 +186,22 @@ describe('with the bridge launcher', function () {
     test('the bridge starts VLC and converts the paths for a Windows VLC', function () {
         // The container cannot see the binary, so it is not checked here
         Setting::query()->whereKey('vlc_media_player_path')->update(['value' => '/mnt/c/Program Files/VideoLAN/VLC/vlc.exe']);
-        Http::fake([
-            '127.0.0.1:8767/windows-paths' => Http::response(['paths' => ['G:\\videos\\ep 1.mkv', 'G:\\videos\\ep 2.mkv']]),
-            '127.0.0.1:8767/launch' => Http::response(status: 204),
-            '127.0.0.1:*' => Http::response(['state' => 'stopped']),
+        Saloon::fake([
+            '127.0.0.1:8767/windows-paths' => MockResponse::make(['paths' => ['G:\\videos\\ep 1.mkv', 'G:\\videos\\ep 2.mkv']]),
+            '127.0.0.1:8767/launch' => MockResponse::make(status: 204),
+            '127.0.0.1:*' => MockResponse::make(['state' => 'stopped']),
         ]);
 
         $vlc = app(OpenVlcPlaylistAction::class)->handle(['/mnt/g/videos/ep 1.mkv', '/mnt/g/videos/ep 2.mkv'], 1);
 
-        Http::assertSent(fn (Request $request): bool => $request->url() === 'http://127.0.0.1:8767/windows-paths'
-            && $request->hasHeader('Authorization', 'Bearer bridge-token')
-            && $request->data() === ['paths' => ['/mnt/g/videos/ep 1.mkv', '/mnt/g/videos/ep 2.mkv']]);
-        Http::assertSent(fn (Request $request): bool => $request->url() === 'http://127.0.0.1:8767/launch'
-            && $request->hasHeader('Authorization', 'Bearer bridge-token')
-            && $request->data() === [
+        $paths = saloonSent(ConvertToWindowsPathsRequest::class)->sole();
+        expect($paths['request']->getUrl())->toBe('http://127.0.0.1:8767/windows-paths')
+            ->and($paths['request']->headers()->get('Authorization'))->toBe('Bearer bridge-token')
+            ->and($paths['fields'])->toBe(['paths' => ['/mnt/g/videos/ep 1.mkv', '/mnt/g/videos/ep 2.mkv']]);
+        $launch = saloonSent(LaunchRequest::class)->sole();
+        expect($launch['request']->getUrl())->toBe('http://127.0.0.1:8767/launch')
+            ->and($launch['request']->headers()->get('Authorization'))->toBe('Bearer bridge-token')
+            ->and($launch['fields'])->toBe([
                 'binary' => '/mnt/c/Program Files/VideoLAN/VLC/vlc.exe',
                 'port' => $vlc->port,
                 'password' => $vlc->password,
@@ -209,32 +214,32 @@ describe('with the bridge launcher', function () {
     });
 
     test('a Linux VLC keeps its paths', function () {
-        Http::fake([
-            '127.0.0.1:8767/launch' => Http::response(status: 204),
-            '127.0.0.1:*' => Http::response(['state' => 'stopped']),
+        Saloon::fake([
+            '127.0.0.1:8767/launch' => MockResponse::make(status: 204),
+            '127.0.0.1:*' => MockResponse::make(['state' => 'stopped']),
         ]);
 
         app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
 
-        Http::assertNotSent(fn (Request $request): bool => str_ends_with($request->url(), '/windows-paths'));
-        Http::assertSent(fn (Request $request): bool => str_ends_with($request->url(), '/launch') && $request['binary'] === 'vlc');
+        expect(saloonSent(ConvertToWindowsPathsRequest::class))->toBeEmpty()
+            ->and(saloonSent(LaunchRequest::class)->sole()['fields']['binary'])->toBe('vlc');
         expect(sentVlcCommands())->toBe(['in_play /videos/ep 1.mkv']);
     });
 
     test('it passes on why the bridge rejected the launch', function () {
-        Http::fake(['127.0.0.1:8767/launch' => Http::response(['message' => 'VLC was not found at /missing/vlc.'], 422)]);
+        Saloon::fake(['127.0.0.1:8767/launch' => MockResponse::make(['message' => 'VLC was not found at /missing/vlc.'], 422)]);
 
         app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
     })->throws(VlcLaunchException::class, 'VLC was not found at /missing/vlc.');
 
     test('it fails when the bridge rejects the token', function () {
-        Http::fake(['127.0.0.1:8767/launch' => Http::response(status: 403)]);
+        Saloon::fake(['127.0.0.1:8767/launch' => MockResponse::make(status: 403)]);
 
         app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
     })->throws(VlcLaunchException::class, 'The VLC bridge answered 403. Check VLC_BRIDGE_TOKEN.');
 
     test('it fails when the bridge is not running', function () {
-        Http::fake(fn () => throw new ConnectionException('Connection refused'));
+        Saloon::fake([VlcBridgeConnector::class => saloonConnectionRefused()]);
 
         app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
     })->throws(VlcLaunchException::class, 'The VLC bridge at http://127.0.0.1:8767 did not answer.');

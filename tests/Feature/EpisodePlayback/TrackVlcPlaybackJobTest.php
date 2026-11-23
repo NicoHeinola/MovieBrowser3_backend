@@ -9,8 +9,9 @@ use App\Models\ShowEntry\ShowEntry;
 use App\Models\ShowEntryWatchStatus\ShowEntryWatchStatus;
 use App\Models\ShowWatchProgress\ShowWatchProgress;
 use App\Models\User\User;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use Saloon\Http\Faking\MockResponse;
+use Saloon\Laravel\Facades\Saloon;
 
 use function Pest\Laravel\assertDatabaseCount;
 use function Pest\Laravel\assertDatabaseHas;
@@ -27,7 +28,7 @@ function runTrackVlcPlaybackJob(User $user): void
 
 function fakeVlcStatus(string $state, ?string $filename, int $time = 0, int $length = 0): void
 {
-    Http::fake(['127.0.0.1:*' => Http::response([
+    Saloon::fake(['127.0.0.1:*' => MockResponse::make([
         'state' => $state,
         'time' => $time,
         'length' => $length,
@@ -195,7 +196,7 @@ test('a file that is not one of our episodes is ignored', function (?string $fil
 
 test('tracking stops once VLC is closed', function () {
     $user = User::factory()->create();
-    Http::fake(['127.0.0.1:*' => Http::failedConnection()]);
+    Saloon::fake(['127.0.0.1:*' => saloonConnectionRefused()]);
 
     runTrackVlcPlaybackJob($user);
 
@@ -215,7 +216,7 @@ test('a failed progress save keeps the tracking going', function () {
 
 test('a status without a state is treated as not playing', function () {
     $user = User::factory()->create();
-    Http::fake(['127.0.0.1:*' => Http::response(['version' => '3.0.24'])]);
+    Saloon::fake(['127.0.0.1:*' => MockResponse::make(['version' => '3.0.24'])]);
 
     runTrackVlcPlaybackJob($user);
 

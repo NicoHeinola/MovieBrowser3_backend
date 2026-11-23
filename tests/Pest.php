@@ -3,7 +3,14 @@
 use App\Models\Setting\Setting;
 use App\Models\User\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
+use Saloon\Data\MultipartValue;
+use Saloon\Exceptions\Request\FatalRequestException;
+use Saloon\Http\Faking\MockResponse;
+use Saloon\Http\PendingRequest;
+use Saloon\Http\Response;
+use Saloon\Laravel\Facades\Saloon;
 use Tests\TestCase;
 
 /*
@@ -119,4 +126,73 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * A faked request to an outside system that never reaches it, as when nothing listens on the port.
+ */
+function saloonConnectionRefused(): MockResponse
+{
+    return MockResponse::make()->throw(fn (PendingRequest $request) => new FatalRequestException(new RuntimeException('Connection refused'), $request));
+}
+
+/**
+ * The requests Saloon sent while faked, oldest first, each with its form or multipart fields as `name => value`.
+ *
+ * @param  class-string|null  $requestClass  Only requests of this class
+ * @return Collection<int, array{request: PendingRequest, fields: array<string, mixed>}>
+ */
+function saloonSent(?string $requestClass = null): Collection
+{
+    return collect(Saloon::mockClient()->getRecordedResponses())
+        ->map(fn (Response $response): PendingRequest => $response->getPendingRequest())
+        ->filter(fn (PendingRequest $request): bool => $requestClass === null || $request->getRequest() instanceof $requestClass)
+        ->map(fn (PendingRequest $request): array => ['request' => $request, 'fields' => saloonFields($request)])
+        ->values();
+}
+
+/**
+ * A sent request's form or multipart fields as `name => value`, or its JSON body.
+ *
+ * @return array<string, mixed>
+ */
+function saloonFields(PendingRequest $request): array
+{
+    $body = $request->body()?->all() ?? [];
+
+    return collect($body)->mapWithKeys(fn (mixed $value, string|int $key): array => $value instanceof MultipartValue
+        ? [$value->name => $value->value]
+        : [$key => $value])->all();
+}
+
+/**
+ * Answers a faked request with each response in turn, then with `$whenEmpty` once they run out.
+ */
+function saloonSequence(array $responses, ?MockResponse $whenEmpty = null): Closure
+{
+    return function () use (&$responses, $whenEmpty): MockResponse {
+        $next = array_shift($responses) ?? $whenEmpty;
+
+        if ($next === null) {
+            throw new RuntimeException('The faked response sequence ran out.');
+        }
+
+        return $next;
+    };
+}
+
+/**
+ * The full URLs Saloon sent while faked, query included the way a browser writes it (`one%20piece`), oldest first.
+ *
+ * @return list<string>
+ */
+function saloonSentUrls(): array
+{
+    return saloonSent()
+        ->map(function (array $sent): string {
+            $query = http_build_query($sent['request']->query()->all(), '', '&', PHP_QUERY_RFC3986);
+
+            return $sent['request']->getUrl().($query === '' ? '' : "?{$query}");
+        })
+        ->all();
 }

@@ -28,7 +28,7 @@ class CheckQBittorrentConnectionAction
         }
 
         try {
-            $version = $this->qBittorrentService->getVersion($connection);
+            $version = $this->qBittorrentService->testConnection($connection);
         } catch (QBittorrentUnavailableException $exception) {
             return SetupCheckData::failed(match ($exception->failure) {
                 QBittorrentFailure::Unreachable => SetupCheckCode::QBittorrentUnreachable,
