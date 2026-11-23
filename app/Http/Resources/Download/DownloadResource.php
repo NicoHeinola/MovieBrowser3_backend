@@ -32,7 +32,8 @@ class DownloadResource extends JsonResource
             'eta_seconds' => $this->torrent?->etaSeconds,
             // Loaded with its titles only, which is all a download needs to name it
             'show' => $show === null ? null : ShowResource::make($show),
-            'files' => DownloadFileResource::collection($this->files),
+            'files' => $this->when($this->files !== null, fn () => DownloadFileResource::collection($this->files)),
+            'waiting_episode_count' => $this->when($this->waitingEpisodeCount !== null, $this->waitingEpisodeCount),
             'created_at' => $download->created_at,
         ];
     }

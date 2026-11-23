@@ -575,3 +575,95 @@ test('a torrent added without a name shows qBittorrent\'s, and a long name is sh
 
     expect(mb_strlen(Download::query()->sole()->name))->toBe(255);
 });
+
+test('the list shows every download newest first, live from one qBittorrent request', function () {
+    [$show, $made, $replaced] = showWithTwoEpisodes();
+    $show->titles()->create(['title' => 'Mushoku Tensei', 'is_primary' => true]);
+    $made->update(['filename' => '']);
+    $replaced->update(['filename' => 'Old release.mkv']);
+    $lost = Download::factory()->create(['hash' => str_repeat('a', 40), 'created_at' => now()->subDay()]);
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'show_id' => $show->id, 'status' => DownloadStatus::Downloading]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $made->id]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 1, 'episode_id' => $replaced->id]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info')]);
+    actingAsAdmin();
+
+    getJson('/api/v1/downloads')
+        ->assertOk()
+        ->assertJsonCount(2)
+        ->assertJsonPath('0.id', $download->id)
+        ->assertJsonPath('0.status', 'downloading')
+        ->assertJsonPath('0.progress', 0.25)
+        ->assertJsonPath('0.download_speed', 5000000)
+        ->assertJsonPath('0.show.titles.0.title', 'Mushoku Tensei')
+        // Only the episode made for it: the other keeps its own video when cancelled
+        ->assertJsonPath('0.waiting_episode_count', 1)
+        ->assertJsonMissingPath('0.files')
+        ->assertJsonPath('1.id', $lost->id)
+        ->assertJsonPath('1.status', 'failed')
+        ->assertJsonPath('1.error_code', 'client_lost_torrent');
+
+    expect(qBittorrentRequestsTo('torrents/info'))->toBe([['hashes' => DOWNLOAD_HASH.'|'.str_repeat('a', 40)]]);
+});
+
+test('an empty list asks qBittorrent nothing', function () {
+    actingAsAdmin();
+
+    getJson('/api/v1/downloads')->assertOk()->assertExactJson([]);
+    Saloon::assertNothingSent();
+});
+
+test('cancelling removes the torrent and its data, and keeps the episodes', function () {
+    [$show, $episode] = showWithTwoEpisodes();
+    $episode->update(['filename' => '']);
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'show_id' => $show->id]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $episode->id]);
+    fakeQBittorrentApi();
+    actingAsAdmin();
+
+    deleteJson("/api/v1/downloads/{$download->id}")->assertNoContent();
+
+    expect(Download::query()->count())->toBe(0)
+        ->and(DownloadPick::query()->count())->toBe(0)
+        ->and(Episode::query()->find($episode->id))->not->toBeNull()
+        ->and(qBittorrentRequestsTo('torrents/delete'))->toBe([['hashes' => DOWNLOAD_HASH, 'deleteFiles' => 'true']]);
+});
+
+test('cancelling can remove the episodes made for it, but never one that has its own video', function () {
+    [$show, $made, $replaced] = showWithTwoEpisodes();
+    $made->update(['filename' => '']);
+    $replaced->update(['filename' => 'Old release.mkv']);
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'show_id' => $show->id]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $made->id]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 1, 'episode_id' => $replaced->id]);
+    fakeQBittorrentApi();
+    actingAsAdmin();
+
+    deleteJson("/api/v1/downloads/{$download->id}?remove_episodes=1")->assertNoContent();
+
+    expect(Episode::query()->find($made->id))->toBeNull()
+        ->and(Episode::query()->find($replaced->id))->not->toBeNull();
+});
+
+test('a closed qBittorrent keeps the download to cancel again', function () {
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH]);
+    Saloon::fake([QBittorrentConnector::class => saloonConnectionRefused()]);
+    actingAsAdmin();
+
+    deleteJson("/api/v1/downloads/{$download->id}")->assertStatus(502);
+
+    expect(Download::query()->find($download->id))->not->toBeNull();
+});
+
+test('listing and cancelling downloads require an admin', function () {
+    $download = Download::factory()->create();
+
+    getJson('/api/v1/downloads')->assertUnauthorized();
+    deleteJson("/api/v1/downloads/{$download->id}")->assertUnauthorized();
+
+    withToken(User::factory()->create()->createToken('test-token')->plainTextToken);
+
+    getJson('/api/v1/downloads')->assertForbidden();
+    deleteJson("/api/v1/downloads/{$download->id}")->assertForbidden();
+    Saloon::assertNothingSent();
+});

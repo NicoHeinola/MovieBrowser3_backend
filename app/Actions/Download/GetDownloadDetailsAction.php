@@ -5,8 +5,6 @@ namespace App\Actions\Download;
 use App\Dtos\Download\DownloadDetailsData;
 use App\Dtos\Download\DownloadFileDetailsData;
 use App\Dtos\QBittorrent\QBittorrentFileData;
-use App\Enums\DownloadErrorCode;
-use App\Enums\DownloadStatus;
 use App\Models\Download\Download;
 use App\Services\QBittorrent\QBittorrentService;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -17,11 +15,11 @@ class GetDownloadDetailsAction
 
     public function __construct(
         private readonly QBittorrentService $qBittorrentService,
+        private readonly ResolveDownloadDetailsAction $resolveDownloadDetailsAction,
     ) {}
 
     /**
-     * The download with its torrent's files and progress as qBittorrent reports them now. Reads only: a torrent
-     * qBittorrent lost is reported as failed, not stored as failed.
+     * The download with its torrent's files and progress as qBittorrent reports them now.
      */
     public function handle(Download $download): DownloadDetailsData
     {
@@ -29,7 +27,7 @@ class GetDownloadDetailsAction
         $torrent = $this->qBittorrentService->getTorrent($download->hash);
 
         if ($torrent === null) {
-            return new DownloadDetailsData($download, DownloadStatus::Failed, DownloadErrorCode::ClientLostTorrent, null, []);
+            return $this->resolveDownloadDetailsAction->handle($download, null, []);
         }
 
         $picks = $download->picks->keyBy('file_index');
@@ -42,11 +40,6 @@ class GetDownloadDetailsAction
             showId: $picks->get($file->index)?->episode?->entry?->show_id,
         ), $this->qBittorrentService->getFiles($download->hash) ?? []);
 
-        // A magnet's files come from peers first, so a waiting download may not have any to pick yet
-        $status = $download->status === DownloadStatus::WaitingForFiles && !$torrent->hasMetadata
-            ? DownloadStatus::FetchingMetadata
-            : $download->status;
-
-        return new DownloadDetailsData($download, $status, $download->error_code, $torrent, $files);
+        return $this->resolveDownloadDetailsAction->handle($download, $torrent, $files);
     }
 }

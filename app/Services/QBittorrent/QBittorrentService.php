@@ -112,6 +112,26 @@ class QBittorrentService
     }
 
     /**
+     * The torrents with these info hashes that qBittorrent has, by hash. One request for a whole list of downloads.
+     *
+     * @param  list<string>  $hashes
+     * @return array<string, QBittorrentTorrentData>
+     */
+    public function getTorrents(array $hashes): array
+    {
+        if ($hashes === []) {
+            return [];
+        }
+
+        $torrents = $this->send(new GetTorrentsRequest(['hashes' => implode('|', $hashes)]))->json();
+
+        return collect(is_array($torrents) ? $torrents : [])
+            ->map(fn (array $torrent): QBittorrentTorrentData => $this->mapper->torrent($torrent))
+            ->keyBy('hash')
+            ->all();
+    }
+
+    /**
      * The torrent's files, empty while a magnet's file list is still being fetched, or null when qBittorrent doesn't
      * have the torrent.
      *

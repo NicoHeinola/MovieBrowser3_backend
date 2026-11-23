@@ -81,7 +81,7 @@ Route::prefix('v1')->group(function (): void {
 
         Route::apiResource('nekobt-torrents', NekoBtTorrentController::class)->only(['index']);
         // Torrents handed to qBittorrent, admin only like the torrent search; reading one asks qBittorrent
-        Route::apiResource('downloads', DownloadController::class)->only(['store', 'show']);
+        Route::apiResource('downloads', DownloadController::class)->only(['index', 'store', 'show', 'destroy']);
         Route::apiSingleton('downloads.files', DownloadFilesController::class)->only(['update']);
         Route::apiResource('mal-anime', MalAnimeController::class)->only(['index']);
         // A show described by an outside page, for the show editor to start from; nothing is saved
