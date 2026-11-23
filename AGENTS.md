@@ -12,7 +12,7 @@ Guidance for AI coding agents (Claude Code and Copilot). File-specific rules liv
 
 ## Commands
 
-- `composer dev`: server (port 8765, `composer dev -- --port=9000` for another) plus queue worker. Runs with `--no-reload` so `PHP_CLI_SERVER_WORKERS` (4) applies: restart after `.env` changes.
+- `composer dev`: server (port 8765, `composer dev -- --port=9000` for another) plus queue worker and scheduler (`schedule:work`, the jobs in `routes/console.php`, such as the download sync). Runs with `--no-reload` so `PHP_CLI_SERVER_WORKERS` (4) applies: restart after `.env` changes.
 - `php artisan test --compact`, or `--filter=CategoryApiTest`, or a file path.
 - `composer lint:check` / `composer lint:fix`: Pint, `laravel` preset (`!$x` without a space after `!`).
 - Run `composer lint:fix` and the relevant tests before calling work done.
