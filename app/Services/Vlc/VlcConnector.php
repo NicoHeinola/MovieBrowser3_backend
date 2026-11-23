@@ -4,9 +4,11 @@ namespace App\Services\Vlc;
 
 use App\Dtos\EpisodePlayback\VlcConnectionData;
 use App\Services\LenientJsonResponse;
+use Psr\Http\Message\RequestInterface;
 use Saloon\Contracts\Authenticator;
 use Saloon\Http\Auth\BasicAuthenticator;
 use Saloon\Http\Connector;
+use Saloon\Http\PendingRequest;
 use Saloon\Traits\Plugins\HasTimeout;
 
 /**
@@ -33,5 +35,16 @@ final class VlcConnector extends Connector
     protected function defaultAuth(): Authenticator
     {
         return new BasicAuthenticator('', $this->vlc->password);
+    }
+
+    /**
+     * Sends spaces as `%20`. Saloon writes them as `+`, which VLC reads as a plus sign, so it would look for
+     * `Spirited+Away` on the disk. A real plus is `%2B` by now, so no `+` left here is one.
+     */
+    public function handlePsrRequest(RequestInterface $request, PendingRequest $pendingRequest): RequestInterface
+    {
+        $uri = $request->getUri();
+
+        return $request->withUri($uri->withQuery(str_replace('+', '%20', $uri->getQuery())));
     }
 }
