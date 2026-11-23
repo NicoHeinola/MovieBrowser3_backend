@@ -1,0 +1,185 @@
+{
+  "titles": [
+    "Frieren: Beyond Journey's End",
+    "Sousou no Frieren",
+    "葬送のフリーレン"
+  ],
+  "description": "The demon king is dead and the heroes have gone home. Frieren, an elven mage who barely noticed the ten years they shared, sets out again to understand the people she outlives.",
+  "categories": [
+    "adventure",
+    "fantasy",
+    "drama"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/479/1198409.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/469/1173039.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=Iwr1aLEDpe4",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/154707/frieren-beyond-journeys-end-season-1",
+      "episodes": [
+        {
+          "name": "The Journey's End",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "It Didn't Have to Be Magic...",
+          "duration_seconds": 1560
+        },
+        {
+          "name": "Killing Magic",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "The Land Where Souls Rest",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Phantoms of the Dead",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "The Hero of the Village",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Like a Fairy Tale",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Frieren the Slayer",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Aura the Guillotine",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "A Powerful Mage",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Winter in the Northern Lands",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "A Real Hero",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Aversion to One's Own Kind",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Privilege of the Young",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Smells Like Trouble",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Long-Lived Friends",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Take Care",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "First-Class Mage Exam",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Well-Laid Plans",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Necessary Killing",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "The World of Magic",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Future Enemies",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Conquering the Labyrinth",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Perfect Replicas",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "A Fatal Vulnerability",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "The Height of Magic",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "An Era of Humans",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "It Would Be Embarrassing When We Met Again",
+          "duration_seconds": 1440
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/191260/frieren-beyond-journeys-end-season-2",
+      "episodes": [
+        {
+          "name": "Shall We Go, Then?",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "The Hero of the South",
+          "duration_seconds": 1380
+        },
+        {
+          "name": "Somewhere She'd Like",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Other People's Homes",
+          "duration_seconds": 1380
+        },
+        {
+          "name": "Logistics in the Northern Plateau",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "A Demon-Slaying Request",
+          "duration_seconds": 1380
+        },
+        {
+          "name": "The Divine Revolte",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "A Magnificent End",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Himmel's Memoirs",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A Beautiful Sight",
+          "duration_seconds": 1800
+        }
+      ]
+    }
+  ],
+  "links": []
+}

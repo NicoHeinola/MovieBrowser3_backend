@@ -1,0 +1,30 @@
+{
+  "titles": [
+    "Howl's Moving Castle",
+    "Howl no Ugoku Shiro",
+    "ハウルの動く城"
+  ],
+  "description": "A young hatter cursed into an old woman finds shelter in a walking castle that belongs to a vain wizard, his fire demon and a war he would rather avoid.",
+  "categories": [
+    "adventure",
+    "fantasy",
+    "romance"
+  ],
+  "card_image_url": "https://cdn.myanimelist.net/images/anime/1470/138723l.jpg",
+  "banner_url": "https://i.ytimg.com/vi/iwROgK94zcM/maxresdefault.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=iwROgK94zcM",
+  "entries": [
+    {
+      "type": "movie",
+      "name": "Howl's Moving Castle",
+      "url": "https://myanimelist.net/anime/431/Howl_no_Ugoku_Shiro",
+      "episodes": [
+        {
+          "name": "Howl's Moving Castle",
+          "duration_seconds": 7140
+        }
+      ]
+    }
+  ],
+  "links": []
+}

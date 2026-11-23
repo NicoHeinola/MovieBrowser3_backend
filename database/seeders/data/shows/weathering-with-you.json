@@ -1,0 +1,30 @@
+{
+  "titles": [
+    "Weathering with You",
+    "Tenki no Ko",
+    "天気の子"
+  ],
+  "description": "A runaway in a Tokyo where it never stops raining meets a girl who can pray the sun out. People pay for it, and so does she.",
+  "categories": [
+    "drama",
+    "romance",
+    "fantasy"
+  ],
+  "card_image_url": "https://cdn.myanimelist.net/images/anime/1880/101146l.jpg",
+  "banner_url": "https://i.ytimg.com/vi/Q6iK6DjV_iE/maxresdefault.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=Q6iK6DjV_iE",
+  "entries": [
+    {
+      "type": "movie",
+      "name": "Weathering with You",
+      "url": "https://myanimelist.net/anime/38826/Tenki_no_Ko",
+      "episodes": [
+        {
+          "name": "Weathering with You",
+          "duration_seconds": 6720
+        }
+      ]
+    }
+  ],
+  "links": []
+}

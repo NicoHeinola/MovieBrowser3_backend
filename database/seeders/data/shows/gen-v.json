@@ -1,0 +1,95 @@
+{
+  "titles": [
+    "Gen V"
+  ],
+  "description": "Godolkin University trains the next generation of superheroes, and its students compete for the top ranking. Then some of them find out what the school keeps in the basement.",
+  "categories": [
+    "action",
+    "science-fiction",
+    "thriller"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/587/1469203.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/479/1197951.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/140508/gen-v-season-1",
+      "episodes": [
+        {
+          "name": "God U.",
+          "duration_seconds": 3540
+        },
+        {
+          "name": "First Day",
+          "duration_seconds": 2940
+        },
+        {
+          "name": "#ThinkBrink",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "The Whole Truth",
+          "duration_seconds": 2820
+        },
+        {
+          "name": "Welcome to the Monster Club",
+          "duration_seconds": 2460
+        },
+        {
+          "name": "Jumanji",
+          "duration_seconds": 2400
+        },
+        {
+          "name": "Sick",
+          "duration_seconds": 2880
+        },
+        {
+          "name": "Guardians of Godolkin",
+          "duration_seconds": 2340
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/160846/gen-v-season-2",
+      "episodes": [
+        {
+          "name": "New Year, New U",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Justice Never Forgets",
+          "duration_seconds": 2700
+        },
+        {
+          "name": "H is for Human",
+          "duration_seconds": 3300
+        },
+        {
+          "name": "Bags",
+          "duration_seconds": 2880
+        },
+        {
+          "name": "The Kids Are Not All Right",
+          "duration_seconds": 2940
+        },
+        {
+          "name": "Cooking Lessons",
+          "duration_seconds": 2700
+        },
+        {
+          "name": "Hell Week",
+          "duration_seconds": 2460
+        },
+        {
+          "name": "Trojan",
+          "duration_seconds": 2820
+        }
+      ]
+    }
+  ],
+  "links": []
+}

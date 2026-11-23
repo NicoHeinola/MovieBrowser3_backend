@@ -1,0 +1,216 @@
+{
+  "titles": [
+    "Black Mirror"
+  ],
+  "description": "Stand-alone stories about technology that is nearly here already, and the people who should have read the terms and conditions.",
+  "categories": [
+    "science-fiction",
+    "drama",
+    "thriller"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/564/1411764.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/202/505185.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=jDiYGjp5iFg",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/1256/black-mirror-season-1",
+      "episodes": [
+        {
+          "name": "The National Anthem",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Fifteen Million Merits",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Entire History of You",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/1257/black-mirror-season-2",
+      "episodes": [
+        {
+          "name": "Be Right Back",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "White Bear",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "The Waldo Moment",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/44472/black-mirror-season-3",
+      "episodes": [
+        {
+          "name": "Nosedive",
+          "duration_seconds": 3780
+        },
+        {
+          "name": "Playtest",
+          "duration_seconds": 3420
+        },
+        {
+          "name": "Shut Up and Dance",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "San Junipero",
+          "duration_seconds": 3660
+        },
+        {
+          "name": "Men Against Fire",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Hated in the Nation",
+          "duration_seconds": 5340
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/55748/black-mirror-season-4",
+      "episodes": [
+        {
+          "name": "USS Callister",
+          "duration_seconds": 4560
+        },
+        {
+          "name": "Arkangel",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "Crocodile",
+          "duration_seconds": 3540
+        },
+        {
+          "name": "Hang the DJ",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "Metalhead",
+          "duration_seconds": 2460
+        },
+        {
+          "name": "Black Museum",
+          "duration_seconds": 4140
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 5",
+      "url": "https://www.tvmaze.com/seasons/96483/black-mirror-season-5",
+      "episodes": [
+        {
+          "name": "Striking Vipers",
+          "duration_seconds": 3660
+        },
+        {
+          "name": "Smithereens",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Rachel, Jack and Ashley, Too",
+          "duration_seconds": 4020
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 6",
+      "url": "https://www.tvmaze.com/seasons/149848/black-mirror-season-6",
+      "episodes": [
+        {
+          "name": "Joan Is Awful",
+          "duration_seconds": 3360
+        },
+        {
+          "name": "Loch Henry",
+          "duration_seconds": 3360
+        },
+        {
+          "name": "Beyond the Sea",
+          "duration_seconds": 4800
+        },
+        {
+          "name": "Mazey Day",
+          "duration_seconds": 2520
+        },
+        {
+          "name": "Demon 79",
+          "duration_seconds": 4500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 7",
+      "url": "https://www.tvmaze.com/seasons/160367/black-mirror-season-7",
+      "episodes": [
+        {
+          "name": "Common People",
+          "duration_seconds": 3420
+        },
+        {
+          "name": "Bête Noire",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Hotel Reverie",
+          "duration_seconds": 4620
+        },
+        {
+          "name": "Plaything",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "Eulogy",
+          "duration_seconds": 2820
+        },
+        {
+          "name": "USS Callister: Into Infinity",
+          "duration_seconds": 5400
+        }
+      ]
+    },
+    {
+      "type": "tv_special",
+      "name": "White Christmas",
+      "url": "https://www.tvmaze.com/episodes/501956/black-mirror-s02-special-white-christmas",
+      "episodes": [
+        {
+          "name": "White Christmas",
+          "duration_seconds": 4380
+        }
+      ]
+    },
+    {
+      "type": "movie",
+      "name": "Bandersnatch",
+      "url": "https://www.tvmaze.com/episodes/1583427/black-mirror-s04-special-bandersnatch",
+      "episodes": [
+        {
+          "name": "Bandersnatch",
+          "duration_seconds": 5400
+        }
+      ]
+    }
+  ],
+  "links": []
+}

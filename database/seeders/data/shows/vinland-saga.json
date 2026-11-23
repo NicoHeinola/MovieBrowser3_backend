@@ -1,0 +1,224 @@
+{
+  "titles": [
+    "Vinland Saga",
+    "ヴィンランド・サガ"
+  ],
+  "description": "Young Thorfinn follows the Viking who killed his father across a war-torn England, waiting for the duel he was promised. What comes after revenge turns out to be the harder question.",
+  "categories": [
+    "action",
+    "adventure",
+    "historical"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/508/1270295.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/219/547877.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/96415/vinland-saga-season-1",
+      "episodes": [
+        {
+          "name": "Somewhere Not Here",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sword",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Troll",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A True Warrior",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Troll's Son",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Journey Begins",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Normanni",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Beyond the Edge of the Sea",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Battle of London Bridge",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Ragnarok",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A Gamble",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Land on the Far Bank",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Child of a Hero",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Light of Dawn",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "After Yule",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "History of Beasts",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Servant",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Out of the Cradle",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "United Front",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Crown",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Reunion",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Lone Wolf",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Miscalculation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "End of the Prologue",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/144192/vinland-saga-season-2",
+      "episodes": [
+        {
+          "name": "Slave",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Ketil's Farm",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Snake",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Awakening",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Path of Blood",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "We Need a Horse",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Iron Fist Ketil",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "An Empty Man",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Oath",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Cursed Head",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "King and Sword",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "For Lost Love",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dark Clouds",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Freedom",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Storm",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Cause",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Road Home",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The First Method",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Battle of Ketil's Farm",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pain",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Courage",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The King of Rebellion",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Two Paths",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Home",
+          "duration_seconds": 1800
+        }
+      ]
+    }
+  ],
+  "links": []
+}

@@ -1,0 +1,255 @@
+{
+  "titles": [
+    "Code Geass: Lelouch of the Rebellion",
+    "Code Geass: Hangyaku no Lelouch",
+    "コードギアス 反逆のルルーシュ"
+  ],
+  "description": "An exiled prince living in occupied Japan gains the power to make anyone obey a single command. Behind a mask he starts a rebellion against his own empire.",
+  "categories": [
+    "action",
+    "drama",
+    "science-fiction"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/580/1451498.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/226/567223.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/15954/code-geass-hangyaku-no-lelouch-season-1",
+      "episodes": [
+        {
+          "name": "Stage 1: The Day a New Demon was Born",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 2: The White Knight Awakens",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 3: The False Classmate",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 4: His Name Is Zero",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 5: The Princess and the Witch",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 6: The Stolen Mask",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 7: Attack Cornelia",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 8: The Black Knights",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 9: Refrain",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 10: Guren Dances",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 11: Battle for Narita",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 12: The Messenger from Kyoto",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 13: Shirley at Gunpoint",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 14: Geass vs. Geass",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 15: Cheering Mao",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 16: Nunnally Held Hostage",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 17: Knight",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 18: I Order You, Suzaku Kururugi",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 19: Island of the Gods",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 20: Battle at Kyushu",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 21: The School Festival Declaration!",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 22: Bloodstained Euphy",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 23: At Least with Sorrow",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 24: The Collapsing Stage",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Stage 25: Zero",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/15955/code-geass-hangyaku-no-lelouch-season-2",
+      "episodes": [
+        {
+          "name": "Turn 1: The Day a Demon Awakens",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 2: Plan for Independent Japan",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 3: Imprisoned in Campus",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 4: Counterattack at the Gallows",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 5: Knights of the Round",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 6: Surprise Attack over the Pacific",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 7: The Abandoned Mask",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 8: One Million Miracles",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 9: A Bride in the Vermillion Forbidden City",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 10: When Shen Hu Wins Glory",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 11: Power of Passion",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 12: Love Attack!",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 13: Assassin from the Past",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 14: Geass Hunt",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 15: The C's World",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 16: United Federation of Nations Resolution Number One",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 17: The Taste of Humiliation",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 18: Final Battle Tokyo II",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 19: Betrayal",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 20: Emperor Dismissed",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 21: The Ragnarök Connection",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 22: Emperor Lelouch",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 23: Schneizel's Guise",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Turn 24: The Grip of Damocles",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Final Turn: Re;",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "movie",
+      "name": "Lelouch of the Re;surrection",
+      "url": "https://myanimelist.net/anime/34437/Code_Geass__Fukkatsu_no_Lelouch",
+      "episodes": [
+        {
+          "name": "Lelouch of the Re;surrection",
+          "duration_seconds": 6720
+        }
+      ]
+    },
+    {
+      "type": "tv_special",
+      "name": "Specials",
+      "url": null,
+      "episodes": [
+        {
+          "name": "Nunnally in Wonderland (OVA)",
+          "duration_seconds": 1680
+        }
+      ]
+    }
+  ],
+  "links": []
+}

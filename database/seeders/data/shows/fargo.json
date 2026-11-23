@@ -1,0 +1,256 @@
+{
+  "titles": [
+    "Fargo"
+  ],
+  "description": "Each season tells a different crime story from the snowy Midwest, where polite people make one bad decision and then a lot more of them.",
+  "categories": [
+    "crime",
+    "drama",
+    "thriller"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/487/1219631.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/15/38256.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/115/fargo-season-1",
+      "episodes": [
+        {
+          "name": "The Crocodile's Dilemma",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "The Rooster Prince",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "A Muddy Road",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Eating the Blame",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "The Six Ungraspables",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Buridan's Ass",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Who Shaves the Barber?",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "The Heap",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "A Fox, a Rabbit, and a Cabbage",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Morton's Fork",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/8945/fargo-season-2",
+      "episodes": [
+        {
+          "name": "Waiting for Dutch",
+          "duration_seconds": 4140
+        },
+        {
+          "name": "Before the Law",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Myth of Sisyphus",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Fear and Trembling",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "The Gift of the Magi",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Rhinoceros",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Did You Do This? No, You Did It!",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Loplop",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Castle",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Palindrome",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/60289/fargo-season-3",
+      "episodes": [
+        {
+          "name": "The Law of Vacant Places",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Principle of Restricted Choice",
+          "duration_seconds": 4440
+        },
+        {
+          "name": "The Law of Non-Contradiction",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "The Narrow Escape Problem",
+          "duration_seconds": 4320
+        },
+        {
+          "name": "The House of Special Purpose",
+          "duration_seconds": 5040
+        },
+        {
+          "name": "The Lord of No Mercy",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "The Law of Inevitability",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Who Rules the Land of Denial?",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Aporia",
+          "duration_seconds": 4380
+        },
+        {
+          "name": "Somebody to Love",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/85818/fargo-season-4",
+      "episodes": [
+        {
+          "name": "Welcome to the Alternate Economy",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Land of Taking and Killing",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Raddoppiarlo",
+          "duration_seconds": 5160
+        },
+        {
+          "name": "The Pretend War",
+          "duration_seconds": 4920
+        },
+        {
+          "name": "The Birthplace of Civilization",
+          "duration_seconds": 5160
+        },
+        {
+          "name": "Camp Elegance",
+          "duration_seconds": 3780
+        },
+        {
+          "name": "Lay Away",
+          "duration_seconds": 3660
+        },
+        {
+          "name": "The Nadir",
+          "duration_seconds": 4140
+        },
+        {
+          "name": "East/West",
+          "duration_seconds": 4440
+        },
+        {
+          "name": "Happy",
+          "duration_seconds": 4320
+        },
+        {
+          "name": "Storia Americana",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 5",
+      "url": "https://www.tvmaze.com/seasons/121668/fargo-season-5",
+      "episodes": [
+        {
+          "name": "The Tragedy of the Commons",
+          "duration_seconds": 3360
+        },
+        {
+          "name": "Trials and Tribulations",
+          "duration_seconds": 2820
+        },
+        {
+          "name": "The Paradox of Intermediate Transactions",
+          "duration_seconds": 3660
+        },
+        {
+          "name": "Insolubilia",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "The Tiger",
+          "duration_seconds": 3660
+        },
+        {
+          "name": "The Tender Trap",
+          "duration_seconds": 4140
+        },
+        {
+          "name": "Linda",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Blanket",
+          "duration_seconds": 3900
+        },
+        {
+          "name": "The Useless Hand",
+          "duration_seconds": 3840
+        },
+        {
+          "name": "Bisquik",
+          "duration_seconds": 4020
+        }
+      ]
+    }
+  ],
+  "links": []
+}

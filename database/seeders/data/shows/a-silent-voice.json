@@ -1,0 +1,30 @@
+{
+  "titles": [
+    "A Silent Voice",
+    "Koe no Katachi",
+    "聲の形"
+  ],
+  "description": "Years after bullying a deaf classmate until she changed schools, Shoya tracks her down to make amends, and has to learn to look people in the face again.",
+  "categories": [
+    "drama",
+    "romance",
+    "slice-of-life"
+  ],
+  "card_image_url": "https://cdn.myanimelist.net/images/anime/1122/96435l.jpg",
+  "banner_url": "https://i.ytimg.com/vi/nfK6UgLra7g/maxresdefault.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=nfK6UgLra7g",
+  "entries": [
+    {
+      "type": "movie",
+      "name": "A Silent Voice",
+      "url": "https://myanimelist.net/anime/28851/Koe_no_Katachi",
+      "episodes": [
+        {
+          "name": "A Silent Voice",
+          "duration_seconds": 7800
+        }
+      ]
+    }
+  ],
+  "links": []
+}

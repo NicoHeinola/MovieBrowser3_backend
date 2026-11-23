@@ -1,0 +1,35 @@
+{
+  "titles": [
+    "Your Name.",
+    "Kimi no Na wa.",
+    "君の名は。"
+  ],
+  "description": "A girl in the mountains and a boy in Tokyo wake up in each other's bodies. They leave notes, fall for each other and find out that something stands between them that no train can cross.",
+  "categories": [
+    "drama",
+    "romance",
+    "supernatural"
+  ],
+  "card_image_url": "https://cdn.myanimelist.net/images/anime/5/87048l.jpg",
+  "banner_url": "https://i.ytimg.com/vi/xU47nhruN-Q/maxresdefault.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=xU47nhruN-Q",
+  "entries": [
+    {
+      "type": "movie",
+      "name": "Your Name",
+      "url": "https://myanimelist.net/anime/32281/Kimi_no_Na_wa",
+      "episodes": [
+        {
+          "name": "Your Name",
+          "duration_seconds": 6360
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "suggested_next",
+      "title": "Weathering with You"
+    }
+  ]
+}

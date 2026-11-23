@@ -1,0 +1,398 @@
+{
+  "titles": [
+    "Haikyu!!",
+    "Haikyuu!!",
+    "ハイキュー!!"
+  ],
+  "description": "Short but fast Hinata joins a once-great school volleyball team, only to find that the setter who crushed him in middle school is on it too.",
+  "categories": [
+    "comedy",
+    "sports",
+    "slice-of-life"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/65/164065.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/223/559347.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/15762/haikyuu-season-1",
+      "episodes": [
+        {
+          "name": "The End & the Beginning",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Karasuno High School Volleyball Club",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Formidable Ally",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The View from the Summit",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "A Coward's Anxiety",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "An Interesting Team",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Versus the Great King",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "He Who Is Called ''Ace''",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "A Toss to the Ace",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Yearning",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Decision",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Neko-Karasu Reunion",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Rival",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Formidable Opponents",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Revival",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Winners and Losers",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Iron Wall",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Guarding Your Back",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Coaches",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Oikawa Toru Is Not a Genius",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Senpai's True Abilities",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Evolution",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Point that Changes the Momentum",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Removing The Solitary King",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Third Day",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/15763/haikyuu-season-2",
+      "episodes": [
+        {
+          "name": "Let's Go To Tokyo!!",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Direct Sunlight",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Villager B",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Center Ace",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Greed",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Tempo",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Moonrise",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Illusionary Hero",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Vs \"Umbrella\"",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Cogs",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Above",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Let the Games Begin!",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "A Simple and Pure Strength",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Still Growing",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Place to Play",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Next",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Battle Without Will Power",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Losers",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Iron Wall Can Be Rebuilt Again and Again",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Wiping Out",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Destroyer",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Fight of the Previously Spineless",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Team",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Absolute Limit Switch",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Declaration of War",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/39807/haikyuu-season-3",
+      "episodes": [
+        {
+          "name": "Greetings",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Threat of \"Left\"",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Guess-Monster",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Halo Around the Moon",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "One vs. Many",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Chemical Change of Encounters",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Obsession",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "An Annoying Guy",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Volleyball Freaks",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Battle of Concepts",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/103609/haikyuu-season-4",
+      "episodes": [
+        {
+          "name": "Introductions",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Lost",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Perspective",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Take it Easy",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Hunger",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Enhancements",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Return",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Challenger",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Everyone's Night",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Battle Lines",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "A Chance to Connect",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Vivid",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Second Day",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Rhythm",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Found",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Broken Heart",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Cats vs Monkeys",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Trap",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Ultimate Challengers",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Leader",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Hero",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Pitons",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Birth of the Serene King",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Monsters' Ball",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Promised Land",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "movie",
+      "name": "The Dumpster Battle",
+      "url": "https://www.tvmaze.com/episodes/2895591/haikyuu-s04-special-the-dumpster-battle",
+      "episodes": [
+        {
+          "name": "The Dumpster Battle",
+          "duration_seconds": 5100
+        }
+      ]
+    }
+  ],
+  "links": []
+}

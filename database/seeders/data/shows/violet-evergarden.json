@@ -1,0 +1,88 @@
+{
+  "titles": [
+    "Violet Evergarden",
+    "ヴァイオレット・エヴァーガーデン"
+  ],
+  "description": "A girl raised as a weapon comes home from the war with metal arms and an order she does not understand. She takes a job writing letters for others to find out what the words mean.",
+  "categories": [
+    "drama",
+    "fantasy",
+    "slice-of-life"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/504/1261954.jpg",
+  "banner_url": "https://i.ytimg.com/vi/BUfSen2rYQs/maxresdefault.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=BUfSen2rYQs",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/79394/violet-evergarden-season-1",
+      "episodes": [
+        {
+          "name": "'I Love You' and Auto Memoir Dolls",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Never Coming Back",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "May You Be an Exemplary Auto Memoir Doll",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "You Won't be a Tool, but a Person Worthy of that Name",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "You Write Letters That Bring People Together?",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Somewhere Under the Starry Sky",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Nameless",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Nameless",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Violet Evergarden",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Loved Ones Will Always Watch Over You",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "'I Don't Want Anybody Else to Die'",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Nameless",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Auto Memoir Doll and \"I Love You\"",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "movie",
+      "name": "Violet Evergarden the Movie",
+      "url": "https://www.tvmaze.com/episodes/2195471/violet-evergarden-s01-special-violet-evergarden-the-movie",
+      "episodes": [
+        {
+          "name": "Violet Evergarden the Movie",
+          "duration_seconds": 8400
+        }
+      ]
+    }
+  ],
+  "links": []
+}

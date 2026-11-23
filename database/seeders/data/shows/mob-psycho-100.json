@@ -1,0 +1,187 @@
+{
+  "titles": [
+    "Mob Psycho 100",
+    "モブサイコ100"
+  ],
+  "description": "A shy schoolboy with overwhelming psychic powers works for a con man who has none. All he wants is to grow a little muscle and talk to the girl he likes.",
+  "categories": [
+    "action",
+    "comedy",
+    "supernatural"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/508/1270187.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/225/564167.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/47685/mob-psycho-100-season-1",
+      "episodes": [
+        {
+          "name": "Self-Proclaimed Psychic: Reigen Arataka ~And Mob~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Doubts about Youth ~The Telepathy Club Appears~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "An Invitation to a Meeting ~Simply Put, I Just Want to be Popular~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Idiots Only Event ~Kin~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "OCHIMUSHA ~Psychic Powers and Me~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Discord ~To Become One~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Exaltation ~I've Obtained Loss~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Older Brother Bows ~Destructive Intent~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Claw ~7th Division~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Heinous Aura ~Mastermind~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Master ~Leader~",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Mob and Reigen",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/89316/mob-psycho-100-season-2",
+      "episodes": [
+        {
+          "name": "Ripped Apart ~Someone Is Watching~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Urban Legends ~Encountering Rumors~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "One Danger After Another ~Degeneration~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Inside ~Evil Spirit~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Discord ~Choices~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Poor, Lonely, Whitey",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Cornered ~True Identity~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Even Then ~Continue Forward~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Show Me What You've Got ~Band Together~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Collision ~Power Type~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Guidance ~Psychic Sensor~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Battle for Social Rehabilitation ~Friendship~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Boss Fight ~The Final Light~",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/141066/mob-psycho-100-season-3",
+      "episodes": [
+        {
+          "name": "Future ~Career Paths~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Yokai Hunter Amakusa Haruaki Appears! ~The Threat of a Hundred Demons!!~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Getting Carried Away ~100%~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Divine Tree 1 ~The Founder Appears~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Divine Tree 2 ~Peace~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Divine Tree 3 ~Dimple Is~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Transmission 1 ~Winter Break~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Transmission 2 ~Encountering the Unknown~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mob 1 ~Moving~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mob 2 ~Rival~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mob 3 ~Trauma~",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Confession ~The Future~",
+          "duration_seconds": 1800
+        }
+      ]
+    }
+  ],
+  "links": []
+}

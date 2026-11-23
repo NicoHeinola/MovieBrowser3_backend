@@ -1,0 +1,104 @@
+{
+  "titles": [
+    "Sherlock"
+  ],
+  "description": "Sherlock Holmes and Dr. Watson solve cases in present-day London, with smartphones, a blog and an enemy who is just as bored as Holmes is.",
+  "categories": [
+    "crime",
+    "mystery",
+    "drama"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/171/428042.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/93/233089.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/1353/sherlock-season-1",
+      "episodes": [
+        {
+          "name": "A Study in Pink",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Blind Banker",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Great Game",
+          "duration_seconds": 5400
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/1354/sherlock-season-2",
+      "episodes": [
+        {
+          "name": "A Scandal in Belgravia",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Hounds of Baskerville",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Reichenbach Fall",
+          "duration_seconds": 5400
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/1355/sherlock-season-3",
+      "episodes": [
+        {
+          "name": "The Empty Hearse",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Sign of Three",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "His Last Vow",
+          "duration_seconds": 5400
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/20855/sherlock-season-4",
+      "episodes": [
+        {
+          "name": "The Six Thatchers",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Lying Detective",
+          "duration_seconds": 5400
+        },
+        {
+          "name": "The Final Problem",
+          "duration_seconds": 5400
+        }
+      ]
+    },
+    {
+      "type": "tv_special",
+      "name": "The Abominable Bride",
+      "url": "https://www.tvmaze.com/episodes/401163/sherlock-s04-special-the-abominable-bride",
+      "episodes": [
+        {
+          "name": "The Abominable Bride",
+          "duration_seconds": 5580
+        }
+      ]
+    }
+  ],
+  "links": []
+}

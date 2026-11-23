@@ -1,0 +1,310 @@
+{
+  "titles": [
+    "Better Call Saul"
+  ],
+  "description": "Years before he meets Walter White, small-time lawyer Jimmy McGill hustles for clients in Albuquerque, looks after his brilliant brother and keeps getting pulled towards the cartel's business. Step by step he becomes the man who calls himself Saul Goodman.",
+  "categories": [
+    "crime",
+    "drama"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/501/1253515.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/118/297100.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=HN4oydykJFc",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/2566/better-call-saul-season-1",
+      "episodes": [
+        {
+          "name": "Uno",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Mijo",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Nacho",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Hero",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Alpine Shepherd Boy",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Five-O",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Bingo",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Rico",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Pimento",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Marco",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/24939/better-call-saul-season-2",
+      "episodes": [
+        {
+          "name": "Switch",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Cobbler",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Amarillo",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Gloves Off",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Rebecca",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Bali Ha'i",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Inflatable",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Fifi",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Nailed",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Klick",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/38746/better-call-saul-season-3",
+      "episodes": [
+        {
+          "name": "Mabel",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Witness",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Sunk Costs",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Sabrosito",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Chicanery",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Off Brand",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Expenses",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Slip",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Fall",
+          "duration_seconds": 4620
+        },
+        {
+          "name": "Lantern",
+          "duration_seconds": 4560
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/70687/better-call-saul-season-4",
+      "episodes": [
+        {
+          "name": "Smoke",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Breathe",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Something Beautiful",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Talk",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Quite a Ride",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Piñata",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Something Stupid",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Coushatta",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Wiedersehen",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Winner",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 5",
+      "url": "https://www.tvmaze.com/seasons/87440/better-call-saul-season-5",
+      "episodes": [
+        {
+          "name": "Magic Man",
+          "duration_seconds": 4500
+        },
+        {
+          "name": "50% Off",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "The Guy for This",
+          "duration_seconds": 4500
+        },
+        {
+          "name": "Namaste",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Dedicado a Max",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Wexler v. Goodman",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "JMM",
+          "duration_seconds": 4080
+        },
+        {
+          "name": "Bagman",
+          "duration_seconds": 4500
+        },
+        {
+          "name": "Bad Choice Road",
+          "duration_seconds": 5100
+        },
+        {
+          "name": "Something Unforgivable",
+          "duration_seconds": 5100
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 6",
+      "url": "https://www.tvmaze.com/seasons/105103/better-call-saul-season-6",
+      "episodes": [
+        {
+          "name": "Wine and Roses",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Carrot and Stick",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Rock and Hard Place",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Hit and Run",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Black and Blue",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Axe and Grind",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Plan and Execution",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Point and Shoot",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Fun and Games",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Nippy",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Breaking Bad",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Waterworks",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Saul Gone",
+          "duration_seconds": 4320
+        }
+      ]
+    }
+  ],
+  "links": []
+}

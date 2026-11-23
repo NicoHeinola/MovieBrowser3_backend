@@ -1,0 +1,887 @@
+{
+  "titles": [
+    "The Office",
+    "The Office (US)"
+  ],
+  "description": "A documentary crew follows the employees of a paper company's Scranton branch, their well-meaning and unbearable boss, and the slow romance across two desks.",
+  "categories": [
+    "comedy"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/481/1204342.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/220/550710.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/2087/the-office-season-1",
+      "episodes": [
+        {
+          "name": "Pilot",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Diversity Day",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Health Care",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Alliance",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Basketball",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Hot Girl",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/2088/the-office-season-2",
+      "episodes": [
+        {
+          "name": "The Dundies",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sexual Harassment",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Office Olympics",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Fire",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Halloween",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Fight",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Client",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Performance Review",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "E-Mail Surveillance",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Christmas Party",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Booze Cruise",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Injury",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Secret",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Carpet",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Boys and Girls",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Valentine's Day",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dwight's Speech",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Take Your Daughter to Work Day",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Michael's Birthday",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Drug Testing",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Conflict Resolution",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Casino Night",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/2089/the-office-season-3",
+      "episodes": [
+        {
+          "name": "Gay Witch Hunt",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Convention",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Coup",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Grief Counseling",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Initiation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Diwali",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Branch Closing",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Merger",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Convict",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A Benihana Christmas (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A Benihana Christmas (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Back from Vacation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Traveling Salesmen",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Return",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Ben Franklin",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Phyllis' Wedding",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Business School",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Cocktails",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Negotiation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Safety Training",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Product Recall",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Women's Appreciation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Beach Games",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Job (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Job (2)",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/2090/the-office-season-4",
+      "episodes": [
+        {
+          "name": "Fun Run (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Fun Run (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dunder Mifflin Infinity (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dunder Mifflin Infinity (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Launch Party (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Launch Party (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Money (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Money (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Local Ad",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Branch Wars",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Survivor Man",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Deposition",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dinner Party",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Chair Model",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Night Out",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Did I Stutter?",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Job Fair",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Goodbye, Toby (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Goodbye, Toby (2)",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 5",
+      "url": "https://www.tvmaze.com/seasons/2091/the-office-season-5",
+      "episodes": [
+        {
+          "name": "Weight Loss (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Weight Loss (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Business Ethics",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Baby Shower",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Crime Aid",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Employee Transfer",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Customer Survey",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Business Trip",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Frame Toby",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Surplus",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Moroccan Christmas",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Duel",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Prince Family Paper",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Stress Relief (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Stress Relief (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Lecture Circuit (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Lecture Circuit (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Blood Drive",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Golden Ticket",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "New Boss",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Two Weeks",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dream Team",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Michael Scott Paper Company",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Heavy Competition",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Broke",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Casual Friday",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Cafe Disco",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Company Picnic",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 6",
+      "url": "https://www.tvmaze.com/seasons/2092/the-office-season-6",
+      "episodes": [
+        {
+          "name": "Gossip",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Meeting",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Promotion",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Niagara (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Niagara (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mafia",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Lover",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Koi Pond",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Double Date",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Murder",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Shareholder Meeting",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Scott's Tots",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Secret Santa",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Banker",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sabre",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Manager and the Salesman",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Delivery (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Delivery (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "St. Patrick's Day",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "New Leads",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Happy Hour",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Secretary's Day",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Body Language",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Cover-Up",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Chump",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Whistleblower",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 7",
+      "url": "https://www.tvmaze.com/seasons/2093/the-office-season-7",
+      "episodes": [
+        {
+          "name": "Nepotism",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Counseling",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Andy's Play",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sex Ed",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Sting",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Costume Contest",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Christening",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Viewing Party",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "WUPHF.com",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "China",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Classy Christmas (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Classy Christmas (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Ultimatum",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Seminar",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Search",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "PDA",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Threat Level Midnight",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Todd Packer",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Garage Sale",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Training Day",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Michael's Last Dundies",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Goodbye, Michael (1)",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "Goodbye, Michael (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Inner Circle",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dwight K. Schrute, (Acting) Manager",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Search Committee (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Search Committee (2)",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 8",
+      "url": "https://www.tvmaze.com/seasons/2094/the-office-season-8",
+      "episodes": [
+        {
+          "name": "The List",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Incentive",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Lotto",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Garden Party",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Spooked",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Doomsday",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pam's Replacement",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Gettysburg",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mrs. California",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Christmas Wishes",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Trivia",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pool Party",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Jury Duty",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Special Project",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tallahassee",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "After Hours",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Test the Store",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Last Day in Florida",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Get the Girl",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Welcome Party",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Angry Andy",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Fundraiser",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Turf War",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Free Family Portrait Studio",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 9",
+      "url": "https://www.tvmaze.com/seasons/2095/the-office-season-9",
+      "episodes": [
+        {
+          "name": "The New Guys",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Roy's Wedding",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Andy's Ancestry",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Work Bus",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Here Comes Treble",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Boat",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Whale",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Target",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dwight Christmas",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Lice",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Suit Warehouse",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Customer Loyalty",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Junior Salesman",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Vandalism",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Couples Discount",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Moving On",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "The Farm",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Promos",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Stairmageddon",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Paper Airplane",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Livin' the Dream",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "A.A.R.M. (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A.A.R.M. (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Finale (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Finale (2)",
+          "duration_seconds": 2700
+        }
+      ]
+    }
+  ],
+  "links": []
+}

@@ -1,0 +1,316 @@
+{
+  "titles": [
+    "Breaking Bad"
+  ],
+  "description": "A high-school chemistry teacher is told he has terminal lung cancer and turns to cooking methamphetamine with a former student to leave his family something behind. The work he is best at turns out to be the one that destroys everyone around him.",
+  "categories": [
+    "crime",
+    "drama",
+    "thriller"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/501/1253519.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/219/547904.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=HhesaQXLuRY",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/753/breaking-bad-season-1",
+      "episodes": [
+        {
+          "name": "Pilot",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Cat's in the Bag...",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "...and the Bag's in the River",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Cancer Man",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Gray Matter",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Crazy Handful of Nothin'",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "A No-Rough-Stuff-Type Deal",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/754/breaking-bad-season-2",
+      "episodes": [
+        {
+          "name": "Seven Thirty-Seven",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Grilled",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Bit by a Dead Bee",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Down",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Breakage",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Peekaboo",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Negro Y Azul",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Better Call Saul",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "4 Days Out",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Over",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Mandala",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Phoenix",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "ABQ",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/755/breaking-bad-season-3",
+      "episodes": [
+        {
+          "name": "No Más",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Caballo sin Nombre",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "I.F.T.",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Green Light",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Más",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Sunset",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "One Minute",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "I See You",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Kafkaesque",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Fly",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Abiquiu",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Half Measures",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Full Measure",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/756/breaking-bad-season-4",
+      "episodes": [
+        {
+          "name": "Box Cutter",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Thirty-Eight Snub",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Open House",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Bullet Points",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Shotgun",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Cornered",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Problem Dog",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Hermanos",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Bug",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Salud",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Crawl Space",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "End Times",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Face Off",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 5",
+      "url": "https://www.tvmaze.com/seasons/757/breaking-bad-season-5",
+      "episodes": [
+        {
+          "name": "Live Free or Die",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Madrigal",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Hazard Pay",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Fifty-One",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Dead Freight",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Buyout",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Say My Name",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Gliding Over All",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Blood Money",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Buried",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Confessions",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Rabid Dog",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "To'hajiilee",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Ozymandias",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Granite State",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Felina",
+          "duration_seconds": 3600
+        }
+      ]
+    },
+    {
+      "type": "movie",
+      "name": "El Camino: A Breaking Bad Movie",
+      "url": "https://www.tvmaze.com/episodes/2007806/breaking-bad-s05-special-el-camino-a-breaking-bad-movie",
+      "episodes": [
+        {
+          "name": "El Camino: A Breaking Bad Movie",
+          "duration_seconds": 7320
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "spin_off",
+      "title": "Better Call Saul"
+    }
+  ]
+}

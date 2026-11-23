@@ -1,0 +1,220 @@
+{
+  "titles": [
+    "Stranger Things"
+  ],
+  "description": "A boy disappears from a small Indiana town in 1983, and the friends who go looking for him find a girl with a shaved head and strange powers. Behind a secret laboratory lies another world that keeps reaching into theirs.",
+  "categories": [
+    "horror",
+    "science-fiction",
+    "drama"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/595/1489169.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/70/175852.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=b9EkMc79ZSU",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/9601/stranger-things-season-1",
+      "episodes": [
+        {
+          "name": "Chapter One: The Vanishing of Will Byers",
+          "duration_seconds": 2940
+        },
+        {
+          "name": "Chapter Two: The Weirdo on Maple Street",
+          "duration_seconds": 3360
+        },
+        {
+          "name": "Chapter Three: Holly, Jolly",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "Chapter Four: The Body",
+          "duration_seconds": 3060
+        },
+        {
+          "name": "Chapter Five: The Flea and the Acrobat",
+          "duration_seconds": 3180
+        },
+        {
+          "name": "Chapter Six: The Monster",
+          "duration_seconds": 2820
+        },
+        {
+          "name": "Chapter Seven: The Bathtub",
+          "duration_seconds": 2520
+        },
+        {
+          "name": "Chapter Eight: The Upside Down",
+          "duration_seconds": 3300
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/52465/stranger-things-season-2",
+      "episodes": [
+        {
+          "name": "Chapter One: MADMAX",
+          "duration_seconds": 2880
+        },
+        {
+          "name": "Chapter Two: Trick or Treat, Freak",
+          "duration_seconds": 3360
+        },
+        {
+          "name": "Chapter Three: The Pollywog",
+          "duration_seconds": 3060
+        },
+        {
+          "name": "Chapter Four: Will the Wise",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "Chapter Five: Dig Dug",
+          "duration_seconds": 3480
+        },
+        {
+          "name": "Chapter Six: The Spy",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "Chapter Seven: The Lost Sister",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "Chapter Eight: The Mind Flayer",
+          "duration_seconds": 2880
+        },
+        {
+          "name": "Chapter Nine: The Gate",
+          "duration_seconds": 3720
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/73742/stranger-things-season-3",
+      "episodes": [
+        {
+          "name": "Chapter One: Suzie, Do You Copy?",
+          "duration_seconds": 3060
+        },
+        {
+          "name": "Chapter Two: The Mall Rats",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Chapter Three: The Case of the Missing Lifeguard",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Chapter Four: The Sauna Test",
+          "duration_seconds": 3180
+        },
+        {
+          "name": "Chapter Five: The Flayed",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "Chapter Six: E Pluribus Unum",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Chapter Seven: The Bite",
+          "duration_seconds": 3300
+        },
+        {
+          "name": "Chapter Eight: The Battle of Starcourt",
+          "duration_seconds": 4680
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/100928/stranger-things-season-4",
+      "episodes": [
+        {
+          "name": "Chapter One: The Hellfire Club",
+          "duration_seconds": 4680
+        },
+        {
+          "name": "Chapter Two: Vecna's Curse",
+          "duration_seconds": 4620
+        },
+        {
+          "name": "Chapter Three: The Monster and the Superhero",
+          "duration_seconds": 3780
+        },
+        {
+          "name": "Chapter Four: Dear Billy",
+          "duration_seconds": 4740
+        },
+        {
+          "name": "Chapter Five: The Nina Project",
+          "duration_seconds": 4500
+        },
+        {
+          "name": "Chapter Six: The Dive",
+          "duration_seconds": 4380
+        },
+        {
+          "name": "Chapter Seven: The Massacre at Hawkins Lab",
+          "duration_seconds": 6000
+        },
+        {
+          "name": "Chapter Eight: Papa",
+          "duration_seconds": 5160
+        },
+        {
+          "name": "Chapter Nine: The Piggyback",
+          "duration_seconds": 8520
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 5",
+      "url": "https://www.tvmaze.com/seasons/137136/stranger-things-season-5",
+      "episodes": [
+        {
+          "name": "Chapter One: The Crawl",
+          "duration_seconds": 4260
+        },
+        {
+          "name": "Chapter Two: The Vanishing of Holly Wheeler",
+          "duration_seconds": 3420
+        },
+        {
+          "name": "Chapter Three: The Turnbow Trap",
+          "duration_seconds": 4140
+        },
+        {
+          "name": "Chapter Four: Sorcerer",
+          "duration_seconds": 5160
+        },
+        {
+          "name": "Chapter Five: Shock Jock",
+          "duration_seconds": 4080
+        },
+        {
+          "name": "Chapter Six: Escape from Camazotz",
+          "duration_seconds": 4500
+        },
+        {
+          "name": "Chapter Seven: The Bridge",
+          "duration_seconds": 3960
+        },
+        {
+          "name": "Chapter Eight: The Rightside Up",
+          "duration_seconds": 7680
+        }
+      ]
+    }
+  ],
+  "links": []
+}

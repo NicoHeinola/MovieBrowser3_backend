@@ -1,0 +1,448 @@
+{
+  "titles": [
+    "Attack on Titan",
+    "Shingeki no Kyojin",
+    "進撃の巨人",
+    "AoT"
+  ],
+  "description": "What is left of humanity lives behind three enormous walls, safe from man-eating giants until one of them kicks a hole in the first. Eren Yeager swears to kill them all, and learns where they come from.",
+  "categories": [
+    "action",
+    "drama",
+    "fantasy"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/632/1582290.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/219/549570.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=MGRm4IzK1SQ",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/3989/attack-on-titan-season-1",
+      "episodes": [
+        {
+          "name": "To You, in 2000 Years - The Fall of Shiganshina (1)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "That Day - The Fall of Shiganshina (2)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "A Dim Light Amid Despair - Humanity's Comeback (1)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Night of the Closing Ceremony - Humanity's Comeback (2)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "First Battle - The Struggle for Trost (1)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The World the Girl Saw - The Struggle for Trost (2)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Small Blade - The Struggle for Trost (3)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "I Can Hear His Heartbeat - The Struggle for Trost (4)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Whereabouts of His Left Arm - The Struggle for Trost (5)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Response - The Struggle for Trost (6)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Idol - The Struggle for Trost (7)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Wound - The Struggle for Trost (8)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Primal Desire - The Struggle for Trost (9)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Can't Look Into His Eyes - Eve of the Counterattack (1)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Special Operations Squad - Eve of the Counterattack (2)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "What Needs to Be Done Now - Eve of the Counterattack (3)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Female Titan - The 57th Exterior Scouting Mission (1)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Forest of Giant Trees - The 57th Exterior Scouting Mission (2)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Bite - The 57th Exterior Scouting Mission (3)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Erwin Smith - The 57th Exterior Scouting Mission (4)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Crushing Blow - The 57th Exterior Scouting Mission (5)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Defeated - The 57th Exterior Scouting Mission (6)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Smile - Assault on Stohess (1)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Mercy - Assault on Stohess (2)",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Wall: Raid on Stohess District (3)",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/49119/attack-on-titan-season-2",
+      "episodes": [
+        {
+          "name": "Beast Titan",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "I'm Home",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Southwestward",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Soldier",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Historia",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Warrior",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Close Combat",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Hunters",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Opening",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Children",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Charge",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Scream",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/70496/attack-on-titan-season-3",
+      "episodes": [
+        {
+          "name": "Smoke Signal",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Pain",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Old Story",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Trust",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Reply",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Sin",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Wish",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Outside the Walls of Orvud District",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Ruler of the Walls",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Friends",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Bystander",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Night of the Battle to Retake the Wall",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Town Where Everything Began",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Thunder Spears",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Descent",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Perfect Game",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Hero",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Midnight Sun",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Basement",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "That Day",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Attack Titan",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Beyond the Wall",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/97882/attack-on-titan-season-4",
+      "episodes": [
+        {
+          "name": "Other Side of the Sea",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Midnight Train",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Door of Hope",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "From One Hand to Another",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Declaration of War",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The War Hammer Titan",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Assault",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Assassin's Bullet",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Brave Volunteers",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "A Sound Argument",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Impostors",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Guides",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Children of the Forest",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Violence",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Sole Salvation",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Heaven and Earth",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Judgement",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Sneak Attack",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Two Brothers",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Memories of the Future",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "From You, 2,000 Years Ago",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Thaw",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Sunset",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Pride",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Night of the End",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Traitor",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Retrospective",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Dawn of Humanity",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Attack on Titan: The Final Chapters (Part One)",
+          "duration_seconds": 3660
+        },
+        {
+          "name": "Attack on Titan: The Final Chapters (Part Two)",
+          "duration_seconds": 5400
+        }
+      ]
+    },
+    {
+      "type": "tv_special",
+      "name": "Specials",
+      "url": null,
+      "episodes": [
+        {
+          "name": "Ilse's Notebook: Memoirs of a Recon Corps Member",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "A Sudden Visitor: The Torturous Curse of Youth",
+          "duration_seconds": 1560
+        },
+        {
+          "name": "Distress",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "A Choice with No Regrets: Part One",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "A Choice with No Regrets: Part Two",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Wall Sina, Goodbye: Part One",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Wall Sina, Goodbye: Part Two",
+          "duration_seconds": 1440
+        },
+        {
+          "name": "Lost in the Cruel World",
+          "duration_seconds": 1440
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "suggested_next",
+      "title": "Vinland Saga"
+    }
+  ]
+}

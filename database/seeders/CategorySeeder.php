@@ -24,11 +24,14 @@ class CategorySeeder extends Seeder
             ['name' => 'Mystery', 'value' => 'mystery', 'icon' => 'mdi-magnify'],
             ['name' => 'Romance', 'value' => 'romance', 'icon' => 'mdi-heart'],
             ['name' => 'Science Fiction', 'value' => 'science-fiction', 'icon' => 'mdi-rocket-launch'],
+            ['name' => 'Slice of Life', 'value' => 'slice-of-life', 'icon' => 'mdi-coffee'],
+            ['name' => 'Sports', 'value' => 'sports', 'icon' => 'mdi-volleyball'],
+            ['name' => 'Supernatural', 'value' => 'supernatural', 'icon' => 'mdi-auto-fix'],
             ['name' => 'Thriller', 'value' => 'thriller', 'icon' => 'mdi-flashlight'],
         ];
 
         foreach ($categories as $category) {
-            Category::query()->updateOrCreate(
+            Category::query()->firstOrCreate(
                 ['value' => $category['value']],
                 ['name' => $category['name'], 'icon' => $category['icon']],
             );

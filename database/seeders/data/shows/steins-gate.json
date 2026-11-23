@@ -1,0 +1,141 @@
+{
+  "titles": [
+    "Steins;Gate",
+    "シュタインズ・ゲート"
+  ],
+  "description": "A self-styled mad scientist and his friends find out that their microwave can send text messages into the past. Every change helps someone, until one of them brings a European laboratory to their door.",
+  "categories": [
+    "science-fiction",
+    "thriller",
+    "drama"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/373/933178.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/225/564679.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/7280/steinsgate-season-1",
+      "episodes": [
+        {
+          "name": "Turning Point",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Time Travel Paranoia",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Parallel World Paranoia",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Interpreter Rendezvous",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Starmine Rendezvous",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Butterfly Effect's Divergence",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Divergence Singularity",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Chaos Theory Homeostasis I",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Chaos Theory Homeostasis II",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Chaos Theory Homeostasis III",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Dogma in Event Horizon",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Dogma in Ergosphere",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Metaphysics Necrosis",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Physically Necrosis",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Missing Link Necrosis",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Sacrificial Necrosis",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Made in Complex",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Fractal Androgynous",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Endless Apoptosis",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Finalize Apoptosis",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Paradox Meltdown",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Being Meltdown",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Open the Steins Gate",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Achievement Point",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "tv_special",
+      "name": "Specials",
+      "url": null,
+      "episodes": [
+        {
+          "name": "Egoistic Poriomania",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Open the Missing Link - Divide By Zero",
+          "duration_seconds": 1500
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "sequel",
+      "title": "Steins;Gate 0"
+    }
+  ]
+}

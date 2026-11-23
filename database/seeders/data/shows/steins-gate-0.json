@@ -1,0 +1,128 @@
+{
+  "titles": [
+    "Steins;Gate 0",
+    "シュタインズ・ゲート ゼロ"
+  ],
+  "description": "On the world line where Okabe gave up, he tries to live a normal life. Then he meets an artificial intelligence with the memories of the one he could not save.",
+  "categories": [
+    "science-fiction",
+    "thriller",
+    "drama"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/148/371410.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/225/564679.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/82181/steinsgate-0-season-1",
+      "episodes": [
+        {
+          "name": "Missing Link of the Annihilator -Absolute Zero-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Epigraph of the Closed Curve -Closed Epigraph-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Protocol of the Two-sided Gospel -X-Day Protocol-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Solitude of the Mournful Flow -A Stray Sheep-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Solitude of the Astigmatism -Entangled Sheep-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Eclipse of Orbital Ordering -The Orbital Eclipse-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Eclipse of Vibronic Transition -Vibronic Transition-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dual of Antinomy -Antinomic Dual-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pandora of Eternal Return -Pandora's Box-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pandora of Provable Existence -Forbidden Cubicle-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pandora of Forgotten Existence -Sealed Reliquary-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mother Goose of Mutual Recursion -Recursive Mother Goose-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mother Goose of Diffractive Recitativo -Diffraction Mother Goose-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Recognition of the Elastic Limit -Presage or Recognize-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Recognition of the Asymptotic Line -Recognize Asymptote-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Altair of the Point at Infinity -Vega and Altair-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Altair of the Hyperbolic Plane -Beltrami Pseudosphere-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Altair of Translational Symmetry -Translational Symmetry-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Altair of the Cyclic Coordinate -Time-leap Machine-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Rinascimento of the Unwavering Promise - Promised Rinascimento-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Rinascimento of Image Formation -Return of Phoenix-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Rinascimento of Projection -Project Amadeus-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Arclight of the Point at Infinity -Arc-light of the Sky-",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "tv_special",
+      "name": "Specials",
+      "url": null,
+      "episodes": [
+        {
+          "name": "Valentine of Crystaline Polymorphism -Bittersweet Intermedio-",
+          "duration_seconds": 1800
+        }
+      ]
+    }
+  ],
+  "links": []
+}

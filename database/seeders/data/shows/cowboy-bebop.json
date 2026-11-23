@@ -1,0 +1,140 @@
+{
+  "titles": [
+    "Cowboy Bebop",
+    "カウボーイビバップ"
+  ],
+  "description": "In 2071 the broke crew of the spaceship Bebop chases bounties across the solar system. Each of them is running from a past that catches up, one jazz track at a time.",
+  "categories": [
+    "action",
+    "science-fiction",
+    "drama"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/178/446548.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/221/553358.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=gY5nDXOtv_o",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/4769/cowboy-bebop-season-1",
+      "episodes": [
+        {
+          "name": "Asteroid Blues",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Stray Dog Strut",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Honky Tonk Women",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Gateway Shuffle",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Ballad of Fallen Angels",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sympathy for the Devil",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Heavy Metal Queen",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Waltz for Venus",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Jamming with Edward",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Ganymede Elegy",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Toys in the Attic",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Jupiter Jazz (Part 1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Jupiter Jazz (Part 2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Bohemian Rhapsody",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "My Funny Valentine",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Black Dog Serenade",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mushroom Samba",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Speak Like a Child",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Wild Horses",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pierrot le Fou",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Boogie Woogie Feng Shui",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Cowboy Funk",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Brain Scratch",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Hard Luck Woman",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Real Folk Blues (Part I)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Real Folk Blues (Part II)",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "movie",
+      "name": "Knockin' on Heaven's Door",
+      "url": "https://www.tvmaze.com/episodes/400180/cowboy-bebop-s01-special-knockin-on-heavens-door",
+      "episodes": [
+        {
+          "name": "Knockin' on Heaven's Door",
+          "duration_seconds": 6900
+        }
+      ]
+    }
+  ],
+  "links": []
+}

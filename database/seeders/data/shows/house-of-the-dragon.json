@@ -1,0 +1,143 @@
+{
+  "titles": [
+    "House of the Dragon",
+    "HotD"
+  ],
+  "description": "Nearly two hundred years before the fall of the Targaryens, the king names his daughter heir and then has a son. His house splits into two courts, and both of them have dragons.",
+  "categories": [
+    "fantasy",
+    "drama",
+    "action"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/627/1568449.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/218/547436.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=DotnJ7tTA34",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/102306/house-of-the-dragon-season-1",
+      "episodes": [
+        {
+          "name": "The Heirs of the Dragon",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "The Rogue Prince",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Second of His Name",
+          "duration_seconds": 3960
+        },
+        {
+          "name": "King of the Narrow Sea",
+          "duration_seconds": 3900
+        },
+        {
+          "name": "We Light the Way",
+          "duration_seconds": 3780
+        },
+        {
+          "name": "The Princess and the Queen",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Driftmark",
+          "duration_seconds": 3720
+        },
+        {
+          "name": "The Lord of the Tides",
+          "duration_seconds": 4260
+        },
+        {
+          "name": "The Green Council",
+          "duration_seconds": 3660
+        },
+        {
+          "name": "The Black Queen",
+          "duration_seconds": 3720
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/142069/house-of-the-dragon-season-2",
+      "episodes": [
+        {
+          "name": "A Son for a Son",
+          "duration_seconds": 3780
+        },
+        {
+          "name": "Rhaenyra the Cruel",
+          "duration_seconds": 4140
+        },
+        {
+          "name": "The Burning Mill",
+          "duration_seconds": 4260
+        },
+        {
+          "name": "The Red Dragon and the Gold",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Regent",
+          "duration_seconds": 4080
+        },
+        {
+          "name": "Smallfolk",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "The Red Sowing",
+          "duration_seconds": 4020
+        },
+        {
+          "name": "The Queen Who Ever Was",
+          "duration_seconds": 4380
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/171080/house-of-the-dragon-season-3",
+      "episodes": [
+        {
+          "name": "Salt and Sea, Fire and Blood",
+          "duration_seconds": 4380
+        },
+        {
+          "name": "Queen's Landing",
+          "duration_seconds": 4080
+        },
+        {
+          "name": "Rhaenyra Triumphant",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Tumbleton",
+          "duration_seconds": 3960
+        },
+        {
+          "name": "Unbowed and Unbent",
+          "duration_seconds": 3900
+        },
+        {
+          "name": "Faceless Men",
+          "duration_seconds": 4020
+        },
+        {
+          "name": "The Dragon in Winter",
+          "duration_seconds": 4080
+        },
+        {
+          "name": "The Treasons at Tumbleton",
+          "duration_seconds": 4200
+        }
+      ]
+    }
+  ],
+  "links": []
+}

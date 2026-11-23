@@ -1,0 +1,287 @@
+{
+  "titles": [
+    "Jujutsu Kaisen",
+    "呪術廻戦",
+    "JJK"
+  ],
+  "description": "To save his friends from a curse, Yuji Itadori swallows a rotten finger and ends up sharing his body with the king of curses. A school for sorcerers offers him a delayed execution.",
+  "categories": [
+    "action",
+    "fantasy",
+    "supernatural"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/608/1521905.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/290/726479.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=pkKu9hLT-t8",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/110494/jujutsu-kaisen-season-1",
+      "episodes": [
+        {
+          "name": "Ryomen Sukuna",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "For Myself",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Girl of Steel",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Curse Womb Must Die",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Curse Womb Must Die -II-",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "After Rain",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Assault",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Boredom",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Small Fry and Reverse Retribution",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Idle Transfiguration",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Narrow-minded",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "To You, Someday",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tomorrow",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Kyoto Sister School Exchange Event - Group Battle 0 -",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Kyoto Sister School Exchange Event - Group Battle 1 -",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Kyoto Sister School Exchange Event - Group Battle 2 -",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Kyoto Sister School Exchange Event - Group Battle 3 -",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sage",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Black Flash",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Nonstandard",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Jujutsu Koshien",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Origin of Blind Obedience",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Origin of Blind Obedience - 2 -",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Accomplices",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "movie",
+      "name": "Jujutsu Kaisen 0",
+      "url": "https://myanimelist.net/anime/48561/Jujutsu_Kaisen_0_Movie",
+      "episodes": [
+        {
+          "name": "Jujutsu Kaisen 0",
+          "duration_seconds": 6300
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/150918/jujutsu-kaisen-season-2",
+      "episodes": [
+        {
+          "name": "Hidden Inventory",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Hidden Inventory, Part 2",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Hidden Inventory, Part 3",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Hidden Inventory, Part 4",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Premature Death",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "It's Like That",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Evening Festival",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Shibuya Incident",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Shibuya Incident - Gate Open",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pandemonium",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Summon",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dull Knife",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Red Scale",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Fluctuations",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Fluctuations II",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Thunderclap",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Thunderclap II",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Right and Wrong",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Right and Wrong II",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Right and Wrong III",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Transformation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Transformation II",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Shibuya Incident - Gate Closed",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/178526/jujutsu-kaisen-season-3",
+      "episodes": [
+        {
+          "name": "Execution",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "One More Time",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "About the Culling Game",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Perfect Preparation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Passion",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Cog",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tokyo Colony No. 1",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tokyo Colony No. 1, Part 2",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tokyo Colony No. 1, Part 3",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tokyo Colony No. 1, Part 4",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tokyo Colony No. 1, Part 5",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sendai Colony",
+          "duration_seconds": 1800
+        }
+      ]
+    }
+  ],
+  "links": []
+}

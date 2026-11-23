@@ -1,0 +1,282 @@
+{
+  "titles": [
+    "Fullmetal Alchemist: Brotherhood",
+    "Hagane no Renkinjutsushi: Fullmetal Alchemist",
+    "FMAB"
+  ],
+  "description": "Edward and Alphonse Elric travel through Amestris looking for a way to undo the price they paid for alchemy, and stumble on a conspiracy as old as the country itself.",
+  "categories": [
+    "action",
+    "adventure",
+    "fantasy"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/485/1214095.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/225/564673.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/7318/fullmetal-alchemist-brotherhood-season-1",
+      "episodes": [
+        {
+          "name": "Fullmetal Alchemist",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The First Day",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "City of Heresy",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "An Alchemist's Anguish",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Rain of Sorrows",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Road of Hope",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Hidden Truths",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Fifth Laboratory",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Created Feelings",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Separate Destinations",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Miracle at Rush Valley",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "One is All, All is One",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Beasts of Dublith",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Those Who Lurk Underground",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Envoy from the East",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Footsteps of a Comrade-in-Arms",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Cold Flame",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Arrogant Palm of a Small Human",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Death of the Undying",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Father Before the Grave",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Advance of the Fool",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Backs in the Distance",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Girl on the Battlefield",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Inside the Belly",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Doorway of Darkness",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Reunion",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Interlude Party",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Father",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Struggle of the Fool",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Ishvalan War of Extermination",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The 520 Cens Promise",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Führer's Son",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Northern Wall of Briggs",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Ice Queen",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Shape of This Country",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Family Portrait",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The First Homunculus",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Conflict at Baschool",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Daydream",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Homunculus",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Abyss",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Signs of a Counteroffensive",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Bite of the Ant",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Revving at Full Throttle",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Promised Day",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Looming Shadows",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Emissary of Darkness",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Oath in the Tunnel",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Filial Affection",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Upheaval in Central",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Immortal Legion",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Combined Strength",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Flame of Vengeance",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Beyond the Inferno",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Adults' Way of Life",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Return of the Führer",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Eternal Leave",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Sacrifices",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Lost Light",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Eye of Heaven, Gateway of Earth",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "He Who Would Swallow God",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "A Fierce Counterattack",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Other Side of the Gateway",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Journey's End",
+          "duration_seconds": 1500
+        }
+      ]
+    }
+  ],
+  "links": []
+}

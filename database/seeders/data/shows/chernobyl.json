@@ -1,0 +1,44 @@
+{
+  "titles": [
+    "Chernobyl"
+  ],
+  "description": "In April 1986 a reactor explodes at the Chernobyl power plant. Scientists, firefighters, miners and officials try to contain the disaster while the state tries to contain the truth.",
+  "categories": [
+    "historical",
+    "drama",
+    "thriller"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/193/482599.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/183/458073.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=s9APLXM9Ei8",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/72720/chernobyl-season-1",
+      "episodes": [
+        {
+          "name": "1:23:45",
+          "duration_seconds": 3900
+        },
+        {
+          "name": "Please Remain Calm",
+          "duration_seconds": 4200
+        },
+        {
+          "name": "Open Wide, O Earth",
+          "duration_seconds": 3960
+        },
+        {
+          "name": "The Happiness of All Mankind",
+          "duration_seconds": 4260
+        },
+        {
+          "name": "Vichnaya Pamyat",
+          "duration_seconds": 4680
+        }
+      ]
+    }
+  ],
+  "links": []
+}

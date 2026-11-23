@@ -1,0 +1,128 @@
+{
+  "titles": [
+    "Andor",
+    "Star Wars: Andor"
+  ],
+  "description": "Five years before the theft of the Death Star plans, a thief on the run from the Empire is drawn into the first scattered cells of a rebellion.",
+  "categories": [
+    "science-fiction",
+    "drama",
+    "thriller"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/564/1411766.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/412/1030743.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/117570/andor-season-1",
+      "episodes": [
+        {
+          "name": "Kassa",
+          "duration_seconds": 2340
+        },
+        {
+          "name": "That Would Be Me",
+          "duration_seconds": 2160
+        },
+        {
+          "name": "Reckoning",
+          "duration_seconds": 2400
+        },
+        {
+          "name": "Aldhani",
+          "duration_seconds": 2820
+        },
+        {
+          "name": "The Axe Forgets",
+          "duration_seconds": 2580
+        },
+        {
+          "name": "The Eye",
+          "duration_seconds": 3060
+        },
+        {
+          "name": "Announcement",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Narkina 5",
+          "duration_seconds": 3180
+        },
+        {
+          "name": "Nobody's Listening!",
+          "duration_seconds": 2820
+        },
+        {
+          "name": "One Way Out",
+          "duration_seconds": 2580
+        },
+        {
+          "name": "Daughter of Ferrix",
+          "duration_seconds": 2580
+        },
+        {
+          "name": "Rix Road",
+          "duration_seconds": 3240
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/138941/andor-season-2",
+      "episodes": [
+        {
+          "name": "One Year Later",
+          "duration_seconds": 3060
+        },
+        {
+          "name": "Sagrona Teema",
+          "duration_seconds": 2640
+        },
+        {
+          "name": "Harvest",
+          "duration_seconds": 3180
+        },
+        {
+          "name": "Ever Been to Ghorman?",
+          "duration_seconds": 3240
+        },
+        {
+          "name": "I Have Friends Everywhere",
+          "duration_seconds": 3240
+        },
+        {
+          "name": "What a Festive Evening",
+          "duration_seconds": 3240
+        },
+        {
+          "name": "Messenger",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "Who Are You?",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Welcome to the Rebellion",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Make It Stop",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Who Else Knows?",
+          "duration_seconds": 2700
+        },
+        {
+          "name": "Jedha, Kyber, Erso",
+          "duration_seconds": 3000
+        }
+      ]
+    }
+  ],
+  "links": []
+}

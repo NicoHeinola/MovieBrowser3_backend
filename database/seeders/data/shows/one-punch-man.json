@@ -1,0 +1,189 @@
+{
+  "titles": [
+    "One-Punch Man",
+    "One Punch Man",
+    "ワンパンマン"
+  ],
+  "description": "Saitama trained so hard that he lost his hair and now beats every enemy with one punch. Nobody knows his name, and he would really like a proper fight.",
+  "categories": [
+    "action",
+    "comedy",
+    "science-fiction"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/598/1496471.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/219/548004.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/13120/one-punch-man-season-1",
+      "episodes": [
+        {
+          "name": "The Strongest Man",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Lone Cyborg",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Obsessive Scientist",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Modern Ninja",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Ultimate Master",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Terrifying City",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Ultimate Disciple",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Deep Sea King",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Unyielding Justice",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Unparalleled Peril",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Dominator of the Universe",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Strongest Hero",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/88521/one-punch-man-season-2",
+      "episodes": [
+        {
+          "name": "Return of the Hero",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Human Monster",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Hunt Begins",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Metal Bat",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Martial Arts Tournament",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Uprising of the Monsters",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Class S Heroes",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Resistance of the Strong",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Troubles of the Strongest",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Justice Under Siege",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Varieties of Pride",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "The Wiping of the Disciple's Butt",
+          "duration_seconds": 1500
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/178682/one-punch-man-season-3",
+      "episodes": [
+        {
+          "name": "The Strategy Meeting",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Monster Traits",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Organism Limits",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Counterattack Signal",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Monster King",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Motley Heroes",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Counterstrike",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Ninja Tale",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Brave Child",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Immortal Bloodbath",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Top Dragons",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Ultimate Lifeform",
+          "duration_seconds": 1500
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "suggested_next",
+      "title": "Mob Psycho 100"
+    }
+  ]
+}

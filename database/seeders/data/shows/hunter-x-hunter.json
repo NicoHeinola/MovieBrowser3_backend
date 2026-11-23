@@ -1,0 +1,618 @@
+{
+  "titles": [
+    "Hunter x Hunter",
+    "ハンター×ハンター",
+    "HxH"
+  ],
+  "description": "Gon leaves his island to become a Hunter like the father who left him. The exam is deadly, the friends he makes there are strange, and the world keeps getting bigger and darker.",
+  "categories": [
+    "action",
+    "adventure",
+    "fantasy"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/223/559165.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/223/559166.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/6025/hunter-x-hunter-season-1",
+      "episodes": [
+        {
+          "name": "Departure × and × Friends",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Test × of × Tests",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Rivals × in × Survival",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Hope × and × Ambition",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Hisoka × Is × Sneaky",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "A × Surprising × Challenge",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Showdown × on × The Airship",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Solution × Is × Majority Rules?",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Beware × of × Prisoners",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Trick × to × The Trick",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Trouble × with × The Gamble",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Last Test × of × Resolve",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Letter × from × Gon",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Hit × the × Target",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "Explosion × of × Deception",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Defeat × and × Disgrace",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "アナ×デ×ワナ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "タイセツ×ナ×メンセツ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カテナイ×ガ×マケナイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "フカカイ×ナ×テンカイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "キョウダイ×ノ×モンダイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "キケン×ナ×バンケン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "バンニン×ノ×セキニン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ゾルディック×ノ×カゾク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ミエナイ×ト×アエナイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "アレカラ×ト×ソレカラ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "トウギジョウ×ニ×トウジョウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ネン×ト×ネン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カクセイ×ト×カノウセイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ゲキトウ×ト×カットウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "インネン×ト×シュウネン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ドッキリ×ナ×ショウリ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ケイハク×ナ×キョウハク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ジツリョク×デ×セツジョク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "セイカク×ナ×ゴウカク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "オオキナカリ×ト×チイサナケリ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ジン×ト×ゴン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "オヤジ×ノ×ヘンジ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ネガイ×ト×チカイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ノウリョクシャ×ハ×キョウリョクシャ？",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ゴウケツ×ノ×シュウケツ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "マモル×ト×セメル",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ショウゲキ×ノ×サンゲキ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ゲキセン×ノ×フクセン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "コウソク×ト×ヤクソク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "オウモノ×ト×マツモノ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "セイヤク×ト×セイヤク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "メキキ×ノ×キキメ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ツイセキ×デ×ブンセキ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ナカマ×ト×カタナ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ヒジョウ×ノ×センジョウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "シュウゲキ×ト×ショウゲキ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "フェイク×デ×サイク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ウラナイ×ガ×アタラナイ？",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ナカマ×ト×イカサマ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "サイアイ×ト×サイアク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "センテ×ト×オキテ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ヒキギワ×ノ×ヒキガネ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "セリ×ト×アセリ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "キマリ×ト×ハジマリ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カンユウ×ト×シンユウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ゲンジツ？×ト×ゲンセキ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "シショウ×ハ×ヒジョウ？",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "キョウカ×ト×キョウカツ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ジャケン×ト×ジャンケン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "コウリャク×ト×サクリャク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "15×ト×15",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カイゾク×ト×スイソク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "タイケツ×デ×ネッケツ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "コンジョウ×ト×ユウジョウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カケヒキ×ト×トリヒキ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "チェイス×デ×チャンス",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "キョウキ×ト×ショウキ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ショウシャ×ト×ハイシャ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ジンノトモ×ト×シンノトモ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "サイカイ×ト×リカイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "フアン×ト×シュツゲン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "キュウソク×ナ×ゾウショク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "NG×ナ×NGL",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ゴクアク×ト×サイアク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "タタカイ×ノ×カイシ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カイト×ノ×スロット",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カンカ×シテ×シンカ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "サダメ×ノ×メザメ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ヒカリ×ト×カゲ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "チカイ×ト×サイカイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ケットウ×シテ×トウソウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ジャンケン×ト×ジャクテン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ヤサシサ×ト×ツヨサ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "リソク×ト×ジュバク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "キョウシャ×ト×ジャクシャ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ヒトツノネガイ×ト×フタツノチカイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "パーム×ト×デート",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "トモダチ×ト×タビダチ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ウラミ×ト×スゴミ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ムホウ×ナ×ホーム",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ゲキトウ×デ×ゲキメツ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "センニュウ×ト×センベツ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "コンビネーション×ト×エボリューション",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ツイセキ×ニハ×ツイゲキ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "イカルゴ×ト×イカズチ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ノウリョク×ト×タイキョク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ツミ×ト×ヨミ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "マヨイ×ト×トマドイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カクゴ×ト×カクセイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ノヴ×ト×モラウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "リターン×ト×リタイア",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "コムギ×ノ×グンギ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "コウシンカイシ×デ×コウドウカイシ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "コンワク×ト×オモワク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "トツニュウ×シテ×シンニュウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カイブツ×ト×カイブツ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ムシ×ダケド×カシ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ブンダン×ト×ゴサン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ギム×ト×ギモン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "フクシュウ×ト×シュウフク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ブジョク×ニハ×セツジョク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "イツワリ×ノ×イカリ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ツヨ×イカ×ヨワ×イカ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ニセモノ×ト×ホンモノ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ハイボク×ト×メンボク",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "タテマエ×ト×ナマエ",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "ムカデ×ト×オモイデ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ケッカイ×ト×カクセイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ブノツヨミ×ト×ブノキワミ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ゼロ×ト×ローズ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "テキイ×ト×ケツイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ムジョウノヨロコビ×ト×ムショウノアイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ヒョウテキ×ト×モクテキ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "マホウ×デ×ゼツボウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "イカリ×ト×ヒカリ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "センコウ×ト×ハツドウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "セイゾン×ノ×キゲン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ヒトコト×ハ×ソノヒト",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "コノヒ×ト×コノシュンカン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "キキョウ×ト×ホンミョウ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ジュウニシン×デ×ギロン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "オネダリ×ト×オネガイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "アルカ×ト×ナニカ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "サンセン×ト×カイセン",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "テジナシ×ト×シツジ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ハリ×ト×カリ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ツミ×ト×ツメ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "ケッサイ×ト×カッサイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カンパイ×ト×サイカイ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "カイチョウ×ト×カイジョ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "スクイ×ト×ミライ",
+          "duration_seconds": 1500
+        },
+        {
+          "name": "コレマデ×ト×コレカラ",
+          "duration_seconds": 1500
+        }
+      ]
+    }
+  ],
+  "links": []
+}

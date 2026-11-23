@@ -1,0 +1,112 @@
+{
+  "titles": [
+    "Severance"
+  ],
+  "description": "Employees of Lumon Industries have their memories split between work and home, so neither half knows the other. When a former colleague shows up outside, one team leader starts to wonder what they really do all day.",
+  "categories": [
+    "mystery",
+    "science-fiction",
+    "thriller"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/548/1371406.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/384/960581.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=xEQP4VVuyrY",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/102615/severance-season-1",
+      "episodes": [
+        {
+          "name": "Good News About Hell",
+          "duration_seconds": 3420
+        },
+        {
+          "name": "Half Loop",
+          "duration_seconds": 3180
+        },
+        {
+          "name": "In Perpetuity",
+          "duration_seconds": 3360
+        },
+        {
+          "name": "The You You Are",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "The Grim Barbarity of Optics and Design",
+          "duration_seconds": 2580
+        },
+        {
+          "name": "Hide and Seek",
+          "duration_seconds": 2400
+        },
+        {
+          "name": "Defiant Jazz",
+          "duration_seconds": 2940
+        },
+        {
+          "name": "What's for Dinner?",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "The We We Are",
+          "duration_seconds": 2400
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/137329/severance-season-2",
+      "episodes": [
+        {
+          "name": "Hello, Ms. Cobel",
+          "duration_seconds": 2880
+        },
+        {
+          "name": "Goodbye, Mrs. Selvig",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "Who Is Alive?",
+          "duration_seconds": 3180
+        },
+        {
+          "name": "Woe's Hollow",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Trojan's Horse",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "Attila",
+          "duration_seconds": 2880
+        },
+        {
+          "name": "Chikhai Bardo",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Sweet Vitriol",
+          "duration_seconds": 2220
+        },
+        {
+          "name": "The After Hours",
+          "duration_seconds": 2640
+        },
+        {
+          "name": "Cold Harbor",
+          "duration_seconds": 4500
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "suggested_next",
+      "title": "Dark"
+    }
+  ]
+}

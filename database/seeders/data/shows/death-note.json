@@ -1,0 +1,178 @@
+{
+  "titles": [
+    "Death Note",
+    "デスノート"
+  ],
+  "description": "A bored honour student finds a notebook that kills anyone whose name is written in it and decides to clean up the world. A detective known only as L decides to stop him.",
+  "categories": [
+    "crime",
+    "supernatural",
+    "thriller"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/499/1249019.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/223/559511.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/133/death-note-season-1",
+      "episodes": [
+        {
+          "name": "Rebirth",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Confrontation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dealings",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pursuit",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tactics",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Unraveling",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Overcast",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Glare",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Encounter",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Doubt",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Assault",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Love",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Confession",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Friend",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Wager",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Decision",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Execution",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Ally",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Matsuda",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Makeshift",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Performance",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Guidance",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Frenzy",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Revival",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Silence",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Renewal",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Abduction",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Impatience",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Father",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Justice",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Transfer",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Selection",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Scorn",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Vigilance",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Malice",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "1.28",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "New World",
+          "duration_seconds": 1800
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "suggested_next",
+      "title": "Code Geass: Lelouch of the Rebellion"
+    }
+  ]
+}

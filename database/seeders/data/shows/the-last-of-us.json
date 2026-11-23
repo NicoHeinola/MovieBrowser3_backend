@@ -1,0 +1,96 @@
+{
+  "titles": [
+    "The Last of Us",
+    "TLOU"
+  ],
+  "description": "Twenty years after a fungus ended modern civilisation, a hardened smuggler is hired to take a teenage girl out of a quarantine zone. She may be the key to a cure, and the trip west changes both of them.",
+  "categories": [
+    "drama",
+    "horror",
+    "adventure"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/563/1409008.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/429/1072778.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=uLtkt8BonwM",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/134145/the-last-of-us-season-1",
+      "episodes": [
+        {
+          "name": "When You're Lost in the Darkness",
+          "duration_seconds": 5100
+        },
+        {
+          "name": "Infected",
+          "duration_seconds": 3360
+        },
+        {
+          "name": "Long, Long Time",
+          "duration_seconds": 4860
+        },
+        {
+          "name": "Please Hold to My Hand",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Endure and Survive",
+          "duration_seconds": 3660
+        },
+        {
+          "name": "Kin",
+          "duration_seconds": 3720
+        },
+        {
+          "name": "Left Behind",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "When We Are in Need",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Look for the Light",
+          "duration_seconds": 2760
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/148200/the-last-of-us-season-2",
+      "episodes": [
+        {
+          "name": "Future Days",
+          "duration_seconds": 3720
+        },
+        {
+          "name": "Through the Valley",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "The Path",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Day One",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Feel Her Love",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "The Price",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Convergence",
+          "duration_seconds": 3300
+        }
+      ]
+    }
+  ],
+  "links": []
+}

@@ -1,0 +1,35 @@
+{
+  "titles": [
+    "Spirited Away",
+    "Sen to Chihiro no Kamikakushi",
+    "千と千尋の神隠し"
+  ],
+  "description": "Ten-year-old Chihiro wanders into a bathhouse for spirits, where her parents are turned into pigs. To free them she has to work for the witch who runs the place and not forget her own name.",
+  "categories": [
+    "adventure",
+    "fantasy",
+    "supernatural"
+  ],
+  "card_image_url": "https://cdn.myanimelist.net/images/anime/6/79597l.jpg",
+  "banner_url": "https://i.ytimg.com/vi/ByXuk9QqQkk/maxresdefault.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=ByXuk9QqQkk",
+  "entries": [
+    {
+      "type": "movie",
+      "name": "Spirited Away",
+      "url": "https://myanimelist.net/anime/199/Sen_to_Chihiro_no_Kamikakushi",
+      "episodes": [
+        {
+          "name": "Spirited Away",
+          "duration_seconds": 7500
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "suggested_next",
+      "title": "Howl's Moving Castle"
+    }
+  ]
+}

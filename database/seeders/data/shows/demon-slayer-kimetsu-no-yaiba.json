@@ -1,0 +1,315 @@
+{
+  "titles": [
+    "Demon Slayer: Kimetsu no Yaiba",
+    "Kimetsu no Yaiba",
+    "鬼滅の刃"
+  ],
+  "description": "Tanjiro comes home to find his family slaughtered and his sister turned into a demon. He joins the Demon Slayer Corps to find a cure and the one who did it.",
+  "categories": [
+    "action",
+    "fantasy",
+    "supernatural"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/456/1140750.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/227/569823.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=VQGCKyvzIM4",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/94942/demon-slayer-season-1",
+      "episodes": [
+        {
+          "name": "Cruelty",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Trainer Sakonji Urokodaki",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sabito and Makomo",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Final Selection",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "My Own Steel",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Swordsman Accompanying a Demon",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Muzan Kibutsuji",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Smell of Enchanting Blood",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Temari Demon and Arrow Demon",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Together Forever",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tsuzumi Mansion",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Boar Bares Its Fangs, Zenitsu Sleeps",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Something More Important Than Life",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The House With the Wisteria Family Crest",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mount Natagumo",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Letting Someone Else Go First",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "You Must Master a Single Thing",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A Forged Bond",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Fire God",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Pretend Family",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Against Corps Rules",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Master of the Mansion",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Hashira Meeting",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Rehabilitation Training",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tsuguko, Kanao Tsuyuri",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "New Mission",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "movie",
+      "name": "Mugen Train",
+      "url": "https://myanimelist.net/anime/40456/Kimetsu_no_Yaiba_Movie__Mugen_Ressha-hen",
+      "episodes": [
+        {
+          "name": "Mugen Train",
+          "duration_seconds": 7020
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/130030/demon-slayer-season-2",
+      "episodes": [
+        {
+          "name": "Flame Hashira Kyojuro Rengoku",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Deep Sleep",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Should Have Been",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Insult",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Move Forward!",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Akaza",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Set Your Heart Ablaze",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sound Hashira Tengen Uzui",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Infiltrating the Entertainment District",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "What Are You?",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Tonight",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Things Are Gonna Get Real Flashy!!",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Layered Memories",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Transformation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Gathering",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Defeating an Upper Moon Demon",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Never Give Up",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "No Matter How Many Lives",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/131073/demon-slayer-season-3",
+      "episodes": [
+        {
+          "name": "Someone's Dream",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Yoriichi Type Zero",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A Sword from Over 300 Years Ago",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Thank You, Tokito",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Bright Red Sword",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Aren't You Going to Become a Hashira?",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Awful Villain",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Mu in Muichiro",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mist Hashira Muichiro Tokito",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Love Hashira Mitsuri Kanroji",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A Connected Bond: Daybreak and First Light",
+          "duration_seconds": 1800
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 4",
+      "url": "https://www.tvmaze.com/seasons/165384/demon-slayer-season-4",
+      "episodes": [
+        {
+          "name": "To Defeat Muzan Kibutsuji",
+          "duration_seconds": 2940
+        },
+        {
+          "name": "Water Hashira Giyu Tomioka's Pain",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Fully Recovered Tanjiro Joins the Hashira Training!!",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "To Bring a Smile to One's Face",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "I Even Ate Demons...",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Strongest of the Demon Slayer Corps",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Stone Hashira Gyomei Himejima",
+          "duration_seconds": 2100
+        },
+        {
+          "name": "The Hashira Unite",
+          "duration_seconds": 2400
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "suggested_next",
+      "title": "Jujutsu Kaisen"
+    }
+  ]
+}

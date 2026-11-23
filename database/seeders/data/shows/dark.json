@@ -1,0 +1,142 @@
+{
+  "titles": [
+    "Dark"
+  ],
+  "description": "Two children go missing in the German town of Winden, near an old power plant and a cave. The search uncovers how four families are tied together across generations, and that the question is not where but when.",
+  "categories": [
+    "mystery",
+    "science-fiction",
+    "thriller"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/504/1262352.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/219/547866.jpg",
+  "preview_url": "https://www.youtube.com/watch?v=rrwycJ08PSA",
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/46649/dark-season-1",
+      "episodes": [
+        {
+          "name": "Geheimnisse",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "Lügen",
+          "duration_seconds": 2700
+        },
+        {
+          "name": "Gestern und Heute",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "Doppelleben",
+          "duration_seconds": 2880
+        },
+        {
+          "name": "Wahrheiten",
+          "duration_seconds": 2760
+        },
+        {
+          "name": "Sic Mundus Creatus Est",
+          "duration_seconds": 3060
+        },
+        {
+          "name": "Kreuzwege",
+          "duration_seconds": 3120
+        },
+        {
+          "name": "Was man sät, das wird man ernten",
+          "duration_seconds": 3000
+        },
+        {
+          "name": "Alles ist jetzt",
+          "duration_seconds": 3300
+        },
+        {
+          "name": "Alpha und Omega",
+          "duration_seconds": 3420
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 2",
+      "url": "https://www.tvmaze.com/seasons/84187/dark-season-2",
+      "episodes": [
+        {
+          "name": "Anfänge und Enden",
+          "duration_seconds": 3240
+        },
+        {
+          "name": "Dunkle Materie",
+          "duration_seconds": 3300
+        },
+        {
+          "name": "Gespenster",
+          "duration_seconds": 3360
+        },
+        {
+          "name": "Die Reisenden",
+          "duration_seconds": 3660
+        },
+        {
+          "name": "Vom Suchen und Finden",
+          "duration_seconds": 3360
+        },
+        {
+          "name": "Ein unendlicher Kreis",
+          "duration_seconds": 3300
+        },
+        {
+          "name": "Der weiße Teufel",
+          "duration_seconds": 3480
+        },
+        {
+          "name": "Enden und Anfänge",
+          "duration_seconds": 3480
+        }
+      ]
+    },
+    {
+      "type": "season",
+      "name": "Season 3",
+      "url": "https://www.tvmaze.com/seasons/97710/dark-season-3",
+      "episodes": [
+        {
+          "name": "Déjà-vu",
+          "duration_seconds": 3720
+        },
+        {
+          "name": "Die Überlebende",
+          "duration_seconds": 3600
+        },
+        {
+          "name": "Adam und Eva",
+          "duration_seconds": 3420
+        },
+        {
+          "name": "Der Ursprung",
+          "duration_seconds": 3840
+        },
+        {
+          "name": "Leben und Tod",
+          "duration_seconds": 3840
+        },
+        {
+          "name": "Licht und Schatten",
+          "duration_seconds": 3540
+        },
+        {
+          "name": "Zwischen der Zeit",
+          "duration_seconds": 4140
+        },
+        {
+          "name": "Das Paradies",
+          "duration_seconds": 4380
+        }
+      ]
+    }
+  ],
+  "links": []
+}

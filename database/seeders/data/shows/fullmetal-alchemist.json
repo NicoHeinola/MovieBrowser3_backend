@@ -1,0 +1,235 @@
+{
+  "titles": [
+    "Fullmetal Alchemist",
+    "Hagane no Renkinjutsushi",
+    "鋼の錬金術師"
+  ],
+  "description": "Two brothers who lost their bodies in a failed attempt to bring their mother back search for the Philosopher's Stone. This first adaptation leaves the manga's path halfway through and finds its own ending.",
+  "categories": [
+    "action",
+    "adventure",
+    "fantasy"
+  ],
+  "card_image_url": "https://static.tvmaze.com/uploads/images/original_untouched/20/51196.jpg",
+  "banner_url": "https://static.tvmaze.com/uploads/images/original_untouched/222/555815.jpg",
+  "preview_url": null,
+  "entries": [
+    {
+      "type": "season",
+      "name": "Season 1",
+      "url": "https://www.tvmaze.com/seasons/13344/fullmetal-alchemist-season-1",
+      "episodes": [
+        {
+          "name": "To Challenge the Sun",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Body of the Sanctioned",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Mother",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "A Forger's Love",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Man with the Mechanical Arm",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Alchemy Exam",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Night of the Chimera's Cry",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Philosopher's Stone",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Be Thou for the People",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Phantom Thief",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Other Brothers Elric (1)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Other Brothers Elric (2)",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Fullmetal vs. Flame",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Destruction's Right Hand",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Ishbal Massacre",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "That Which Is Lost",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "House of the Waiting Family",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Marcoh's Notes",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Truth Behind Truths",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Soul of the Guardian",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Red Glow",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Created Human",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Heart of Steel",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Bonding Memories",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Words of Farewell",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Her Reason",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Teacher",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "One is All, All is One",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Untainted Child",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Assault on South Headquarters",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Sin",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Dante of the Deep Wood",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Al, Captured",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Theory of Avarice",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Reunion of the Fallen",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Sinner Within Me",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Flame Alchemist, The Bachelor Lieutenant, & The Mystery of Warehouse 13",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "With the River's Flow",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Secret of Ishbal",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Scar",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Holy Mother",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "His Name is Unknown",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "The Stray Dog",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Hohenheim of Light",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "One Who Lets Her Heart Rot",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Human Transmutation",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Homunculus Sealed",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Farewell",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Beyond the Gate",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Death",
+          "duration_seconds": 1800
+        },
+        {
+          "name": "Laws and Promises",
+          "duration_seconds": 1800
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "suggested_next",
+      "title": "Fullmetal Alchemist: Brotherhood"
+    }
+  ]
+}
