@@ -81,15 +81,16 @@ class SyncDownloadsAction
         $progressByIndex = collect($this->qBittorrentService->getFiles($download->hash) ?? [])->pluck('progress', 'index');
         $finished = $waiting->filter(fn (DownloadPick $pick): bool => $progressByIndex->get($pick->file_index, 0) >= 1);
 
+        $status = $finished->isEmpty() ? DownloadStatus::Downloading : DownloadStatus::Importing;
+
+        // Before the imports are queued: one can fail at once, and its failed status must not be overwritten
+        if ($download->status !== $status) {
+            DB::transaction(fn () => $download->update(['status' => $status]));
+        }
+
         // Each job is unique per pick, so a copy still running isn't queued twice
         foreach ($finished as $pick) {
             ImportDownloadPickJob::dispatch($pick->id);
-        }
-
-        $status = $finished->isEmpty() ? DownloadStatus::Downloading : DownloadStatus::Importing;
-
-        if ($download->status !== $status) {
-            DB::transaction(fn () => $download->update(['status' => $status]));
         }
     }
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Download\ResolveDownloadPathAction;
+use App\Enums\DownloadErrorCode;
 use App\Enums\DownloadStatus;
 use App\Models\Download\Download;
 use App\Models\DownloadPick\DownloadPick;
@@ -174,16 +175,52 @@ test('a torrent qBittorrent already has is taken over', function () {
 
 test('a torrent that is already a download answers with its id', function () {
     $download = Download::factory()->create(['hash' => DOWNLOAD_HASH]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info')]);
     actingAsAdmin();
 
     postJson('/api/v1/downloads', ['magnet_url' => DOWNLOAD_MAGNET, 'name' => 'Mushoku'])
         ->assertConflict()
         ->assertExactJson(['code' => 'download_exists', 'params' => ['download_id' => (string) $download->id]]);
-    Saloon::assertNothingSent();
+    expect(qBittorrentRequestsTo('torrents/add'))->toBe([]);
 });
+
+test('a download qBittorrent no longer has is added again and starts over', function (array $attributes) {
+    [$show, $first] = showWithTwoEpisodes();
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'show_id' => $show->id, ...$attributes]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $first->id]);
+    // Gone until it's added
+    $isAdded = false;
+    fakeQBittorrentApi([
+        'torrents/add' => function () use (&$isAdded): MockResponse {
+            $isAdded = true;
+
+            return MockResponse::make('Ok.');
+        },
+        'torrents/info' => function () use (&$isAdded): MockResponse {
+            return MockResponse::make($isAdded ? qBittorrentAnswer('torrents-info') : []);
+        },
+        'torrents/files' => qBittorrentAnswer('torrents-files'),
+    ]);
+    actingAsAdmin();
+
+    postJson('/api/v1/downloads', ['magnet_url' => DOWNLOAD_MAGNET])
+        ->assertCreated()
+        ->assertJsonPath('id', $download->id)
+        ->assertJsonPath('status', 'waiting_for_files')
+        ->assertJsonPath('error_code', null);
+
+    expect($download->fresh()->client_removed_at)->toBeNull()
+        ->and($download->picks()->count())->toBe(0)
+        ->and(Episode::query()->find($first->id))->not->toBeNull();
+})->with([
+    'lost before it finished' => [['status' => DownloadStatus::Failed, 'error_code' => DownloadErrorCode::ClientLostTorrent]],
+    'removed after seeding' => [['status' => DownloadStatus::Completed, 'client_removed_at' => now()]],
+    'lost without the app knowing yet' => [['status' => DownloadStatus::WaitingForFiles]],
+]);
 
 test('base32 info hashes find the same torrent', function () {
     Download::factory()->create(['hash' => DOWNLOAD_HASH]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info')]);
     actingAsAdmin();
 
     postJson('/api/v1/downloads', ['magnet_url' => 'magnet:?xt=urn:btih:CLADZ6OMMDVHYE4TDYAZL6SUSA6YV6C7XY&dn=x', 'name' => 'x'])->assertUnprocessable();
@@ -323,6 +360,70 @@ test('picking again replaces the links, and picking nothing stops the torrent', 
         ->and(collect(qBittorrentRequestsTo('torrents/filePrio'))->last())->toBe(['hash' => DOWNLOAD_HASH, 'id' => '0|1|2', 'priority' => '0']);
 });
 
+test('picking more files leaves the imported and unchanged picks as they are', function () {
+    [$show, $imported, $waiting] = showWithTwoEpisodes();
+    $added = Episode::factory()->for($imported->entry, 'entry')->create();
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'show_id' => $show->id, 'status' => DownloadStatus::Downloading]);
+    $importedPick = DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $imported->id, 'imported_at' => now()]);
+    $waitingPick = DownloadPick::factory()->for($download)->create(['file_index' => 1, 'episode_id' => $waiting->id]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info'), 'torrents/files' => qBittorrentAnswer('torrents-files')]);
+    actingAsAdmin();
+
+    $files = [['index' => 1, 'episode_id' => $waiting->id], ['index' => 2, 'episode_id' => $added->id]];
+
+    // An editor opened before the import still sends that pick; one opened after doesn't
+    putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 0, 'episode_id' => $imported->id], ...$files]])->assertOk();
+    putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => $files])->assertOk();
+
+    expect($importedPick->fresh()?->imported_at)->not->toBeNull()
+        ->and($waitingPick->fresh())->not->toBeNull()
+        ->and($download->picks()->pluck('episode_id', 'file_index')->all())->toBe([0 => $imported->id, 1 => $waiting->id, 2 => $added->id]);
+});
+
+test('an episode that got its file can take a better one', function () {
+    [$show, $first] = showWithTwoEpisodes();
+    $oldPick = DownloadPick::factory()
+        ->for(Download::factory()->create(['status' => DownloadStatus::Completed, 'client_removed_at' => now()]))
+        ->create(['file_index' => 0, 'episode_id' => $first->id, 'imported_at' => now()]);
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info'), 'torrents/files' => qBittorrentAnswer('torrents-files')]);
+    actingAsAdmin();
+
+    putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 0, 'episode_id' => $first->id]]])->assertOk();
+
+    // From another torrent, then another file of the same one
+    expect($oldPick->fresh())->toBeNull();
+    $download->picks()->update(['imported_at' => now()]);
+
+    putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 1, 'episode_id' => $first->id]]])->assertOk();
+
+    expect($download->picks()->sole())->file_index->toBe(1)->imported_at->toBeNull();
+});
+
+test('a file that became an episode\'s video can not be picked for another', function () {
+    [$show, $first, $second] = showWithTwoEpisodes();
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'status' => DownloadStatus::Downloading]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $first->id, 'imported_at' => now()]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info'), 'torrents/files' => qBittorrentAnswer('torrents-files')]);
+    actingAsAdmin();
+
+    $response = putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 0, 'episode_id' => $second->id]]])->assertUnprocessable();
+
+    expect($response->json('errors')['files.0.index'][0]['code'])->toBe('file_already_picked');
+});
+
+test('picking again clears why it failed', function () {
+    [$show, $first] = showWithTwoEpisodes();
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'status' => DownloadStatus::Failed, 'error_code' => DownloadErrorCode::ImportFailed]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info'), 'torrents/files' => qBittorrentAnswer('torrents-files')]);
+    actingAsAdmin();
+
+    putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 0, 'episode_id' => $first->id]]])
+        ->assertOk()
+        ->assertJsonPath('status', 'downloading')
+        ->assertJsonPath('error_code', null);
+});
+
 test('it says which picked file or episode does not fit', function (Closure $files, string $field, string $code) {
     [$show, $first] = showWithTwoEpisodes();
     [, $otherShowEpisode] = showWithTwoEpisodes();
@@ -373,6 +474,21 @@ test('picking files of a torrent qBittorrent lost says so', function () {
     putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 0, 'episode_id' => $first->id]]])
         ->assertConflict()
         ->assertExactJson(['code' => 'download_not_in_client', 'params' => []]);
+});
+
+test('an episode can let go of a file of a torrent qBittorrent lost', function () {
+    [$show, $first, $second] = showWithTwoEpisodes();
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'status' => DownloadStatus::Failed, 'error_code' => DownloadErrorCode::ClientLostTorrent]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $first->id]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 1, 'episode_id' => $second->id]);
+    fakeQBittorrentApi(['torrents/info' => [], 'torrents/files' => MockResponse::make('Not Found', 404)]);
+    actingAsAdmin();
+
+    putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 1, 'episode_id' => $second->id]]])
+        ->assertOk()
+        ->assertJsonPath('status', 'failed');
+
+    expect($download->picks()->pluck('episode_id', 'file_index')->all())->toBe([1 => $second->id]);
 });
 
 test('picking files needs a show and well-formed files', function (array $body, string $field) {
@@ -628,6 +744,34 @@ test('a closed qBittorrent keeps the download to cancel again', function () {
     deleteJson("/api/v1/downloads/{$download->id}")->assertStatus(502);
 
     expect(Download::query()->find($download->id))->not->toBeNull();
+});
+
+test('a download qBittorrent no longer has is removed without asking it', function (array $attributes) {
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, ...$attributes]);
+    actingAsAdmin();
+
+    deleteJson("/api/v1/downloads/{$download->id}")->assertNoContent();
+
+    expect(Download::query()->count())->toBe(0);
+    Saloon::assertNothingSent();
+})->with([
+    'removed after seeding' => [['status' => DownloadStatus::Completed, 'client_removed_at' => now()]],
+    'lost before it finished' => [['status' => DownloadStatus::Failed, 'error_code' => DownloadErrorCode::ClientLostTorrent]],
+]);
+
+test('deleting a show or an episode leaves a torrent qBittorrent no longer had alone', function () {
+    [$show, $first, $second] = showWithTwoEpisodes();
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'show_id' => $show->id, 'status' => DownloadStatus::Completed, 'client_removed_at' => now()]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $first->id, 'imported_at' => now()]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 1, 'episode_id' => $second->id, 'imported_at' => now()]);
+    actingAsAdmin();
+
+    deleteJson("/api/v1/episodes/{$first->id}")->assertNoContent();
+    expect($download->fresh()->status)->toBe(DownloadStatus::Completed);
+
+    deleteJson("/api/v1/shows/{$show->id}")->assertNoContent();
+    expect($download->fresh())->toBeNull();
+    Saloon::assertNothingSent();
 });
 
 test('listing and cancelling downloads require an admin', function () {

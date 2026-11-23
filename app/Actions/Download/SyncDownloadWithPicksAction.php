@@ -31,7 +31,11 @@ class SyncDownloadWithPicksAction
         $skipped = array_values(array_diff(array_map(fn (QBittorrentFileData $file): int => $file->index, $torrentFiles), $picked));
 
         DB::transaction(function () use ($download, $picked, $skipped): void {
-            $download->update(['status' => $picked === [] ? DownloadStatus::WaitingForFiles : DownloadStatus::Downloading]);
+            $download->update([
+                'status' => $picked === [] ? DownloadStatus::WaitingForFiles : DownloadStatus::Downloading,
+                // It starts over, so why it failed before no longer applies
+                'error_code' => null,
+            ]);
 
             // Last, so a failure rolls the status back
             $this->qBittorrentService->setFilePriority($download->hash, $skipped, 0);

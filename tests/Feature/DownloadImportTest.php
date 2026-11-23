@@ -83,6 +83,20 @@ test('the sync queues an import for each picked file that finished, and nothing 
     expect($download->fresh()->status)->toBe(DownloadStatus::Importing);
 });
 
+test('an import that fails at once keeps the download failed', function () {
+    [$download] = downloadWithPicks([0]);
+    fakeTorrent('downloading', [0 => 1.0]);
+    // Runs during the dispatch, like a worker that is faster than the sync; its file is missing
+    Queue::swap(Queue::getFacadeRoot()->queue);
+    putVideoFile(videoBasePathForTests().'/mounted.mkv');
+
+    SyncDownloadsAction::run();
+
+    expect($download->fresh())
+        ->status->toBe(DownloadStatus::Failed)
+        ->error_code->toBe(DownloadErrorCode::FileMissing);
+});
+
 test('a download whose files are all in place completes, and goes once qBittorrent stopped seeding it', function () {
     [$download, [$pick]] = downloadWithPicks([0], DownloadStatus::Importing);
     $pick->update(['imported_at' => now()]);

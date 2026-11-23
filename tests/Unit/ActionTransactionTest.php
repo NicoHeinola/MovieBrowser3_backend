@@ -20,6 +20,7 @@ test('write actions run inside a database transaction', function () {
         'Download/GetDownloadDetailsAction.php',
         'Download/ListDownloadsAction.php',
         'Download/ResolveDownloadDetailsAction.php',
+        'Download/ResolveDownloadGoneAction.php',
         'Download/ResolveDownloadPathAction.php',
         'Download/ResolveMagnetInfoHashAction.php',
         'Download/ResolveQBittorrentConnectionAction.php',

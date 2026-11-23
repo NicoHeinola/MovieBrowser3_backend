@@ -13,7 +13,6 @@ use App\Models\DownloadPick\DownloadPick;
 use App\Models\Episode\Episode;
 use App\Services\QBittorrent\QBittorrentService;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -31,31 +30,48 @@ class UpdateDownloadFilesAction
     ) {}
 
     /**
-     * Replaces which files of the download become episodes of one show, and has qBittorrent download exactly the files
+     * Replaces which files of the download episodes of one show wait for, and has qBittorrent download exactly the files
      * picked by any show. One batch can feed several shows, so other shows' picks stay, and their files can't be
-     * picked again. With no files picked anywhere, the torrent stops and waits.
+     * picked again. A pick that already is its episode's video stays too, until that episode gets another file. With no
+     * files picked anywhere, the torrent stops and waits.
+     *
+     * Only dropping picks works without the torrent too, so an episode can let go of one qBittorrent lost.
      *
      * @throws ValidationException When a file or episode doesn't fit, or the picked files don't fit on the disk
      * @throws DownloadNotInClientException When qBittorrent no longer has the torrent
      */
     public function handle(Download $download, UpdateDownloadFilesData $data): Download
     {
-        $torrentFiles = collect($this->qBittorrentService->getFiles($download->hash) ?? throw new DownloadNotInClientException)
-            ->keyBy('index');
         $links = collect($data->files);
+        $replacedIds = $this->replacedPickIds($download, $links, $data->showId);
+        $keptEpisodeIds = $download->picks()->whereNotIn('id', $replacedIds)->pluck('episode_id', 'file_index');
+        // Picks that stay as they are keep their row, and with it whether they're imported or being imported
+        $newLinks = $links->reject(fn (DownloadPickData $link): bool => $keptEpisodeIds->get($link->index) === $link->episodeId);
 
-        $this->ensureFilesExist($links, $torrentFiles);
-        $this->ensureFilesFree($download, $links, $data->showId);
+        $files = $this->qBittorrentService->getFiles($download->hash);
+
+        if ($files === null && $newLinks->isNotEmpty()) {
+            throw new DownloadNotInClientException;
+        }
+
+        $this->ensureFilesFree($links, $keptEpisodeIds);
         $this->ensureEpisodesFit($download, $links, $data->showId);
-        $this->ensureSpace($links, $torrentFiles);
 
-        return DB::transaction(function () use ($download, $data, $links, $torrentFiles): Download {
+        $torrentFiles = collect($files)->keyBy('index');
+
+        if ($newLinks->isNotEmpty()) {
+            $this->ensureFilesExist($links, $torrentFiles);
+            // Every link: what the kept ones still have to download needs its room too
+            $this->ensureSpace($links, $torrentFiles);
+        }
+
+        return DB::transaction(function () use ($download, $data, $newLinks, $replacedIds, $files, $torrentFiles): Download {
             $download->update(['show_id' => $data->showId]);
 
-            // Delete first: an episode moving to another file of the same torrent would clash with its own old row
-            $this->showPicks($download, $data->showId)->delete();
+            // Delete first: an episode moving to another file would clash with its own old row
+            DownloadPick::query()->whereKey($replacedIds)->delete();
 
-            foreach ($links as $link) {
+            foreach ($newLinks as $link) {
                 /** @var QBittorrentFileData $file */
                 $file = $torrentFiles->get($link->index);
 
@@ -68,7 +84,9 @@ class UpdateDownloadFilesAction
             }
 
             // Last, so a failure rolls the rows back
-            $this->syncDownloadWithPicksAction->handle($download);
+            if ($files !== null) {
+                $this->syncDownloadWithPicksAction->handle($download);
+            }
 
             return $download->fresh();
         });
@@ -88,33 +106,45 @@ class UpdateDownloadFilesAction
     }
 
     /**
-     * A file another show's episode waits for stays that episode's.
+     * A file of a pick that stays (another show's, or one already imported) stays that pick's episode's.
      *
      * @param  Collection<int, DownloadPickData>  $links
+     * @param  Collection<int, int>  $keptEpisodeIds  Episode ids of the picks that stay, by file index
      */
-    private function ensureFilesFree(Download $download, Collection $links, int $showId): void
+    private function ensureFilesFree(Collection $links, Collection $keptEpisodeIds): void
     {
-        $takenIndexes = $download->picks()->whereNotIn('id', $this->showPicks($download, $showId)->select('id'))->pluck('file_index');
-
         foreach ($links as $position => $link) {
-            if ($takenIndexes->contains($link->index)) {
+            if ($keptEpisodeIds->get($link->index, $link->episodeId) !== $link->episodeId) {
                 throw ValidationException::withMessages(["files.{$position}.index" => ValidationErrorCode::FileAlreadyPicked->value]);
             }
         }
     }
 
     /**
-     * The download's picks for episodes of one show.
+     * The picks these links take the place of, leaving out the ones they repeat.
      *
-     * @return HasMany<DownloadPick, Download>
+     * @param  Collection<int, DownloadPickData>  $links
+     * @return list<int>
      */
-    private function showPicks(Download $download, int $showId): HasMany
+    private function replacedPickIds(Download $download, Collection $links, int $showId): array
     {
-        return $download->picks()->whereHas('episode.entry', fn (Builder $query) => $query->where('show_id', $showId));
+        $ofShow = fn (Builder $query) => $query->whereHas('episode.entry', fn (Builder $entry) => $entry->where('show_id', $showId));
+
+        // What the show's episodes still wait for from this download
+        $waiting = $download->picks()->whereNull('imported_at')->where($ofShow)->get();
+        // What linked episodes already got, from any download: a better release takes its place
+        $imported = DownloadPick::query()->whereNotNull('imported_at')->whereIn('episode_id', $links->pluck('episodeId'))->where($ofShow)->get();
+
+        return $waiting->concat($imported)
+            ->reject(fn (DownloadPick $pick): bool => $pick->download_id === $download->id && $links->contains(
+                fn (DownloadPickData $link): bool => $link->index === $pick->file_index && $link->episodeId === $pick->episode_id,
+            ))
+            ->modelKeys();
     }
 
     /**
-     * Each episode must belong to the show and wait for no other download's file.
+     * Each episode must belong to the show and wait for no other download's file. One that already got its file waits
+     * for nothing.
      *
      * @param  Collection<int, DownloadPickData>  $links
      */
@@ -123,7 +153,7 @@ class UpdateDownloadFilesAction
         $episodeIds = $links->pluck('episodeId');
         $showIds = Episode::query()->whereIn('episodes.id', $episodeIds)->join('show_entries', 'show_entries.id', '=', 'episodes.show_entry_id')
             ->pluck('show_entries.show_id', 'episodes.id');
-        $busyEpisodeIds = DownloadPick::query()->whereIn('episode_id', $episodeIds)->where('download_id', '!=', $download->id)->pluck('episode_id');
+        $busyEpisodeIds = DownloadPick::query()->whereIn('episode_id', $episodeIds)->where('download_id', '!=', $download->id)->whereNull('imported_at')->pluck('episode_id');
 
         foreach ($links as $position => $link) {
             if ($showIds->get($link->episodeId) !== $showId) {

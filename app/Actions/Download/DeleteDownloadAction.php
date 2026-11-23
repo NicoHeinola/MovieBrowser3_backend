@@ -18,10 +18,11 @@ class DeleteDownloadAction
     public function __construct(
         private readonly QBittorrentService $qBittorrentService,
         private readonly DeleteEpisodeAction $deleteEpisodeAction,
+        private readonly ResolveDownloadGoneAction $resolveDownloadGoneAction,
     ) {}
 
     /**
-     * Cancels a download: removes the torrent and what it downloaded from qBittorrent. Its episodes stay, missing their
+     * Cancels a download: removes the torrent and what it downloaded from qBittorrent, if it's still there. Its episodes stay, missing their
      * video, unless `$removeWaitingEpisodes` asks to remove the ones made for it: no video of their own, file not in
      * place yet. An episode that only waited for a better release keeps its video either way. Refused while its files
      * are copied into their episodes.
@@ -49,6 +50,12 @@ class DeleteDownloadAction
             }
 
             $download->delete();
+
+            // Already gone: nothing to ask a qBittorrent that may be closed, and a torrent with this hash that someone
+            // added there since is theirs
+            if ($this->resolveDownloadGoneAction->handle($download)) {
+                return;
+            }
 
             // Last, so a failure keeps the download to cancel again
             $this->qBittorrentService->deleteTorrent($download->hash, deleteFiles: true);

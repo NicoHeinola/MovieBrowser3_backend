@@ -20,6 +20,7 @@ class ReleaseEpisodeDownloadsAction
     public function __construct(
         private readonly QBittorrentService $qBittorrentService,
         private readonly SyncDownloadWithPicksAction $syncDownloadWithPicksAction,
+        private readonly ResolveDownloadGoneAction $resolveDownloadGoneAction,
     ) {}
 
     /**
@@ -50,10 +51,17 @@ class ReleaseEpisodeDownloadsAction
      */
     private function release(Download $download): void
     {
+        // Already gone from qBittorrent: a torrent with this hash that someone added there since is theirs
+        $isGone = $this->resolveDownloadGoneAction->handle($download);
+
         try {
             if ($download->picks_count === 0 && $download->show_id === null) {
-                DB::transaction(function () use ($download): void {
+                DB::transaction(function () use ($download, $isGone): void {
                     $download->delete();
+
+                    if ($isGone) {
+                        return;
+                    }
 
                     $this->qBittorrentService->deleteTorrent($download->hash, deleteFiles: true);
                 });
@@ -61,7 +69,9 @@ class ReleaseEpisodeDownloadsAction
                 return;
             }
 
-            $this->syncDownloadWithPicksAction->handle($download);
+            if (!$isGone) {
+                $this->syncDownloadWithPicksAction->handle($download);
+            }
         } catch (QBittorrentUnavailableException|DownloadClientNotConfiguredException|DownloadNotInClientException $exception) {
             Log::warning('A download of deleted episodes could not be updated in qBittorrent.', [
                 'download_id' => $download->id,

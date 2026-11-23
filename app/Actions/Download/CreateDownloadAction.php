@@ -24,10 +24,12 @@ class CreateDownloadAction
         private readonly QBittorrentService $qBittorrentService,
         private readonly ResolveDownloadPathAction $resolveDownloadPathAction,
         private readonly ResolveMagnetInfoHashAction $resolveMagnetInfoHashAction,
+        private readonly ResolveDownloadGoneAction $resolveDownloadGoneAction,
     ) {}
 
     /**
-     * Hands the torrent to qBittorrent, which holds it without downloading until files are picked for episodes.
+     * Hands the torrent to qBittorrent, which holds it without downloading until files are picked for episodes. A
+     * download qBittorrent no longer has is added again and starts over, without its old picks.
      *
      * @throws DownloadClientNotConfiguredException While downloads are off
      * @throws DownloadExistsException When the torrent is already a download
@@ -38,10 +40,13 @@ class CreateDownloadAction
         $hash = $this->resolveMagnetInfoHashAction->handle($data->magnetUrl)
             ?? throw new InvalidArgumentException('The magnet link has no info hash.');
 
-        $existing = Download::query()->where('hash', $hash)->value('id');
+        $existing = Download::query()->where('hash', $hash)->first();
 
-        if ($existing !== null) {
-            throw new DownloadExistsException($existing);
+        // The app may not know yet that the torrent is gone, so qBittorrent has the last word
+        if ($existing !== null
+            && !$this->resolveDownloadGoneAction->handle($existing)
+            && $this->qBittorrentService->getTorrent($hash) !== null) {
+            throw new DownloadExistsException($existing->id);
         }
 
         $isAdded = $this->qBittorrentService->addTorrent(new QBittorrentNewTorrentData(
@@ -57,13 +62,36 @@ class CreateDownloadAction
         }
 
         // After qBittorrent has it: an add can't be rolled back, but a row without a torrent would be worse
-        return DB::transaction(fn (): Download => Download::query()->create([
-            'hash' => $hash,
-            // Characters, not display width: the column holds 255 characters, Japanese ones too
-            'name' => $data->name === null ? null : mb_substr(trim($data->name), 0, 255),
-            'magnet_url' => $data->magnetUrl,
+        return DB::transaction(function () use ($data, $existing, $hash): Download {
+            if ($existing !== null) {
+                return $this->restart($existing, $data->magnetUrl);
+            }
+
+            return Download::query()->create([
+                'hash' => $hash,
+                // Characters, not display width: the column holds 255 characters, Japanese ones too
+                'name' => $data->name === null ? null : mb_substr(trim($data->name), 0, 255),
+                'magnet_url' => $data->magnetUrl,
+                'status' => DownloadStatus::WaitingForFiles,
+            ]);
+        });
+    }
+
+    /**
+     * Starts a download over whose torrent was added again. Its picks go: a kept one would download its file again,
+     * even one that already is its episode's video. Episodes keep their videos.
+     */
+    private function restart(Download $download, string $magnetUrl): Download
+    {
+        $download->picks()->delete();
+        $download->update([
+            'magnet_url' => $magnetUrl,
             'status' => DownloadStatus::WaitingForFiles,
-        ]));
+            'error_code' => null,
+            'client_removed_at' => null,
+        ]);
+
+        return $download->fresh();
     }
 
     /**
