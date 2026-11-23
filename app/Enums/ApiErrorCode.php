@@ -20,4 +20,6 @@ enum ApiErrorCode: string
     case DownloadClientNotConfigured = 'download_client_not_configured';
     case DownloadExists = 'download_exists';
     case DownloadNotInClient = 'download_not_in_client';
+    case DownloadNotRetryable = 'download_not_retryable';
+    case DownloadImportRunning = 'download_import_running';
 }

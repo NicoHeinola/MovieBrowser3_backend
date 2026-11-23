@@ -26,4 +26,13 @@ class QBittorrentTorrentData extends Data
         public ?int $etaSeconds,
         public bool $hasMetadata,
     ) {}
+
+    /**
+     * Whether it finished downloading and qBittorrent stopped it: done seeding, by its share limit or by hand. Older
+     * qBittorrents call the state `pausedUP`.
+     */
+    public function isStoppedAfterFinishing(): bool
+    {
+        return in_array($this->state, ['stoppedUP', 'pausedUP'], true);
+    }
 }

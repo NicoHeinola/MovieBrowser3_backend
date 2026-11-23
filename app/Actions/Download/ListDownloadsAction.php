@@ -5,7 +5,6 @@ namespace App\Actions\Download;
 use App\Dtos\Download\DownloadDetailsData;
 use App\Models\Download\Download;
 use App\Services\QBittorrent\QBittorrentService;
-use Illuminate\Database\Eloquent\Builder;
 use Lorisleiva\Actions\Concerns\AsAction;
 
 class ListDownloadsAction
@@ -27,10 +26,7 @@ class ListDownloadsAction
     {
         $downloads = Download::query()
             ->with('show.titles')
-            // Episodes made for the download: no video of their own, and their file not in place yet
-            ->withCount(['picks as waiting_episode_count' => fn (Builder $query) => $query
-                ->whereNull('imported_at')
-                ->whereHas('episode', fn (Builder $episode) => $episode->where('filename', ''))])
+            ->withCount(Download::waitingEpisodeCount())
             ->latest()
             ->orderByDesc('id')
             ->get();

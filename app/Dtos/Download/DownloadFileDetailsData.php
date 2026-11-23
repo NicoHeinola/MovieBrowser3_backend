@@ -2,6 +2,7 @@
 
 namespace App\Dtos\Download;
 
+use Carbon\CarbonImmutable;
 use Spatie\LaravelData\Data;
 
 class DownloadFileDetailsData extends Data
@@ -11,6 +12,7 @@ class DownloadFileDetailsData extends Data
      *
      * @param  float  $progress  0 to 1
      * @param  int|null  $showId  The show of that episode, so a show's editor leaves other shows' picks alone
+     * @param  CarbonImmutable|null  $importedAt  When the file became that episode's video
      */
     public function __construct(
         public int $index,
@@ -19,5 +21,6 @@ class DownloadFileDetailsData extends Data
         public float $progress,
         public ?int $episodeId,
         public ?int $showId,
+        public ?CarbonImmutable $importedAt = null,
     ) {}
 }

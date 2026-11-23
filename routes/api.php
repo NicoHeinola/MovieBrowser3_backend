@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardStatsController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\DownloadFilesController;
+use App\Http\Controllers\DownloadRetryController;
 use App\Http\Controllers\EpisodeController;
 use App\Http\Controllers\EpisodePlaybackController;
 use App\Http\Controllers\MalAnimeController;
@@ -83,6 +84,7 @@ Route::prefix('v1')->group(function (): void {
         // Torrents handed to qBittorrent, admin only like the torrent search; reading one asks qBittorrent
         Route::apiResource('downloads', DownloadController::class)->only(['index', 'store', 'show', 'destroy']);
         Route::apiSingleton('downloads.files', DownloadFilesController::class)->only(['update']);
+        Route::apiSingleton('downloads.retry', DownloadRetryController::class)->creatable()->only(['store']);
         Route::apiResource('mal-anime', MalAnimeController::class)->only(['index']);
         // A show described by an outside page, for the show editor to start from; nothing is saved
         Route::apiSingleton('show-template', ShowTemplateController::class)->only(['show']);

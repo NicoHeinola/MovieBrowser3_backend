@@ -2,6 +2,7 @@
 
 namespace App\Actions\Episode\VideoFile;
 
+use App\Exceptions\NotEnoughDiskSpaceException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
@@ -48,7 +49,7 @@ class CopyVideoFileAction
         $freeBytes = $this->resolveFreeDiskSpaceAction->handle(dirname($toPath));
 
         if ($freeBytes !== null && $freeBytes < $size + self::RESERVED_DISK_BYTES) {
-            throw new RuntimeException("Not enough free disk space to copy {$fromPath}");
+            throw new NotEnoughDiskSpaceException("Not enough free disk space to copy {$fromPath}");
         }
 
         $basePath = $this->resolveVideoBasePathAction->handle();

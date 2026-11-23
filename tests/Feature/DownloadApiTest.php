@@ -13,7 +13,6 @@ use App\Services\QBittorrent\QBittorrentConnector;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
 use Saloon\Http\Faking\MockResponse;
-use Saloon\Http\PendingRequest;
 use Saloon\Laravel\Facades\Saloon;
 
 use function Pest\Laravel\deleteJson;
@@ -55,31 +54,6 @@ function qBittorrentAnswer(string $name, ?callable $change = null): array
 }
 
 /**
- * Fakes qBittorrent's Web API: logins pass, and each endpoint answers from `$answers` (a body, a mock response, or a
- * closure that builds one). Endpoints without an answer get "Ok.".
- *
- * @param  array<string, mixed>  $answers  Keyed by endpoint without the `/api/v2/` prefix, such as `torrents/info`
- */
-function fakeQBittorrentApi(array $answers = []): void
-{
-    Saloon::fake([QBittorrentConnector::class => function (PendingRequest $request) use ($answers): MockResponse {
-        $endpoint = ltrim($request->getRequest()->resolveEndpoint(), '/');
-
-        if ($endpoint === 'auth/login') {
-            return MockResponse::make('Ok.', 200, ['Set-Cookie' => 'SID=session; path=/']);
-        }
-
-        $answer = $answers[$endpoint] ?? 'Ok.';
-
-        return match (true) {
-            $answer instanceof Closure => $answer($request),
-            $answer instanceof MockResponse => $answer,
-            default => MockResponse::make($answer),
-        };
-    }]);
-}
-
-/**
  * A show with one entry of two episodes.
  *
  * @return array{Show, Episode, Episode}
@@ -90,20 +64,6 @@ function showWithTwoEpisodes(): array
     $entry = ShowEntry::factory()->for($show)->create();
 
     return [$show, Episode::factory()->for($entry, 'entry')->create(), Episode::factory()->for($entry, 'entry')->create()];
-}
-
-/**
- * The fields of the requests sent to one qBittorrent endpoint.
- *
- * @return list<array<string, mixed>>
- */
-function qBittorrentRequestsTo(string $endpoint): array
-{
-    return saloonSent()
-        ->filter(fn (array $sent): bool => ltrim($sent['request']->getRequest()->resolveEndpoint(), '/') === $endpoint)
-        ->map(fn (array $sent): array => $sent['fields'] === [] ? $sent['request']->query()->all() : $sent['fields'])
-        ->values()
-        ->all();
 }
 
 test('downloads require an admin', function () {
@@ -141,6 +101,7 @@ test('a torrent is added stopped to the download folder, as Windows sees it', fu
             'progress' => 0,
             'episode_id' => null,
             'show_id' => null,
+            'imported_at' => null,
         ]);
 
     $added = qBittorrentRequestsTo('torrents/add');
@@ -255,7 +216,7 @@ test('a download reports its progress and picked files live', function () {
     [$show, $episode] = showWithTwoEpisodes();
     $show->titles()->create(['title' => 'Mushoku Tensei', 'is_primary' => true]);
     $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'show_id' => $show->id, 'status' => DownloadStatus::Downloading]);
-    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $episode->id]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $episode->id, 'imported_at' => '2026-11-23 12:00:00']);
     fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info'), 'torrents/files' => qBittorrentAnswer('torrents-files')]);
     actingAsAdmin();
 
@@ -274,7 +235,9 @@ test('a download reports its progress and picked files live', function () {
         ->assertJsonPath('files.0.episode_id', $episode->id)
         ->assertJsonPath('files.0.show_id', $show->id)
         ->assertJsonPath('files.0.progress', 0.5)
-        ->assertJsonPath('files.1.episode_id', null);
+        ->assertJsonPath('files.0.imported_at', '2026-11-23T12:00:00.000000Z')
+        ->assertJsonPath('files.1.episode_id', null)
+        ->assertJsonPath('files.1.imported_at', null);
 });
 
 test('an unknown ETA is null', function () {
@@ -645,6 +608,18 @@ test('cancelling can remove the episodes made for it, but never one that has its
         ->and(Episode::query()->find($replaced->id))->not->toBeNull();
 });
 
+test('a download can not be cancelled while its files are copied into their episodes', function () {
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'status' => DownloadStatus::Importing]);
+    Saloon::fake([QBittorrentConnector::class => saloonConnectionRefused()]);
+    actingAsAdmin();
+
+    deleteJson("/api/v1/downloads/{$download->id}")
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'download_import_running');
+
+    expect(Download::query()->find($download->id))->not->toBeNull();
+});
+
 test('a closed qBittorrent keeps the download to cancel again', function () {
     $download = Download::factory()->create(['hash' => DOWNLOAD_HASH]);
     Saloon::fake([QBittorrentConnector::class => saloonConnectionRefused()]);
@@ -666,4 +641,17 @@ test('listing and cancelling downloads require an admin', function () {
     getJson('/api/v1/downloads')->assertForbidden();
     deleteJson("/api/v1/downloads/{$download->id}")->assertForbidden();
     Saloon::assertNothingSent();
+});
+
+test('a download counts the episodes made for it, for cancelling', function () {
+    [$show, $made, $replaced] = showWithTwoEpisodes();
+    $made->update(['filename' => '']);
+    $replaced->update(['filename' => 'Old release.mkv']);
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'show_id' => $show->id, 'status' => DownloadStatus::Downloading]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $made->id]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 1, 'episode_id' => $replaced->id]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info'), 'torrents/files' => qBittorrentAnswer('torrents-files')]);
+    actingAsAdmin();
+
+    getJson("/api/v1/downloads/{$download->id}")->assertOk()->assertJsonPath('waiting_episode_count', 1);
 });

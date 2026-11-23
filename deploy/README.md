@@ -136,13 +136,24 @@ When it's done it prints the app's address, `http://localhost:8780`, and where i
 ## 7. First Login
 
 1. Open http://localhost:8780 in your browser and log in with the admin username and password.
-2. A setup wizard opens. It asks for two things and suggests an answer for each:
+2. A setup wizard opens. It asks for these and suggests an answer for each:
    - **Video folder**: where new videos are stored. It must be inside one of your media folders, e.g. `/mnt/g/New_Vid/MovieBrowser3`.
    - **VLC**: where VLC is, usually `/mnt/c/Program Files/VideoLAN/VLC/vlc.exe`. The wizard finds it by itself when it's installed in the usual place.
+   - **Downloads** (optional): see [Downloading Torrents](#downloading-torrents). Leave the address empty to skip it.
 
-   The wizard checks both before saving and says what's wrong if something doesn't work.
+   The wizard checks each before saving and says what's wrong if something doesn't work.
 
 To change them later, go to **Admin → Settings**, or reopen the wizard with **Admin → Settings → Run setup again**.
+
+## Downloading Torrents
+
+MovieBrowser3 can download torrents straight into shows through your own qBittorrent on Windows. It's optional.
+
+1. In qBittorrent, open **Tools → Options → Web UI**, tick **Web User Interface (Remote control)**, and set a username and password. Note the port (8080 by default).
+2. Pick a download folder, preferably on a disk other than the videos' and Windows' own, so heavy downloading doesn't slow them down. Its drive must be a media folder (step 5 and 6): run the installer again and add it, e.g. `/mnt/d`.
+3. In **Admin → Settings → Downloads**, enter qBittorrent's address (`http://127.0.0.1:8080`), the username, the password and the download folder (`/mnt/d/MovieBrowser3 Downloads`), then Save. It checks the login and the folder first.
+
+Then send a torrent into a show from **Admin → Torrents**, pick its files for episodes in the show editor and save. **Admin → Downloads** shows the progress. Within a minute of a file finishing, it's copied into its episode and plays. qBittorrent decides how long to seed (its share limit): once it stops a finished torrent, MovieBrowser3 removes it and its files from the download folder.
 
 ## Moving From MovieBrowser2
 
@@ -204,4 +215,6 @@ To go back to a backup, run `moviebrowser3 restore <name>` with a name from that
 | The update says "can't be fast-forwarded" or "can't check out release" | Someone changed files in the install folder. Ask a developer, or see TECHNICAL.md. |
 | The newest backup in Settings is days old | The backup folder's drive isn't visible to Ubuntu: see step 5, then run `moviebrowser3 restart` and `moviebrowser3 backup`. |
 | The update says the database backup failed | The same: the backup folder's drive isn't mounted. Nothing was changed; mount it and update again. |
+| Settings says qBittorrent "didn't answer" | qBittorrent isn't running, or its Web UI is off: see [Downloading Torrents](#downloading-torrents). Mirrored networking must be on (step 2). |
+| A download says "a finished file isn't in the download folder" | The download folder's drive isn't a media folder: add it with the installer (step 6), then **Try again** on the download. |
 | `moviebrowser3: command not found` | Close and reopen Ubuntu. If it still happens, run `~/prod_codes/MovieBrowser3/moviebrowser3` with the full path. |

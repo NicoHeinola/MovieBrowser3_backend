@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\Episode\VideoFile\CheckWindowsCopyAvailableAction;
 use App\Actions\Episode\VideoFile\CopyVideoFileAction;
 use App\Actions\Episode\VideoFile\ResolveFreeDiskSpaceAction;
 use App\Actions\Episode\VideoFile\ResolveVideoBasePathAction;
@@ -15,7 +16,6 @@ use App\Models\Setting\Setting;
 use App\Models\Show\Show;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Number;
 use RuntimeException;
 use Throwable;
@@ -63,7 +63,7 @@ class ImportLegacyShowsCommand extends Command
 
         $copyWithWindows = (bool) $this->option('copy-with-windows');
 
-        if ($copyWithWindows && Process::run(['sh', '-c', 'command -v robocopy.exe'])->failed()) {
+        if ($copyWithWindows && !CheckWindowsCopyAvailableAction::run()) {
             $this->components->error('robocopy.exe is not reachable. --copy-with-windows only works when this command runs in WSL itself, not in Docker.');
 
             return self::FAILURE;

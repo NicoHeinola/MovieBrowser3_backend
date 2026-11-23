@@ -23,11 +23,12 @@ class ResolveDownloadDetailsAction
      */
     public function handle(Download $download, ?QBittorrentTorrentData $torrent, ?array $files = null, ?int $waitingEpisodeCount = null): DownloadDetailsData
     {
-        if ($torrent === null) {
+        // A completed download's torrent leaves qBittorrent on purpose once it's done seeding
+        if ($torrent === null && $download->status !== DownloadStatus::Completed) {
             return new DownloadDetailsData($download, DownloadStatus::Failed, DownloadErrorCode::ClientLostTorrent, null, $files === null ? null : [], $waitingEpisodeCount);
         }
 
-        $status = $download->status === DownloadStatus::WaitingForFiles && !$torrent->hasMetadata
+        $status = $download->status === DownloadStatus::WaitingForFiles && $torrent?->hasMetadata === false
             ? DownloadStatus::FetchingMetadata
             : $download->status;
 

@@ -21,6 +21,7 @@ class DownloadFileResource extends JsonResource
             'progress' => $this->progress,
             'episode_id' => $this->episodeId,
             'show_id' => $this->showId,
+            'imported_at' => $this->importedAt,
         ];
     }
 }

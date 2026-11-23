@@ -21,6 +21,8 @@ return new class extends Migration
             $table->foreignId('show_id')->nullable()->constrained('shows')->nullOnDelete();
             $table->string('status');
             $table->string('error_code')->nullable();
+            // Set once the torrent left qBittorrent after finishing, so the sync stops asking about it
+            $table->timestamp('client_removed_at')->nullable();
             $table->timestamps();
         });
     }

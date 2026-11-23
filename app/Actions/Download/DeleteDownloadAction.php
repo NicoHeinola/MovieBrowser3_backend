@@ -3,6 +3,8 @@
 namespace App\Actions\Download;
 
 use App\Actions\Episode\DeleteEpisodeAction;
+use App\Enums\DownloadStatus;
+use App\Exceptions\DownloadImportRunningException;
 use App\Models\Download\Download;
 use App\Models\Episode\Episode;
 use App\Services\QBittorrent\QBittorrentService;
@@ -21,10 +23,19 @@ class DeleteDownloadAction
     /**
      * Cancels a download: removes the torrent and what it downloaded from qBittorrent. Its episodes stay, missing their
      * video, unless `$removeWaitingEpisodes` asks to remove the ones made for it: no video of their own, file not in
-     * place yet. An episode that only waited for a better release keeps its video either way.
+     * place yet. An episode that only waited for a better release keeps its video either way. Refused while its files
+     * are copied into their episodes.
+     *
+     * @throws DownloadImportRunningException
      */
     public function handle(Download $download, bool $removeWaitingEpisodes = false): void
     {
+        // A copy holds its episode's row until it's in place: a cancel would wait for it, then delete the episode
+        // without the video it just got
+        if ($download->status === DownloadStatus::Importing) {
+            throw new DownloadImportRunningException;
+        }
+
         DB::transaction(function () use ($download, $removeWaitingEpisodes): void {
             if ($removeWaitingEpisodes) {
                 $episodes = Episode::query()

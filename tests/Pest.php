@@ -2,6 +2,7 @@
 
 use App\Models\Setting\Setting;
 use App\Models\User\User;
+use App\Services\QBittorrent\QBittorrentConnector;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -194,5 +195,44 @@ function saloonSentUrls(): array
 
             return $sent['request']->getUrl().($query === '' ? '' : "?{$query}");
         })
+        ->all();
+}
+
+/**
+ * Fakes qBittorrent's Web API: logins pass, and each endpoint answers from `$answers` (a body, a mock response, or a
+ * closure that builds one). Endpoints without an answer get "Ok.".
+ *
+ * @param  array<string, mixed>  $answers  Keyed by endpoint without the `/api/v2/` prefix, such as `torrents/info`
+ */
+function fakeQBittorrentApi(array $answers = []): void
+{
+    Saloon::fake([QBittorrentConnector::class => function (PendingRequest $request) use ($answers): MockResponse {
+        $endpoint = ltrim($request->getRequest()->resolveEndpoint(), '/');
+
+        if ($endpoint === 'auth/login') {
+            return MockResponse::make('Ok.', 200, ['Set-Cookie' => 'SID=session; path=/']);
+        }
+
+        $answer = $answers[$endpoint] ?? 'Ok.';
+
+        return match (true) {
+            $answer instanceof Closure => $answer($request),
+            $answer instanceof MockResponse => $answer,
+            default => MockResponse::make($answer),
+        };
+    }]);
+}
+
+/**
+ * The fields of the requests sent to one qBittorrent endpoint.
+ *
+ * @return list<array<string, mixed>>
+ */
+function qBittorrentRequestsTo(string $endpoint): array
+{
+    return saloonSent()
+        ->filter(fn (array $sent): bool => ltrim($sent['request']->getRequest()->resolveEndpoint(), '/') === $endpoint)
+        ->map(fn (array $sent): array => $sent['fields'] === [] ? $sent['request']->query()->all() : $sent['fields'])
+        ->values()
         ->all();
 }
