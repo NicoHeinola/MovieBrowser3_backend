@@ -1,11 +1,9 @@
 ---
-description: Docker image and production deploy files. Use when editing the Dockerfile, docker/, deploy/ or the install and update scripts.
 paths:
   - 'Dockerfile'
   - '.dockerignore'
   - 'docker/**'
   - 'deploy/**'
-applyTo: 'Dockerfile,.dockerignore,docker/**,deploy/**'
 ---
 
 # Deploy Rules
@@ -18,7 +16,7 @@ applyTo: 'Dockerfile,.dockerignore,docker/**,deploy/**'
 - One FrankenPHP container (classic mode) serves everything on `WEB_PORT`. `/api/*` and `/up` go to `php_server`, with no `encode` so the watch-progress stream flushes. Other paths go to `web/current` (mounted read-only at `/app/frontend`), with `try_files {path} /index.html`, `immutable` caching on `/assets/*`, `no-cache` elsewhere, and zstd/gzip.
 - The site address matches any Host (`http://:{$WEB_PORT}` plus `bind {$WEB_BIND}`), so localhost, 127.0.0.1 and LAN names all work.
 - `docker/php.ini` keeps `max_execution_time = 0` and `output_buffering = 0`. Each open stream holds one of `PHP_THREADS`.
-- Every compose service uses `network_mode: host`: VLC's web interface (47000-47999) and the host bridge (8767) listen on the host's 127.0.0.1 only. Prod ports (web 8780, db 7564) must not clash with dev (3010, 8765, 7563).
+- Every compose service uses `network_mode: host`: VLC's web interface (40000-49151) and the host bridge (8767) listen on the host's 127.0.0.1 only. Prod ports (web 8780, db 7564) must not clash with dev (3010, 8765, 7563).
 - backend, queue, imports and scheduler run as the host user (`APP_UID`/`APP_GID`), so `storage`, `bootstrap/cache` and the Caddy data dirs stay world-writable in the image.
 - The entrypoint caches config, routes and events only. Never `artisan optimize`: laravel-data's step writes to the database cache before the first migration. No `view:cache`: a clone has no `resources/views`. Migrations run only from `install.sh`, never on container start.
 - Media folders and the backup folder (`BACKUP_PATH`) mount at the same path as on the host (written to `compose.override.yml` by `install.sh`), so stored paths work in the container and for the bridge, and backup names resolve the same on the host.

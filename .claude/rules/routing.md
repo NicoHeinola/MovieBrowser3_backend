@@ -1,8 +1,6 @@
 ---
-description: Routing conventions for the API routes file. Use when editing routes/api.php or wiring backend HTTP endpoints.
 paths:
   - 'routes/api.php'
-applyTo: 'routes/api.php'
 ---
 
 # Routing Rules

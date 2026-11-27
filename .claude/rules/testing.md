@@ -1,8 +1,6 @@
 ---
-description: Pest test conventions under tests. Use when creating or editing repository test files.
 paths:
   - 'tests/**/*.php'
-applyTo: 'tests/**/*.php'
 ---
 
 # Testing Rules

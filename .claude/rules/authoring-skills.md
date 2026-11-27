@@ -1,13 +1,12 @@
 ---
-description: Authoring rules for project SKILL.md files. Use when creating or editing skills under .claude/skills.
 paths:
   - '.claude/skills/**'
-applyTo: '.claude/skills/**'
 ---
 
 # Authoring Skills
 
-- Skills are reusable workflows that span several files or layers, or need judgment rather than a fixed structure. If the guidance reads as "files matching X must look like Y", it is a rule instead.
-- Frontmatter: `name` matches the folder, `description` states the capability and the situations that should trigger it.
-- Use short numbered steps and an explicit "Done when" check. Name reference files to copy from instead of restating rule content or templates.
-- Do not mirror a rule with a longer checklist, and do not wrap an agent prompt in a skill.
+- A skill is a **moment**: one thing the user asks for in this repo ("add a resource like show-sections", "add a column"). It holds every step that moment needs, in order, so one load is enough.
+- No one-liner skills: a line that small goes into a rule or `CLAUDE.md`. A generic moment (tickets, reviews, tests, push, releases) is a global skill; this repo only adds its specifics in `CLAUDE.md` and the rules.
+- Frontmatter: `name` matches the folder. `description` is in the third person ("Scaffolds…"): what it does, the phrases that trigger it, and what it is not for.
+- Short numbered steps and a "Done when" check. A step says what to do at that moment ("read `CreateCategoryAction` before writing the new create action"), not a general principle.
+- Name real files to copy from instead of restating rule content or templates. Don't mirror a rule with a longer checklist.

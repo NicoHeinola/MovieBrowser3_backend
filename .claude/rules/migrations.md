@@ -1,8 +1,6 @@
 ---
-description: Migration conventions. Use when creating or editing files under database/migrations.
 paths:
   - 'database/migrations/**/*.php'
-applyTo: 'database/migrations/**/*.php'
 ---
 
 # Migration Rules

@@ -1,5 +1,4 @@
 ---
-description: Per-user watch status, watch progress and the live progress SSE stream. Use when editing watch status or watch progress models, actions, controllers, resources, config or tests.
 paths:
   - 'app/**/ShowEntryWatchStatus/**'
   - 'app/**/ShowWatchProgress/**'
@@ -8,7 +7,6 @@ paths:
   - 'config/watch_progress.php'
   - 'tests/Feature/ShowEntryWatchStatusApiTest.php'
   - 'tests/Feature/ShowWatchProgressStreamApiTest.php'
-applyTo: 'app/**/ShowEntryWatchStatus/**,app/**/ShowWatchProgress/**,app/Http/Controllers/ShowEntryWatchStatusController.php,app/Http/Controllers/ShowWatchProgressStreamController.php,config/watch_progress.php,tests/Feature/ShowEntryWatchStatusApiTest.php,tests/Feature/ShowWatchProgressStreamApiTest.php'
 ---
 
 # Watch Status and Progress

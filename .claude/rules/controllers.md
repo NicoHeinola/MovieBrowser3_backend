@@ -1,8 +1,6 @@
 ---
-description: Controller conventions for Laravel API controllers. Use when editing files under app/Http/Controllers or wiring an endpoint through a controller.
 paths:
   - 'app/Http/Controllers/**/*.php'
-applyTo: 'app/Http/Controllers/**/*.php'
 ---
 
 # Controller Rules

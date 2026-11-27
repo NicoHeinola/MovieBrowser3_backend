@@ -1,13 +1,11 @@
 ---
-description: Action conventions for Laravel actions. Use when editing files under app/Actions or moving application logic out of controllers.
 paths:
   - 'app/Actions/**/*.php'
-applyTo: 'app/Actions/**/*.php'
 ---
 
 # Action Rules
 
-- One use case per action. A row's own changes use CRUD verbs (`Create`, `Update`, `Delete`; not `Set` or `Clear`); anything else says what it does in words the app already uses (`PlayEpisodeAction`, `ReplaceEpisodeVideoAction`, `RetryDownloadAction`; see the words in `AGENTS.md`). `Is…Action` answers yes or no, `Check…Action` finds out and reports or records it, `Resolve…Action` looks a value up. `Start…Action` records a background run and queues its job (`StartVideoBaseFolderMoveAction`, `StartVideoFileCheckAction`); the job ends it. `tests/Unit/ArchitectureTest.php` checks the rest of this file's checkable rules: the `*Action` suffix and `AsAction` trait, no request objects, no SPL iterators, unreported "already running" exceptions.
+- One use case per action. A row's own changes use CRUD verbs (`Create`, `Update`, `Delete`; not `Set` or `Clear`); anything else says what it does in words the app already uses (`PlayEpisodeAction`, `ReplaceEpisodeVideoAction`, `RetryDownloadAction`; see the words in `CLAUDE.md`). `Is…Action` answers yes or no, `Check…Action` finds out and reports or records it, `Resolve…Action` looks a value up. `Start…Action` records a background run and queues its job (`StartVideoBaseFolderMoveAction`, `StartVideoFileCheckAction`); the job ends it. `tests/Unit/ArchitectureTest.php` checks the rest of this file's checkable rules: the `*Action` suffix and `AsAction` trait, no request objects, no SPL iterators, unreported "already running" exceptions.
 - Explicit `handle()` signatures: models and scalars directly, a DTO for grouped payloads or values that always travel together (see the DTO rules). A child create takes the parent first: `handle(Show $show, CreateXData $data)`.
 - An action does what its name says, every time. The caller decides whether to call it (`if ($isLastEpisode) …`), or the action's name says what it depends on. It doesn't check for a state that its write would leave the same anyway: Eloquent's `update` and `updateOrCreate` write nothing when nothing changed, and a loop over nothing does nothing.
 - Return models, DTOs or simple values, never HTTP payloads. Actions must work from controllers, jobs, commands or tests.

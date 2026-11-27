@@ -1,6 +1,6 @@
 ---
 name: eloquent-schema-workflow
-description: Change persistence in this Laravel backend - migrations, models, relations, query traits, factories and seeders. Use when adding a column, table, relation, filter or sort, or reshaping data for a feature, without building a whole new resource.
+description: Changes persistence in this Laravel backend: migrations, models, relations, query traits, factories and seeders. Use when adding a column, table, relation, filter or sort, or reshaping data for a feature, without building a whole new resource.
 ---
 
 # Eloquent and Schema Workflow

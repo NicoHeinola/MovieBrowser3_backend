@@ -1,6 +1,6 @@
 ---
 name: crud-resource
-description: Scaffold or extend an API resource or endpoint in this Laravel backend (migration, model + Query/Relations traits, factory, DTOs, actions, form requests, resource, controller, routes, Pest feature test). Use when adding a new entity or endpoint set like categories, show-sections or a nested child of shows, or when adding or refactoring a single endpoint on an existing resource.
+description: Scaffolds or extends an API resource or endpoint in this Laravel backend (migration, model + Query/Relations traits, factory, DTOs, actions, form requests, resource, controller, routes, Pest feature test). Use when adding a new entity or endpoint set like categories, show-sections or a nested child of shows, or when adding or refactoring a single endpoint on an existing resource. For a column, relation or filter without a new endpoint, use `eloquent-schema-workflow`.
 ---
 
 # CRUD Resource
@@ -32,4 +32,4 @@ Build or extend a vertical slice for a domain `X` (StudlyCase `ShowSection`, tab
 
 - Every layer the change touches follows its rule, and the inverse relation and factory are wired.
 - Pint is clean, and the feature test and the full suite pass.
-- A new durable pattern is recorded in the owning rule (or `AGENTS.md`) in the same change.
+- A new durable pattern is recorded in the owning rule (or `CLAUDE.md`) in the same change.

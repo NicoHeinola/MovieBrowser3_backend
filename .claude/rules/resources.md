@@ -1,8 +1,6 @@
 ---
-description: Resource conventions for Laravel API resources. Use when creating or editing files under app/Http/Resources.
 paths:
   - 'app/Http/Resources/**/*.php'
-applyTo: 'app/Http/Resources/**/*.php'
 ---
 
 # Resource Rules

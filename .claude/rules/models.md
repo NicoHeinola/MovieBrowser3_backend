@@ -1,8 +1,6 @@
 ---
-description: Model folder conventions for Laravel models and their Query/Relations traits. Use when creating or editing files under app/Models.
 paths:
   - 'app/Models/**/*.php'
-applyTo: 'app/Models/**/*.php'
 ---
 
 # Model Rules

@@ -1,5 +1,4 @@
 ---
-description: VLC playback and tracking. Use when editing episode playback actions, the VLC tracking job, VLC config or their tests.
 paths:
   - 'app/Actions/EpisodePlayback/**'
   - 'app/Dtos/EpisodePlayback/**'
@@ -10,7 +9,6 @@ paths:
   - 'config/vlc.php'
   - 'tests/Feature/EpisodePlayback/**'
   - 'tests/Feature/EpisodePlaybackApiTest.php'
-applyTo: 'app/Actions/EpisodePlayback/**,app/Dtos/EpisodePlayback/**,app/Http/Controllers/EpisodePlaybackController.php,app/Jobs/TrackVlcPlaybackJob.php,app/Exceptions/VlcLaunchException.php,app/Services/Vlc/**,config/vlc.php,tests/Feature/EpisodePlayback/**,tests/Feature/EpisodePlaybackApiTest.php'
 ---
 
 # VLC Playback

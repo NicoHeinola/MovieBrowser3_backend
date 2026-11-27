@@ -1,11 +1,9 @@
 ---
-description: Admin website bookmarks and shared website tags. Use when editing Website or WebsiteTag models, actions, requests, resources, controllers or tests.
 paths:
   - 'app/**/Website/**'
   - 'app/**/WebsiteTag/**'
   - 'app/Http/Controllers/Website*Controller.php'
   - 'tests/Feature/Website*ApiTest.php'
-applyTo: 'app/**/Website/**,app/**/WebsiteTag/**,app/Http/Controllers/Website*Controller.php,tests/Feature/Website*ApiTest.php'
 ---
 
 # Websites and Tags

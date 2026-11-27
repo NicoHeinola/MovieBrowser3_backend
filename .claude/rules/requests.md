@@ -1,8 +1,6 @@
 ---
-description: Form Request conventions for API validation. Use when creating or editing files under app/Http/Requests.
 paths:
   - 'app/Http/Requests/**/*.php'
-applyTo: 'app/Http/Requests/**/*.php'
 ---
 
 # Request Rules

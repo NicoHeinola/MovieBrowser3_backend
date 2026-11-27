@@ -1,8 +1,6 @@
 ---
-description: Service conventions for clients of outside systems (torrent sites and other websites or APIs). Use when creating or editing files under app/Services.
 paths:
   - 'app/Services/**/*.php'
-applyTo: 'app/Services/**/*.php'
 ---
 
 # Service Rules

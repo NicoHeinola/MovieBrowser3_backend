@@ -1,8 +1,6 @@
 ---
-description: DTO conventions for Spatie Laravel Data classes. Use when creating or editing files under app/Dtos.
 paths:
   - 'app/Dtos/**/*.php'
-applyTo: 'app/Dtos/**/*.php'
 ---
 
 # DTO Rules
