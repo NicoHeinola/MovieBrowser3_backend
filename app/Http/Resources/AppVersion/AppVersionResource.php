@@ -24,7 +24,6 @@ class AppVersionResource extends JsonResource
                 'latest' => $this->latestFrontendRelease?->version,
                 'release_url' => $this->latestFrontendRelease?->url,
             ],
-            'checked_at' => $this->checkedAt->toJSON(),
         ];
     }
 }

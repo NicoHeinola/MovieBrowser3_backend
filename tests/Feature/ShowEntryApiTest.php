@@ -21,14 +21,14 @@ use function Pest\Laravel\postJson;
 use function Pest\Laravel\withToken;
 
 test('show entry read endpoints require authentication', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $show = Show::factory()->create();
 
     getJson("/api/v1/shows/{$show->id}/entries")->assertUnauthorized();
 });
 
 test('show entry write endpoints require admin', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
@@ -40,7 +40,7 @@ test('show entry write endpoints require admin', function () {
 });
 
 test('authenticated users can list show entries', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
@@ -55,7 +55,7 @@ test('authenticated users can list show entries', function () {
 });
 
 test('authenticated users can view a single entry', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
@@ -74,7 +74,7 @@ test('authenticated users can view a single entry', function () {
 });
 
 test('an admin can create a show entry', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -101,7 +101,7 @@ test('an admin can create a show entry', function () {
 });
 
 test('an admin can update a show entry', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -126,11 +126,11 @@ test('an admin can update a show entry', function () {
     ]);
 });
 
-test('renaming a show entry relocates its episode files', function () {
-    global $videoBasePath;
+test('renaming a show entry moves its episode files', function () {
+    global $videoBaseFolder;
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $show = Show::factory()->create();
     $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
@@ -139,8 +139,8 @@ test('renaming a show entry relocates its episode files', function () {
         'filename' => 'episode_1.mkv',
     ]);
 
-    $oldPath = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
-    $newPath = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_Season 1 Stone Wars/{$episode->id}_Episode 1.mkv";
+    $oldPath = "$videoBaseFolder/{$show->id}_{$show->id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $newPath = "$videoBaseFolder/{$show->id}_{$show->id}/{$entry->id}_Season 1 Stone Wars/{$episode->id}_Episode 1.mkv";
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'video-bytes');
 
@@ -155,7 +155,7 @@ test('renaming a show entry relocates its episode files', function () {
 });
 
 test('an admin can delete a show entry', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -168,10 +168,10 @@ test('an admin can delete a show entry', function () {
 });
 
 test('deleting a show entry cascades to its episodes', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $show = Show::factory()->create();
     $entry = ShowEntry::factory()->for($show)->create();
@@ -186,8 +186,8 @@ test('deleting a show entry cascades to its episodes', function () {
         'sequence_number' => 2,
     ]);
 
-    $pathOne = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_{$entry->name}/{$episodeOne->id}_Episode 1.mkv";
-    $pathTwo = "$videoBasePath/{$show->id}_{$show->id}/{$entry->id}_{$entry->name}/{$episodeTwo->id}_Episode 2.mkv";
+    $pathOne = "$videoBaseFolder/{$show->id}_{$show->id}/{$entry->id}_{$entry->name}/{$episodeOne->id}_Episode 1.mkv";
+    $pathTwo = "$videoBaseFolder/{$show->id}_{$show->id}/{$entry->id}_{$entry->name}/{$episodeTwo->id}_Episode 2.mkv";
     $episodeDirectoryOne = dirname($pathOne);
     $episodeDirectoryTwo = dirname($pathTwo);
     File::ensureDirectoryExists($episodeDirectoryOne);
@@ -208,7 +208,7 @@ test('deleting a show entry cascades to its episodes', function () {
 });
 
 test('creating a show entry validates type enum', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -222,7 +222,7 @@ test('creating a show entry validates type enum', function () {
 });
 
 test('creating a show entry requires name, type, and sort_order', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -234,7 +234,7 @@ test('creating a show entry requires name, type, and sort_order', function () {
 
 test('updating a show entry without renaming leaves episode files in place', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $show = Show::factory()->create();
     $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1', 'sort_order' => 1]);
@@ -248,7 +248,7 @@ test('updating a show entry without renaming leaves episode files in place', fun
 
 test('renaming a show entry moves all of its episodes and leaves other entries alone', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $show = Show::factory()->create();
     $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
@@ -273,7 +273,7 @@ test('renaming a show entry moves all of its episodes and leaves other entries a
 });
 
 test('a rolled back entry rename moves every video back', function () {
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $folder = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1";
     $episodes = Episode::factory()->for($entry, 'entry')->count(2)->sequence(['name' => 'One'], ['name' => 'Two'])->create(['filename' => 'ep.mkv']);

@@ -1,7 +1,7 @@
 <?php
 
-use App\Actions\Episode\VideoFile\ResolveFreeDiskSpaceAction;
-use App\Actions\Episode\VideoFile\ResolveTotalDiskSpaceAction;
+use App\Actions\File\ResolveDiskSpaceAction;
+use App\Dtos\File\DiskSpaceData;
 use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
 use App\Models\Show\Show;
@@ -16,15 +16,14 @@ use function Pest\Laravel\withToken;
 
 test('dashboard stats sum video file sizes and report the video disk space', function () {
     actingAsAdmin();
-    File::ensureDirectoryExists(useTestVideoBasePath());
+    File::ensureDirectoryExists(useTestVideoBaseFolder());
 
     $episodes = Episode::factory()->for(ShowEntry::factory()->for(Show::factory()), 'entry');
     $episodes->create(['video_file_size' => 100]);
     $episodes->create(['video_file_size' => 50]);
     $episodes->create(['has_video_file' => false, 'video_file_size' => 999]);
 
-    ResolveTotalDiskSpaceAction::mock()->shouldReceive('handle')->andReturn(1000);
-    ResolveFreeDiskSpaceAction::mock()->shouldReceive('handle')->andReturn(400);
+    ResolveDiskSpaceAction::mock()->shouldReceive('handle')->andReturn(new DiskSpaceData(freeBytes: 400, totalBytes: 1000));
 
     getJson('/api/v1/dashboard-stats')
         ->assertOk()
@@ -47,9 +46,9 @@ test('dashboard stats add up the known lengths of episodes with a file', functio
         ->assertJsonPath('video_files_total_seconds', 2940);
 });
 
-test('dashboard stats leave disk space unknown when the video folder does not exist', function () {
+test('dashboard stats leave disk space unknown when the video base folder does not exist', function () {
     actingAsAdmin();
-    Setting::query()->whereKey('video_base_path')->update(['value' => '/nonexistent/moviebrowser-videos']);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => '/nonexistent/moviebrowser-videos']);
 
     getJson('/api/v1/dashboard-stats')
         ->assertOk()

@@ -1,23 +1,17 @@
 <?php
 
-use App\Actions\Episode\VideoFile\CheckEpisodeVideoFilesAction;
-use App\Actions\Episode\VideoFile\CheckVideoBasePathExistsAction;
-use App\Actions\Episode\VideoFile\CreateVideoFileCheckAction;
-use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
-use App\Actions\Episode\VideoFile\ResolveVideoBasePathAction;
-use App\Actions\EpisodePlayback\OpenVlcPlaylistAction;
-use App\Dtos\EpisodePlayback\VlcConnectionData;
+use App\Actions\Episode\VideoFile\Path\ResolveEpisodeVideoPathAction;
+use App\Actions\VideoFileCheck\CheckEpisodeVideoFilesAction;
+use App\Actions\VideoFileCheck\StartVideoFileCheckAction;
 use App\Enums\VideoFileCheckErrorCode;
 use App\Jobs\CheckEpisodeVideoFilesJob;
 use App\Models\Episode\Episode;
-use App\Models\Setting\Setting;
 use App\Models\ShowEntry\ShowEntry;
 use App\Models\User\User;
 use App\Models\VideoFileCheck\VideoFileCheck;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Queue;
 
@@ -28,26 +22,20 @@ use function Pest\Laravel\travel;
 use function Pest\Laravel\withToken;
 
 /**
- * Gives the base folder content, as a mounted drive would: the check only needs the folder, playback needs it non-empty.
+ * Gives the video base folder content, as a mounted drive would: the check only needs the folder, playback needs it
+ * non-empty.
  */
-function mountVideoBasePath(): void
+function mountVideoBaseFolder(): void
 {
-    putVideoFile(videoBasePathForTests().'/other-show/video.mkv');
+    putVideoFile(videoBaseFolderForTests().'/other-show/video.mkv');
 }
 
-function episodeWithVideoFile(array $attributes = []): Episode
+function episodeWithVideoFile(array $attributes = [], string $contents = 'video-bytes'): Episode
 {
     $episode = Episode::factory()->create($attributes);
-    putVideoFile(ResolveEpisodeVideoPathAction::run($episode));
+    putVideoFile(ResolveEpisodeVideoPathAction::run($episode), $contents);
 
     return $episode;
-}
-
-function runVideoFileCheck(int $afterId = 0): void
-{
-    $check = VideoFileCheck::query()->active()->first() ?? VideoFileCheck::factory()->create();
-
-    (new CheckEpisodeVideoFilesJob($check, $afterId))->handle(app(CheckEpisodeVideoFilesAction::class));
 }
 
 test('video file check requires authentication', function () {
@@ -62,17 +50,17 @@ test('video file check requires an admin', function () {
     getJson('/api/v1/video-files/check')->assertForbidden();
 });
 
-test('an admin queues the check and gets an empty 202', function () {
+test('an admin queues the check and gets its status', function () {
     Queue::fake();
     actingAsAdmin();
-    mountVideoBasePath();
+    mountVideoBaseFolder();
 
-    postJson('/api/v1/video-files/check')->assertAccepted()->assertContent('');
+    postJson('/api/v1/video-files/check')->assertAccepted()->assertJsonPath('running', true);
 
-    Queue::assertPushed(CheckEpisodeVideoFilesJob::class, fn (CheckEpisodeVideoFilesJob $job): bool => $job->afterId === 0);
+    Queue::assertPushed(CheckEpisodeVideoFilesJob::class);
 });
 
-test('a check started without a reachable base folder ends with a code', function () {
+test('a check started without a reachable video base folder ends with a code', function () {
     actingAsAdmin();
     $episode = Episode::factory()->create();
 
@@ -80,51 +68,49 @@ test('a check started without a reachable base folder ends with a code', functio
 
     getJson('/api/v1/video-files/check')
         ->assertJsonPath('running', false)
-        ->assertJsonPath('error.code', 'video_base_path_unavailable');
+        ->assertJsonPath('error.code', 'video_base_folder_unavailable');
 
     expect(getJson('/api/v1/video-files/check')->getContent())->toContain('"params":{}')
         ->and($episode->fresh()->has_video_file)->toBeTrue();
 });
 
-test('an unreadable base folder stops the check like a missing one', function () {
+test('an unreadable video base folder stops the check like a missing one', function () {
     if (posix_getuid() === 0) {
         $this->markTestSkipped('Root can read every folder.');
     }
 
     $episode = episodeWithVideoFile();
-    chmod(videoBasePathForTests(), 0);
+    chmod(videoBaseFolderForTests(), 0);
 
     try {
-        runVideoFileCheck();
+        StartVideoFileCheckAction::run();
     } finally {
         // The folder must be readable again for the cleanup after each test
-        chmod(videoBasePathForTests(), 0755);
+        chmod(videoBaseFolderForTests(), 0755);
     }
 
     expect($episode->fresh()->has_video_file)->toBeTrue()
-        ->and(VideoFileCheck::query()->sole()->error_code)->toBe(VideoFileCheckErrorCode::VideoBasePathUnavailable);
+        ->and(VideoFileCheck::query()->sole()->error_code)->toBe(VideoFileCheckErrorCode::VideoBaseFolderUnavailable);
 });
 
-test('an empty base folder does not stop the admin from starting a check', function () {
+test('an empty video base folder does not stop the admin from starting a check', function () {
     Queue::fake();
     actingAsAdmin();
     Episode::factory()->create();
-    File::ensureDirectoryExists(videoBasePathForTests());
+    File::ensureDirectoryExists(videoBaseFolderForTests());
 
     postJson('/api/v1/video-files/check')->assertAccepted();
 
     Queue::assertPushedTimes(CheckEpisodeVideoFilesJob::class, 1);
 });
 
-test('the check stores each found video file size and clears it for missing ones', function () {
+test('the check stores each found video file size', function () {
     $present = Episode::factory()->create();
     putVideoFile(ResolveEpisodeVideoPathAction::run($present), str_repeat('x', 42));
-    $gone = Episode::factory()->create(['video_file_size' => 99]);
 
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
-    expect($present->fresh()->video_file_size)->toBe(42)
-        ->and($gone->fresh()->video_file_size)->toBeNull();
+    expect($present->fresh()->video_file_size)->toBe(42);
 });
 
 test('the check stores which episodes have their video file', function () {
@@ -134,7 +120,7 @@ test('the check stores which episodes have their video file', function () {
     $gone = Episode::factory()->create();
     $withoutFilename = Episode::factory()->create(['filename' => '']);
 
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
     expect($present->fresh()->has_video_file)->toBeTrue()
         ->and($returned->fresh()->has_video_file)->toBeTrue()
@@ -142,34 +128,23 @@ test('the check stores which episodes have their video file', function () {
         ->and($withoutFilename->fresh()->has_video_file)->toBeFalse();
 });
 
-test('the check changes nothing when the base folder does not exist', function () {
+test('the check changes nothing when the video base folder does not exist', function () {
     $episode = Episode::factory()->create();
 
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
     expect($episode->fresh()->has_video_file)->toBeTrue()
-        ->and(VideoFileCheck::query()->sole()->error_code)->toBe(VideoFileCheckErrorCode::VideoBasePathUnavailable);
+        ->and(VideoFileCheck::query()->sole()->error_code)->toBe(VideoFileCheckErrorCode::VideoBaseFolderUnavailable);
 });
 
-test('the check flags episodes as missing without an error when the base folder is empty', function () {
+test('the check flags episodes as missing without an error when the video base folder is empty', function () {
     $episode = Episode::factory()->create();
-    File::ensureDirectoryExists(videoBasePathForTests());
+    File::ensureDirectoryExists(videoBaseFolderForTests());
 
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
     expect($episode->fresh()->has_video_file)->toBeFalse()
         ->and(VideoFileCheck::query()->sole()->error_code)->toBeNull();
-});
-
-test('the check writes nothing when the base folder is lost during a chunk', function () {
-    $episode = Episode::factory()->create();
-    CheckVideoBasePathExistsAction::mock()->shouldReceive('handle')->twice()->andReturn(true, false);
-
-    Queue::fake();
-    runVideoFileCheck();
-
-    expect($episode->fresh()->has_video_file)->toBeTrue();
-    Queue::assertNothingPushed();
 });
 
 test('a deleted show folder only flags that show as missing', function () {
@@ -177,7 +152,7 @@ test('a deleted show folder only flags that show as missing', function () {
     $deleted = episodeWithVideoFile();
     File::deleteDirectory(dirname(ResolveEpisodeVideoPathAction::run($deleted), 2));
 
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
     expect($kept->fresh()->has_video_file)->toBeTrue()
         ->and($deleted->fresh()->has_video_file)->toBeFalse()
@@ -191,7 +166,7 @@ test('the status counts files that went missing, not episodes that never had one
     Episode::factory()->create(['filename' => '']);
     File::deleteDirectory(dirname(ResolveEpisodeVideoPathAction::run($deleted), 2));
 
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
     getJson('/api/v1/video-files/check')
         ->assertJsonPath('error', null)
@@ -201,74 +176,16 @@ test('the status counts files that went missing, not episodes that never had one
 test('the next check restores the flags once the drive is back', function () {
     $episode = episodeWithVideoFile();
     $path = ResolveEpisodeVideoPathAction::run($episode);
-    File::deleteDirectory(videoBasePathForTests());
-    File::ensureDirectoryExists(videoBasePathForTests());
+    File::deleteDirectory(videoBaseFolderForTests());
+    File::ensureDirectoryExists(videoBaseFolderForTests());
 
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
     expect($episode->fresh()->has_video_file)->toBeFalse();
 
     putVideoFile($path);
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
     expect($episode->fresh()->has_video_file)->toBeTrue();
-});
-
-test('the check goes through every chunk, one job each', function () {
-    mountVideoBasePath();
-    $entry = ShowEntry::factory()->create();
-    Episode::factory()->count(CheckEpisodeVideoFilesAction::CHUNK_SIZE + 1)->create(['show_entry_id' => $entry->id]);
-
-    CreateVideoFileCheckAction::run();
-
-    expect(Episode::query()->where('has_video_file', true)->count())->toBe(0);
-});
-
-test('a full chunk queues the next one and the last chunk queues nothing', function () {
-    mountVideoBasePath();
-    $entry = ShowEntry::factory()->create();
-    $episodes = Episode::factory()->count(CheckEpisodeVideoFilesAction::CHUNK_SIZE)->create(['show_entry_id' => $entry->id]);
-    Queue::fake();
-
-    runVideoFileCheck();
-
-    Queue::assertPushed(CheckEpisodeVideoFilesJob::class, fn (CheckEpisodeVideoFilesJob $job): bool => $job->afterId === $episodes->last()->id);
-
-    Queue::fake();
-    runVideoFileCheck($episodes->last()->id);
-
-    Queue::assertNothingPushed();
-});
-
-test('the check runs the same number of queries however many shows it covers', function () {
-    mountVideoBasePath();
-    Episode::factory()->create();
-
-    $countQueries = function (): int {
-        DB::flushQueryLog();
-        DB::enableQueryLog();
-        runVideoFileCheck();
-        DB::disableQueryLog();
-
-        return count(DB::getQueryLog());
-    };
-
-    $queriesForOneShow = $countQueries();
-    Episode::factory()->count(4)->create();
-
-    expect($countQueries())->toBe($queriesForOneShow);
-});
-
-test('the check sees a base path changed after the worker memoized the old one', function () {
-    $oldBasePath = videoBasePathForTests().'/old-base';
-    $episode = Episode::factory()->create();
-    Setting::query()->whereKey('video_base_path')->update(['value' => $oldBasePath]);
-    ResolveVideoBasePathAction::run();
-
-    Setting::query()->whereKey('video_base_path')->update(['value' => videoBasePathForTests()]);
-    mountVideoBasePath();
-    runVideoFileCheck();
-
-    expect($episode->fresh()->has_video_file)->toBeFalse();
 });
 
 test('the check is scheduled daily', function () {
@@ -289,13 +206,14 @@ test('the status is empty before any check ran', function () {
             'finished_at' => null,
             'error' => null,
             'missing_video_files_count' => 0,
+            'unknown_video_durations_count' => 0,
         ]);
 });
 
 test('pressing the button again during a check starts nothing new', function () {
     Queue::fake();
     actingAsAdmin();
-    mountVideoBasePath();
+    mountVideoBaseFolder();
 
     postJson('/api/v1/video-files/check')->assertAccepted();
     postJson('/api/v1/video-files/check')->assertAccepted();
@@ -306,38 +224,35 @@ test('pressing the button again during a check starts nothing new', function () 
 test('the daily run starts nothing new during a check either', function () {
     Queue::fake();
 
-    CreateVideoFileCheckAction::run();
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
     Queue::assertPushedTimes(CheckEpisodeVideoFilesJob::class, 1);
 });
 
 test('the status shows progress while the check runs', function () {
-    Queue::fake();
     actingAsAdmin();
-    mountVideoBasePath();
-    $entry = ShowEntry::factory()->create();
-    Episode::factory()->count(CheckEpisodeVideoFilesAction::CHUNK_SIZE + 5)->create(['show_entry_id' => $entry->id]);
-
-    postJson('/api/v1/video-files/check')->assertAccepted();
+    VideoFileCheck::factory()->create(['checked' => 40, 'total' => 90]);
 
     getJson('/api/v1/video-files/check')
         ->assertJsonPath('running', true)
-        ->assertJsonPath('checked', 0)
-        ->assertJsonPath('total', CheckEpisodeVideoFilesAction::CHUNK_SIZE + 5);
+        ->assertJsonPath('checked', 40)
+        ->assertJsonPath('total', 90);
+});
 
-    runVideoFileCheck();
+test('a finished check stores how many episodes it checked', function () {
+    mountVideoBaseFolder();
+    Episode::factory()->count(3)->create();
 
-    getJson('/api/v1/video-files/check')
-        ->assertJsonPath('running', true)
-        ->assertJsonPath('checked', CheckEpisodeVideoFilesAction::CHUNK_SIZE)
-        ->assertJsonPath('total', CheckEpisodeVideoFilesAction::CHUNK_SIZE + 5);
+    StartVideoFileCheckAction::run();
+
+    expect(VideoFileCheck::query()->sole()->only('checked', 'total'))->toBe(['checked' => 3, 'total' => 3]);
 });
 
 test('a finished check reports its time and the button works again', function () {
     $this->freezeTime();
     actingAsAdmin();
-    mountVideoBasePath();
+    mountVideoBaseFolder();
 
     postJson('/api/v1/video-files/check')->assertAccepted();
 
@@ -352,7 +267,7 @@ test('a finished check reports its time and the button works again', function ()
     Queue::assertPushedTimes(CheckEpisodeVideoFilesJob::class, 1);
 });
 
-test('a library that expects no files checks fine without a base folder', function () {
+test('a library that expects no files checks fine without a video base folder', function () {
     actingAsAdmin();
     $episode = Episode::factory()->create(['filename' => '']);
 
@@ -372,16 +287,16 @@ test('the database allows only one running check', function () {
 });
 
 test('a finished check replaces the previous result', function () {
-    mountVideoBasePath();
+    mountVideoBaseFolder();
 
-    CreateVideoFileCheckAction::run();
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
     expect(VideoFileCheck::query()->sole()->finished_at)->not->toBeNull();
 });
 
 test('a job of a check deleted as stale ends without doing anything', function () {
-    mountVideoBasePath();
+    mountVideoBaseFolder();
     $episode = Episode::factory()->create();
     $check = VideoFileCheck::factory()->create();
     $check->delete();
@@ -395,31 +310,20 @@ test('a check that fails reports the code and frees the button at once', functio
     actingAsAdmin();
     CheckEpisodeVideoFilesAction::mock()->shouldReceive('handle')->once()->andThrow(new RuntimeException('Disk error.'));
 
-    expect(fn () => CreateVideoFileCheckAction::run())->toThrow(RuntimeException::class);
+    expect(fn () => StartVideoFileCheckAction::run())->toThrow(RuntimeException::class);
 
     getJson('/api/v1/video-files/check')
         ->assertJsonPath('running', false)
         ->assertJsonPath('error.code', 'video_file_check_failed');
 });
 
-test('a finished run stores how many episodes it checked', function (int $extraEpisodes) {
-    mountVideoBasePath();
-    $entry = ShowEntry::factory()->create();
-    $count = CheckEpisodeVideoFilesAction::CHUNK_SIZE + $extraEpisodes;
-    Episode::factory()->count($count)->create(['show_entry_id' => $entry->id]);
-
-    CreateVideoFileCheckAction::run();
-
-    expect(VideoFileCheck::query()->sole()->only('checked', 'total'))->toBe(['checked' => $count, 'total' => $count]);
-})->with(['ending mid chunk' => 3, 'ending exactly on a chunk' => 0]);
-
 test('the next successful check clears a reported error', function () {
     actingAsAdmin();
     Episode::factory()->create();
-    CreateVideoFileCheckAction::run();
+    StartVideoFileCheckAction::run();
 
-    mountVideoBasePath();
-    CreateVideoFileCheckAction::run();
+    mountVideoBaseFolder();
+    StartVideoFileCheckAction::run();
 
     getJson('/api/v1/video-files/check')->assertJsonPath('error', null);
 });
@@ -427,7 +331,7 @@ test('the next successful check clears a reported error', function () {
 test('a check whose worker died stops counting as running', function () {
     Queue::fake();
     actingAsAdmin();
-    mountVideoBasePath();
+    mountVideoBaseFolder();
     postJson('/api/v1/video-files/check')->assertAccepted();
 
     travel(config('video_files.check_stale_after_seconds') + 1)->seconds();
@@ -468,6 +372,7 @@ test('a new episode has no video file until one is uploaded', function () {
 
 test('uploading a replacement clears the missing flag', function () {
     actingAsAdmin();
+    mountVideoBaseFolder();
     $episode = Episode::factory()->create(['has_video_file' => false]);
 
     post("/api/v1/episodes/{$episode->id}", [
@@ -478,38 +383,54 @@ test('uploading a replacement clears the missing flag', function () {
         ->assertJsonPath('has_video_file', true);
 });
 
-test('a failed playback check flags the episode as missing', function () {
+test('an upload is refused while the video drive is not there, and writes nothing', function () {
     actingAsAdmin();
-    mountVideoBasePath();
-    $episode = Episode::factory()->create(['video_file_size' => 500]);
+    $episode = Episode::factory()->create(['filename' => 'old.mkv', 'has_video_file' => false]);
 
-    postJson("/api/v1/episodes/{$episode->id}/playback")
-        ->assertUnprocessable()
-        ->assertJsonPath('code', 'no_video_file')
-        ->assertJsonPath('errors.episode.0.code', 'no_video_file');
+    post("/api/v1/episodes/{$episode->id}", [
+        '_method' => 'PATCH',
+        'name' => 'Renamed',
+        'file' => UploadedFile::fake()->create('replacement.mkv', 1),
+    ], ['Accept' => 'application/json'])
+        ->assertConflict()
+        ->assertJsonPath('code', 'video_base_folder_unavailable');
 
-    expect($episode->fresh()->has_video_file)->toBeFalse()
-        ->and($episode->fresh()->video_file_size)->toBeNull();
+    expect($episode->fresh()->only('name', 'filename'))->toBe(['name' => $episode->name, 'filename' => 'old.mkv'])
+        ->and(File::exists(videoBaseFolderForTests()))->toBeFalse();
 });
 
-test('a failed playback check keeps the stored value when the base folder is unreachable', function () {
+test('the check reads unknown lengths and those of replaced files, and keeps the rest', function () {
+    $unknown = episodeWithVideoFile(contents: matroskaVideo(1440.4));
+    $replaced = episodeWithVideoFile(['video_duration_seconds' => 1500, 'video_file_size' => 1], matroskaVideo(1620));
+    $known = episodeWithVideoFile(['video_duration_seconds' => 1200, 'video_file_size' => null], matroskaVideo(1440));
+    $unreadable = episodeWithVideoFile();
+    $gone = Episode::factory()->create(['video_duration_seconds' => 1200, 'video_file_size' => 99]);
+
+    StartVideoFileCheckAction::run();
+
+    expect($unknown->fresh()->video_duration_seconds)->toBe(1440)
+        ->and($replaced->fresh()->video_duration_seconds)->toBe(1620)
+        ->and($known->fresh()->video_duration_seconds)->toBe(1200)
+        ->and($unreadable->fresh()->video_duration_seconds)->toBeNull()
+        // Kept, for when its drive is back
+        ->and($gone->fresh()->only('has_video_file', 'video_file_size', 'video_duration_seconds'))
+        ->toBe(['has_video_file' => false, 'video_file_size' => 99, 'video_duration_seconds' => 1200]);
+
     actingAsAdmin();
-    $episode = Episode::factory()->create();
-
-    postJson("/api/v1/episodes/{$episode->id}/playback")
-        ->assertUnprocessable()
-        ->assertJsonPath('code', 'no_video_file');
-
-    expect($episode->fresh()->has_video_file)->toBeTrue();
+    getJson('/api/v1/video-files/check')
+        ->assertJsonPath('missing_video_files_count', 1)
+        ->assertJsonPath('unknown_video_durations_count', 1);
 });
 
-test('a successful playback check clears the missing flag', function () {
-    Queue::fake();
+test('an uploaded video gets its length read and episodes expose it', function () {
     actingAsAdmin();
-    $episode = episodeWithVideoFile(['has_video_file' => false]);
-    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->once()->andReturn(new VlcConnectionData(port: 45678, password: 'secret'));
+    $entry = ShowEntry::factory()->create();
 
-    postJson("/api/v1/episodes/{$episode->id}/playback")->assertCreated();
+    $response = postJson("/api/v1/show-entries/{$entry->id}/episodes", [
+        'name' => 'Episode 1',
+        'sequence_number' => 1,
+        'file' => UploadedFile::fake()->createWithContent('episode-1.mkv', matroskaVideo(1440)),
+    ])->assertCreated();
 
-    expect($episode->fresh()->has_video_file)->toBeTrue();
+    getJson("/api/v1/episodes/{$response->json('id')}")->assertJsonPath('video_duration_seconds', 1440);
 });

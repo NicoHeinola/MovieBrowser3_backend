@@ -39,7 +39,7 @@ function fakeVlcStatus(string $state, ?string $filename, int $time = 0, int $len
 function assertTrackingContinues(User $user): void
 {
     Queue::assertPushed(TrackVlcPlaybackJob::class, fn (TrackVlcPlaybackJob $job): bool => $job->user->is($user)
-        && $job->vlc->port === 45678
+        && $job->vlcConnection->port === 45678
         && $job->delay === 45);
 }
 

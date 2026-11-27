@@ -2,9 +2,8 @@
 
 namespace App\Actions\Dashboard;
 
-use App\Actions\Episode\VideoFile\ResolveFreeDiskSpaceAction;
-use App\Actions\Episode\VideoFile\ResolveTotalDiskSpaceAction;
-use App\Actions\Episode\VideoFile\ResolveVideoBasePathAction;
+use App\Actions\Episode\VideoFile\Path\ResolveVideoBaseFolderAction;
+use App\Actions\File\ResolveDiskSpaceAction;
 use App\Dtos\Dashboard\DashboardStatsData;
 use App\Models\Episode\Episode;
 use App\Models\Show\Show;
@@ -18,16 +17,20 @@ class GetDashboardStatsAction
     use AsAction;
 
     public function __construct(
-        private readonly ResolveVideoBasePathAction $resolveVideoBasePathAction,
-        private readonly ResolveFreeDiskSpaceAction $resolveFreeDiskSpaceAction,
-        private readonly ResolveTotalDiskSpaceAction $resolveTotalDiskSpaceAction,
+        private readonly ResolveVideoBaseFolderAction $resolveVideoBaseFolderAction,
+        private readonly ResolveDiskSpaceAction $resolveDiskSpaceAction,
     ) {}
 
     public function handle(): DashboardStatsData
     {
-        $basePath = $this->resolveVideoBasePathAction->handle();
+        $videoBaseFolder = $this->resolveVideoBaseFolderAction->handle();
         // An unset or unmounted folder would report some other disk, so its space stays unknown
-        $hasBaseFolder = $basePath !== '' && File::isDirectory($basePath);
+        $hasVideoBaseFolder = $videoBaseFolder !== '' && File::isDirectory($videoBaseFolder);
+        $diskSpace = null;
+
+        if ($hasVideoBaseFolder) {
+            $diskSpace = $this->resolveDiskSpaceAction->handle($videoBaseFolder);
+        }
 
         return new DashboardStatsData(
             showsCount: Show::query()->count(),
@@ -39,8 +42,8 @@ class GetDashboardStatsAction
             usersCount: User::query()->count(),
             videoFilesTotalBytes: (int) Episode::query()->where('has_video_file', true)->sum('video_file_size'),
             videoFilesTotalSeconds: (int) Episode::query()->where('has_video_file', true)->sum('video_duration_seconds'),
-            diskTotalBytes: $hasBaseFolder ? $this->resolveTotalDiskSpaceAction->handle($basePath) : null,
-            diskFreeBytes: $hasBaseFolder ? $this->resolveFreeDiskSpaceAction->handle($basePath) : null,
+            diskTotalBytes: $diskSpace?->totalBytes,
+            diskFreeBytes: $diskSpace?->freeBytes,
         );
     }
 }

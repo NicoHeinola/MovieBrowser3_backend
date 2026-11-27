@@ -8,7 +8,7 @@ use Saloon\Http\Request;
 use Saloon\Traits\Body\HasFormBody;
 
 /**
- * Sets the priority of files: `hash`, `id` (indexes joined with `|`) and `priority`.
+ * Sets the priority of some of a torrent's files: 0 skips them, 1 downloads them.
  */
 final class SetFilePriorityRequest extends Request implements HasBody
 {
@@ -17,9 +17,13 @@ final class SetFilePriorityRequest extends Request implements HasBody
     protected Method $method = Method::POST;
 
     /**
-     * @param  array<string, string>  $fields
+     * @param  list<int>  $fileIndexes
      */
-    public function __construct(private readonly array $fields) {}
+    public function __construct(
+        private readonly string $hash,
+        private readonly array $fileIndexes,
+        private readonly int $priority,
+    ) {}
 
     public function resolveEndpoint(): string
     {
@@ -31,6 +35,10 @@ final class SetFilePriorityRequest extends Request implements HasBody
      */
     protected function defaultBody(): array
     {
-        return $this->fields;
+        return [
+            'hash' => $this->hash,
+            'id' => implode('|', $this->fileIndexes),
+            'priority' => (string) $this->priority,
+        ];
     }
 }

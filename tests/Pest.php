@@ -27,9 +27,9 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    // The seeded video_base_path is the real storage/app/videos; keep every test away from it.
-    ->beforeEach(fn () => useTestVideoBasePath())
-    ->afterEach(fn () => File::deleteDirectory(videoBasePathForTests()))
+    // The seeded video_base_folder is the real storage/app/videos; keep every test away from it.
+    ->beforeEach(fn () => useTestVideoBaseFolder())
+    ->afterEach(fn () => File::deleteDirectory(videoBaseFolderForTests()))
     ->in('Feature');
 
 pest()->extend(TestCase::class)
@@ -45,18 +45,18 @@ function actingAsAdmin(): User
     return $user;
 }
 
-function videoBasePathForTests(): string
+function videoBaseFolderForTests(): string
 {
-    return dirname(__DIR__).'/storage/app/testing-video-base';
+    return dirname(__DIR__).'/storage/app/testing-video-base-folder';
 }
 
-$GLOBALS['videoBasePath'] = videoBasePathForTests();
+$GLOBALS['videoBaseFolder'] = videoBaseFolderForTests();
 
-function useTestVideoBasePath(): string
+function useTestVideoBaseFolder(): string
 {
-    Setting::query()->whereKey('video_base_path')->update(['value' => videoBasePathForTests()]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => videoBaseFolderForTests()]);
 
-    return videoBasePathForTests();
+    return videoBaseFolderForTests();
 }
 
 function putVideoFile(string $path, string $contents = 'video-bytes'): string
@@ -68,34 +68,20 @@ function putVideoFile(string $path, string $contents = 'video-bytes'): string
 }
 
 /**
- * A minimal Matroska file holding only what a length read needs. With `$streamedClusterFirst` the Info element comes
- * after a cluster of unknown size, as in a streamed recording, so only the SeekHead says where it is. A `$title` goes
- * into Info before the length, as mkvmerge writes it.
+ * A minimal Matroska file holding only its length.
  */
-function matroskaVideo(?float $seconds, bool $streamedClusterFirst = false, int $timestampScale = 1_000_000, ?string $title = null): string
+function matroskaVideo(?float $seconds): string
 {
     $element = function (int $id, string $body): string {
         // Ids keep their leading bytes as is; sizes use the 8 byte form so every element is built the same way
         return ltrim(pack('N', $id), "\0")."\x01".substr(pack('J', strlen($body)), 1).$body;
     };
 
-    $info = $element(0x1549A966, ($title === null ? '' : $element(0x7BA9, $title))
-        .$element(0x2AD7B1, ltrim(pack('J', $timestampScale), "\0"))
-        .($seconds === null ? '' : $element(0x4489, pack('E', $seconds * 1_000_000_000 / $timestampScale))));
+    $timestampScale = $element(0x2AD7B1, ltrim(pack('J', 1_000_000), "\0"));
+    $duration = $seconds === null ? '' : $element(0x4489, pack('E', $seconds * 1000));
+    $info = $element(0x1549A966, $timestampScale.$duration);
 
-    $header = $element(0x1A45DFA3, $element(0x4282, 'matroska'));
-    $void = $element(0xEC, str_repeat("\0", 16));
-
-    if (!$streamedClusterFirst) {
-        return $header.ltrim(pack('N', 0x18538067), "\0")."\x01".substr(pack('J', strlen($void.$info)), 1).$void.$info;
-    }
-
-    // A cluster id followed by the all-ones "unknown" size can't be stepped over
-    $cluster = "\x1F\x43\xB6\x75\xFF".str_repeat("\xA3", 32);
-    $seekHead = fn (int $position): string => $element(0x114D9B74, $element(0x4DBB, $element(0x53AB, "\x15\x49\xA9\x66").$element(0x53AC, pack('J', $position))));
-    $children = $seekHead(strlen($seekHead(0)) + strlen($cluster)).$cluster.$info;
-
-    return $header.ltrim(pack('N', 0x18538067), "\0")."\x01".substr(pack('J', strlen($children)), 1).$children;
+    return $element(0x1A45DFA3, $element(0x4282, 'matroska')).$element(0x18538067, $info);
 }
 
 /*

@@ -2,7 +2,7 @@
 
 namespace App\Actions\Setup;
 
-use App\Actions\EpisodePlayback\CheckVlcBinaryAction;
+use App\Actions\EpisodePlayback\CheckVlcCanStartAction;
 use App\Dtos\Setup\SetupStatusData;
 use App\Enums\SettingKey;
 use App\Models\Setting\Setting;
@@ -14,7 +14,7 @@ class GetSetupStatusAction
     use AsAction;
 
     public function __construct(
-        private readonly CheckVlcBinaryAction $checkVlcBinaryAction,
+        private readonly CheckVlcCanStartAction $checkVlcCanStartAction,
     ) {}
 
     public function handle(): SetupStatusData
@@ -31,7 +31,7 @@ class GetSetupStatusAction
     private function detectVlc(): ?string
     {
         foreach (config('vlc.detect_paths') as $candidate) {
-            if ($this->checkVlcBinaryAction->handle($candidate)->ok) {
+            if ($this->checkVlcCanStartAction->handle($candidate)->ok) {
                 return $candidate;
             }
         }

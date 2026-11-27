@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\User\User;
-use Illuminate\Support\Carbon;
 use Saloon\Http\Faking\MockResponse;
 use Saloon\Laravel\Facades\Saloon;
 
@@ -46,7 +45,6 @@ test('the app version requires an admin', function () {
 });
 
 test('an admin can read the running version and the latest releases', function () {
-    Carbon::setTestNow('2026-11-03 10:00:00');
     fakeGithubReleases('v9.0.0', 'v8.1.0');
     actingAsAdmin();
 
@@ -62,7 +60,6 @@ test('an admin can read the running version and the latest releases', function (
                 'latest' => '8.1.0',
                 'release_url' => 'https://github.com/owner/frontend/releases/tag/v8.1.0',
             ],
-            'checked_at' => '2026-11-03T10:00:00.000000Z',
         ]);
 });
 
@@ -82,7 +79,7 @@ test('github answers are cached between requests', function () {
     Saloon::assertSentCount(4);
 });
 
-test('a failed github check returns no latest release, and is retried sooner', function () {
+test('a failed github check returns no latest release, and is tried again the next time', function () {
     // One fake switches from failing to answering
     $online = false;
     Saloon::fake([
@@ -104,11 +101,6 @@ test('a failed github check returns no latest release, and is retried sooner', f
         ->assertJsonPath('frontend.latest', null)
         ->assertJsonPath('frontend.release_url', null);
 
-    // The failure is cached too, so an offline install doesn't call GitHub on every request
-    getJson('/api/v1/app-version')->assertOk();
-    Saloon::assertSentCount(1);
-
-    travel(config('releases.failure_cache_seconds') + 1)->seconds();
     $online = true;
     getJson('/api/v1/app-version')->assertOk()->assertJsonPath('backend.latest', '9.0.0');
 });

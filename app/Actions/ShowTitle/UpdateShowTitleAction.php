@@ -2,8 +2,8 @@
 
 namespace App\Actions\ShowTitle;
 
-use App\Actions\Episode\VideoFile\ResolveShowVideoFolderNameAction;
-use App\Actions\Show\RelocateShowVideosAction;
+use App\Actions\Episode\VideoFile\Path\ResolveShowFolderNameAction;
+use App\Actions\Show\RenameShowVideosAction;
 use App\Dtos\ShowTitle\UpdateShowTitleData;
 use App\Models\ShowTitle\ShowTitle;
 use Illuminate\Support\Arr;
@@ -15,13 +15,13 @@ class UpdateShowTitleAction
     use AsAction;
 
     public function __construct(
-        private readonly RelocateShowVideosAction $relocateShowVideosAction,
-        private readonly ResolveShowVideoFolderNameAction $resolveShowVideoFolderNameAction,
+        private readonly RenameShowVideosAction $renameShowVideosAction,
+        private readonly ResolveShowFolderNameAction $resolveShowFolderNameAction,
     ) {}
 
     public function handle(UpdateShowTitleData $data): ShowTitle
     {
-        $oldFolderName = $this->resolveShowVideoFolderNameAction->handle($data->showTitle->show);
+        $oldFolderName = $this->resolveShowFolderNameAction->handle($data->showTitle->show);
 
         return DB::transaction(function () use ($data, $oldFolderName): ShowTitle {
             if ($data->isPrimary === true) {
@@ -33,7 +33,7 @@ class UpdateShowTitleAction
 
             $data->showTitle->fill(Arr::only($data->all(), $data->showTitle->getFillable()))->save();
 
-            $this->relocateShowVideosAction->handle($data->showTitle->show->fresh(), $oldFolderName);
+            $this->renameShowVideosAction->handle($data->showTitle->show->fresh(), $oldFolderName);
 
             return $data->showTitle->fresh();
         });

@@ -24,10 +24,9 @@ class ShowEntryController extends Controller
     /**
      * @return array<int|string, string|Closure>
      */
-    private function relations(Request $request): array
+    private function getRelations(Request $request): array
     {
         return [
-            'show.titles',
             'episodes',
             'watchStatuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id),
         ];
@@ -35,8 +34,6 @@ class ShowEntryController extends Controller
 
     public function index(Show $show, Request $request): JsonResponse
     {
-        $show->loadMissing('titles');
-
         $entries = QueryBuilder::for($show->entries()->with(['episodes', 'watchStatuses' => fn (HasMany $query) => $query->where('user_id', $request->user()->id)]))
             ->allowedFilters(...ShowEntry::getAllowedFilters())
             ->allowedSorts(...ShowEntry::getAllowedSorts())
@@ -49,12 +46,12 @@ class ShowEntryController extends Controller
     {
         $entry = $action->handle($show, CreateShowEntryData::from($request->validated()));
 
-        return ShowEntryResource::make($entry->load($this->relations($request)))->response()->setStatusCode(201);
+        return ShowEntryResource::make($entry->load($this->getRelations($request)))->response()->setStatusCode(201);
     }
 
     public function show(ShowEntry $entry, Request $request): JsonResponse
     {
-        return ShowEntryResource::make($entry->load($this->relations($request)))->response();
+        return ShowEntryResource::make($entry->load($this->getRelations($request)))->response();
     }
 
     public function update(ShowEntry $entry, UpdateShowEntryRequest $request, UpdateShowEntryAction $action): JsonResponse
@@ -64,7 +61,7 @@ class ShowEntryController extends Controller
             'show_entry' => $entry,
         ]));
 
-        return ShowEntryResource::make($updatedEntry->load($this->relations($request)))->response();
+        return ShowEntryResource::make($updatedEntry->load($this->getRelations($request)))->response();
     }
 
     public function destroy(ShowEntry $entry, DeleteShowEntryAction $action): Response

@@ -24,11 +24,11 @@ use App\Http\Controllers\ShowLinkController;
 use App\Http\Controllers\ShowSectionController;
 use App\Http\Controllers\ShowTemplateController;
 use App\Http\Controllers\ShowTitleController;
+use App\Http\Controllers\ShowVideoFileCheckController;
 use App\Http\Controllers\ShowWatchProgressStreamController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VideoDurationScanController;
+use App\Http\Controllers\VideoBaseFolderMoveController;
 use App\Http\Controllers\VideoFileCheckController;
-use App\Http\Controllers\VideoRelocationController;
 use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\WebsiteTagController;
 use Illuminate\Support\Facades\Route;
@@ -66,9 +66,12 @@ Route::prefix('v1')->group(function (): void {
         Route::post('shows/{show}/categories', [ShowCategoryController::class, 'store'])->name('shows.categories.store');
         Route::delete('shows/{show}/categories/{category}', [ShowCategoryController::class, 'destroy'])->name('shows.categories.destroy');
 
-        // `video-files-idle`: writes that move, store or delete video files wait for a video folder relocation to end
+        // `video-files-idle`: writes that move, store or delete video files wait for a video base folder move to end
         Route::delete('shows', [ShowController::class, 'destroyMany'])->name('shows.destroy-many')->middleware('video-files-idle');
         Route::apiResource('shows', ShowController::class)->except(['index', 'show'])->middlewareFor('destroy', 'video-files-idle');
+
+        // Looks at the disk in the request: one show takes a moment, and the admin waits for what it finds
+        Route::apiSingleton('shows.video-file-check', ShowVideoFileCheckController::class)->creatable()->only(['store'])->middleware('video-files-idle');
 
         Route::apiResource('shows.entries', ShowEntryController::class)->shallow()->except(['index', 'show'])->middlewareFor(['update', 'destroy'], 'video-files-idle');
         Route::apiResource('show-entries.episodes', EpisodeController::class)->shallow()->except(['index', 'show'])->middleware('video-files-idle');
@@ -100,8 +103,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('setup/complete', [SetupCompletionController::class, 'store'])->name('setup.complete.store');
 
         Route::apiSingleton('video-files/check', VideoFileCheckController::class)->creatable()->names('video-files.check')->only(['show', 'store']);
-        Route::apiSingleton('video-files/duration-scan', VideoDurationScanController::class)->creatable()->names('video-files.duration-scan')->only(['show', 'store']);
-        Route::apiSingleton('video-files/relocation', VideoRelocationController::class)->creatable()->names('video-files.relocation')->only(['show', 'store']);
+        Route::apiSingleton('video-files/move', VideoBaseFolderMoveController::class)->creatable()->names('video-files.move')->only(['show', 'store']);
 
         Route::apiResource('backups', BackupController::class)->only(['index', 'store']);
     });

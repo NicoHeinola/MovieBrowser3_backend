@@ -6,6 +6,7 @@ use App\Dtos\Download\DownloadDetailsData;
 use App\Dtos\Download\DownloadFileDetailsData;
 use App\Dtos\QBittorrent\QBittorrentFileData;
 use App\Models\Download\Download;
+use App\Models\DownloadPick\DownloadPick;
 use App\Services\QBittorrent\QBittorrentService;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -23,25 +24,29 @@ class GetDownloadDetailsAction
      */
     public function handle(Download $download): DownloadDetailsData
     {
-        $download->loadMissing('picks.episode.entry', 'show.titles')->loadCount(Download::waitingEpisodeCount());
+        $download->loadMissing('picks.episode.entry', 'show.titles')->loadCount(Download::getPickCounts());
         $torrent = $this->qBittorrentService->getTorrent($download->hash);
-        $waitingEpisodeCount = (int) $download->waiting_episode_count;
 
-        if ($torrent === null) {
-            return $this->resolveDownloadDetailsAction->handle($download, null, [], $waitingEpisodeCount);
-        }
+        $picksByFileIndex = $download->picks->keyBy('file_index');
+        $files = $this->qBittorrentService->getTorrentFiles($download->hash) ?? [];
+        $fileDetails = array_map(
+            fn (QBittorrentFileData $file): DownloadFileDetailsData => $this->getFileDetails($file, $picksByFileIndex->get($file->index)),
+            $files,
+        );
 
-        $picks = $download->picks->keyBy('file_index');
-        $files = array_map(fn (QBittorrentFileData $file): DownloadFileDetailsData => new DownloadFileDetailsData(
+        return $this->resolveDownloadDetailsAction->handle($download, $torrent, $fileDetails);
+    }
+
+    private function getFileDetails(QBittorrentFileData $file, ?DownloadPick $pick): DownloadFileDetailsData
+    {
+        return new DownloadFileDetailsData(
             index: $file->index,
             path: $file->path,
             sizeBytes: $file->sizeBytes,
             progress: $file->progress,
-            episodeId: $picks->get($file->index)?->episode_id,
-            showId: $picks->get($file->index)?->episode?->entry?->show_id,
-            importedAt: $picks->get($file->index)?->imported_at,
-        ), $this->qBittorrentService->getFiles($download->hash) ?? []);
-
-        return $this->resolveDownloadDetailsAction->handle($download, $torrent, $files, $waitingEpisodeCount);
+            episodeId: $pick?->episode_id,
+            showId: $pick?->episode?->entry?->show_id,
+            importedAt: $pick?->imported_at,
+        );
     }
 }

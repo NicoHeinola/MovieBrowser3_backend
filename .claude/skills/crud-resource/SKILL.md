@@ -20,13 +20,13 @@ Build or extend a vertical slice for a domain `X` (StudlyCase `ShowSection`, tab
 3. **Model**: `X.php` plus `Query/` and `Relations/` traits. Add the inverse relation on the related model.
 4. **Factory** in `database/factories` (related models as `Related::factory()`). Add a seeder to `DatabaseSeeder` only if local data needs it.
 5. **DTOs**: `CreateXData`, `UpdateXData`.
-6. **Actions**: `{Create,Update,Delete}XAction`, each in `DB::transaction`.
+6. **Actions**: `{Create,Update,Delete}XAction`, in a `DB::transaction` when it writes more than once.
 7. **Requests**: `StoreXRequest`, `UpdateXRequest`.
 8. **Resource**: `XResource`; embed it in a parent resource with `whenLoaded` if needed.
 9. **Controller**: thin, eager-loading what the resource embeds.
 10. **Routes**: the reads `apiResource` and the writes `apiResource` in their groups.
 11. **Tests**: `tests/Feature/XApiTest.php`, following the testing rule's coverage list.
-12. Run `composer lint:fix`, `php artisan test --compact --filter=XApiTest`, then the full suite if shared models, factories or `ActionTransactionTest` could be affected.
+12. Run `composer lint:fix`, `php artisan test --compact --filter=XApiTest`, then the full suite if shared models or factories could be affected.
 
 ## Done when
 

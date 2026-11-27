@@ -9,7 +9,7 @@ enum SettingKey: string
 {
     case BannerDefaultVideos = 'banner_default_videos';
     case BannerDefaultBackgrounds = 'banner_default_backgrounds';
-    case VideoBasePath = 'video_base_path';
+    case VideoBaseFolder = 'video_base_folder';
     case VlcMediaPlayerPath = 'vlc_media_player_path';
     case SetupCompletedAt = 'setup_completed_at';
     case QBittorrentUrl = 'qbittorrent_url';

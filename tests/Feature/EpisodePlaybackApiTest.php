@@ -1,9 +1,9 @@
 <?php
 
-use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
+use App\Actions\Episode\VideoFile\Path\ResolveEpisodeVideoPathAction;
 use App\Actions\EpisodePlayback\OpenVlcPlaylistAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
-use App\Enums\SetupCheckCode;
+use App\Enums\VlcLaunchCode;
 use App\Enums\WatchStatus;
 use App\Exceptions\VlcLaunchException;
 use App\Jobs\TrackVlcPlaybackJob;
@@ -85,7 +85,7 @@ test('a regular user can play an episode with its whole entry as the playlist', 
         'episode_id' => $second->id,
     ]);
     Queue::assertPushed(TrackVlcPlaybackJob::class, fn (TrackVlcPlaybackJob $job): bool => $job->user->is($user)
-        && $job->vlc->port === 45678
+        && $job->vlcConnection->port === 45678
         && $job->delay === 45);
 });
 
@@ -260,11 +260,11 @@ test('a failed VLC launch keeps the previous progress', function () {
     $entry = ShowEntry::factory()->create();
     [$first, $second] = playableEpisodes($entry, 2);
     ShowWatchProgress::factory()->create(['user_id' => $user->id, 'episode_id' => $first->id]);
-    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->andThrow(new VlcLaunchException('VLC was not found.', SetupCheckCode::VlcNotFound, ['path' => '/missing/vlc']));
+    OpenVlcPlaylistAction::mock()->shouldReceive('handle')->andThrow(new VlcLaunchException('VLC could not be started.', VlcLaunchCode::VlcStartFailed, ['detail' => 'sh: not found']));
 
     postJson("/api/v1/episodes/{$second->id}/playback")
         ->assertStatus(503)
-        ->assertExactJson(['code' => 'vlc_not_found', 'params' => ['path' => '/missing/vlc']]);
+        ->assertExactJson(['code' => VlcLaunchCode::VlcStartFailed->value, 'params' => ['detail' => 'sh: not found']]);
 
     Queue::assertNothingPushed();
 

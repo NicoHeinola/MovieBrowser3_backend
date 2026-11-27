@@ -13,6 +13,6 @@ enum DownloadErrorCode: string
     case FileMissing = 'file_missing';
     /** The video disk has too little room for a finished file */
     case NotEnoughDiskSpace = 'not_enough_disk_space';
-    /** Copying a finished file into the video folder failed; the log says why */
+    /** Copying a finished file into the video base folder failed; the log says why */
     case ImportFailed = 'import_failed';
 }

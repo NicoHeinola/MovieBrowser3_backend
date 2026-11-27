@@ -3,23 +3,15 @@
 namespace App\Exceptions;
 
 use App\Enums\ApiErrorCode;
-use App\Http\Resources\ApiError\ApiErrorDetail;
 use Illuminate\Contracts\Debug\ShouldntReport;
-use Illuminate\Http\JsonResponse;
-use RuntimeException;
 
 /**
- * A video file check is running, so nothing may start another check or move the files it is looking at.
+ * A video file check is running, so nothing may move the files it is looking at.
  */
-class VideoFileCheckRunningException extends RuntimeException implements ShouldntReport
+class VideoFileCheckRunningException extends ApiException implements ShouldntReport
 {
     public function __construct()
     {
-        parent::__construct('A video file check is running.');
-    }
-
-    public function render(): JsonResponse
-    {
-        return ApiErrorDetail::response(ApiErrorCode::VideoFileCheckRunning, 409);
+        parent::__construct(ApiErrorCode::VideoFileCheckRunning, 409, 'A video file check is running.');
     }
 }

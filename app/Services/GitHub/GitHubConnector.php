@@ -2,19 +2,13 @@
 
 namespace App\Services\GitHub;
 
-use App\Services\LenientJsonResponse;
-use Saloon\Http\Connector;
-use Saloon\Traits\Plugins\HasTimeout;
+use App\Services\ServiceConnector;
 
 /**
  * GitHub's REST API, without a token. Only `GitHubService` uses it.
  */
-final class GitHubConnector extends Connector
+final class GitHubConnector extends ServiceConnector
 {
-    use HasTimeout;
-
-    protected ?string $response = LenientJsonResponse::class;
-
     public function resolveBaseUrl(): string
     {
         return rtrim((string) config('github.base_url'), '/');
@@ -31,10 +25,5 @@ final class GitHubConnector extends Connector
     public function getRequestTimeout(): float
     {
         return (float) config('github.timeout_seconds');
-    }
-
-    public function getConnectTimeout(): float
-    {
-        return $this->getRequestTimeout();
     }
 }

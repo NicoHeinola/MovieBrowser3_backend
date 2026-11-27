@@ -2,6 +2,8 @@
 
 namespace App\Actions\ShowTemplate;
 
+use App\Services\Mal\MalService;
+use App\Services\NekoBt\NekoBtService;
 use App\Services\ShowTemplateSource;
 use Lorisleiva\Actions\Concerns\AsAction;
 
@@ -9,14 +11,25 @@ class ResolveShowTemplateSourceAction
 {
     use AsAction;
 
+    public function __construct(
+        private readonly NekoBtService $nekoBtService,
+        private readonly MalService $malService,
+    ) {}
+
     /**
-     * The template source that reads a link: the first tagged source that supports it, in `AppServiceProvider`'s order.
-     *
-     * @return ShowTemplateSource|null Null when no source reads the link
+     * The template source that reads a link, or null when none does.
      */
     public function handle(string $url): ?ShowTemplateSource
     {
-        return collect(app()->tagged(ShowTemplateSource::class))
-            ->first(fn (ShowTemplateSource $source): bool => $source->supportsShowTemplateUrl($url));
+        // Asked in this order; another site is another service here
+        $sources = [$this->nekoBtService, $this->malService];
+
+        foreach ($sources as $source) {
+            if ($source->supportsShowTemplateUrl($url)) {
+                return $source;
+            }
+        }
+
+        return null;
     }
 }

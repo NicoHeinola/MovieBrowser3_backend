@@ -57,7 +57,9 @@ arch('actions are *Action classes using AsAction')
 
 arch('services only talk to their outside system')
     ->expect('App\\Services')
-    ->not->toUse(['App\\Actions', 'App\\Models', 'App\\Http']);
+    ->not->toUse(['App\\Actions', 'App\\Models', 'App\\Http'])
+    // A connector reads the saved address and login of its own system
+    ->ignoring('App\\Models\\Setting');
 
 arch('outside systems are reached through a service\'s Saloon connector')
     ->expect('Saloon')
@@ -69,7 +71,9 @@ arch('nothing calls an outside system with the plain HTTP client')
 
 arch('enums are string-backed')
     ->expect('App\Enums')
-    ->toBeStringBackedEnums();
+    ->toBeStringBackedEnums()
+    // Traits that enums share
+    ->ignoring('App\Enums\Concerns');
 
 test('"already running" exceptions are not reported', function () {
     $classes = collect(Finder::create()->files()->in(app_path())->name('*RunningException.php'))

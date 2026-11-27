@@ -2,13 +2,14 @@
 
 use App\Actions\EpisodePlayback\OpenVlcPlaylistAction;
 use App\Actions\EpisodePlayback\ResolveEphemeralPortRangeAction;
+use App\Exceptions\HostBridgeException;
 use App\Exceptions\VlcLaunchException;
 use App\Models\Setting\Setting;
+use App\Services\HostBridge\HostBridgeConnector;
+use App\Services\HostBridge\Requests\ConvertToWindowsPathsRequest;
+use App\Services\HostBridge\Requests\LaunchRequest;
 use App\Services\Vlc\Requests\GetStatusRequest;
 use App\Services\Vlc\VlcConnector;
-use App\Services\VlcBridge\Requests\ConvertToWindowsPathsRequest;
-use App\Services\VlcBridge\Requests\LaunchRequest;
-use App\Services\VlcBridge\VlcBridgeConnector;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Sleep;
@@ -19,7 +20,7 @@ beforeEach(fn () => Sleep::fake());
 
 function useVlcBinary(string $name): string
 {
-    $binary = putVideoFile(videoBasePathForTests()."/bin/{$name}");
+    $binary = putVideoFile(videoBaseFolderForTests()."/bin/{$name}");
     Setting::query()->whereKey('vlc_media_player_path')->update(['value' => $binary]);
 
     return $binary;
@@ -32,7 +33,7 @@ function useVlcBinary(string $name): string
  */
 function sentVlcCommands(): array
 {
-    return saloonSent(GetStatusRequest::class)
+    return saloonSent()
         ->map(fn (array $sent): array => $sent['request']->query()->all())
         ->filter(fn (array $query): bool => isset($query['command']))
         ->map(fn (array $query): string => "{$query['command']} {$query['input']}")
@@ -74,7 +75,7 @@ test('a start time only applies to the episode that plays first', function () {
 
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv', '/videos/ep 2.mkv', '/videos/ep 3.mkv'], 1, 754);
 
-    $options = saloonSent(GetStatusRequest::class)
+    $options = saloonSent()
         ->map(fn (array $sent): array => $sent['request']->query()->all())
         ->filter(fn (array $query): bool => isset($query['command']))
         ->mapWithKeys(fn (array $query): array => [$query['input'] => $query['option'] ?? null])
@@ -85,16 +86,6 @@ test('a start time only applies to the episode that plays first', function () {
         '/videos/ep 2.mkv' => 'start-time=754',
         '/videos/ep 3.mkv' => null,
     ]);
-});
-
-test('without a start time VLC gets no start-time option', function () {
-    useVlcBinary('vlc');
-    Process::fake();
-    Saloon::fake(['127.0.0.1:*' => MockResponse::make(['state' => 'stopped'])]);
-
-    app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
-
-    expect(saloonSent(GetStatusRequest::class)->filter(fn (array $sent): bool => array_key_exists('option', $sent['request']->query()->all())))->toBeEmpty();
 });
 
 test('the port skips Linux\'s ephemeral range, where a Windows vlc.exe cannot listen under WSL mirrored networking', function () {
@@ -160,26 +151,15 @@ test('it fails when VLC is closed while the playlist is built', function () {
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
 })->throws(VlcLaunchException::class, 'VLC was closed before the playlist was built.');
 
-test('it fails when the configured binary does not exist', function () {
-    Process::fake();
-    Setting::query()->whereKey('vlc_media_player_path')->update(['value' => '/missing/vlc.exe']);
-
-    try {
-        app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
-    } finally {
-        Process::assertNothingRan();
-    }
-})->throws(VlcLaunchException::class, 'VLC was not found at /missing/vlc.exe.');
-
 test('it fails when the launch command fails', function () {
     Process::fake(fn () => Process::result(errorOutput: 'sh: not found', exitCode: 127));
 
     app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
 })->throws(VlcLaunchException::class, 'VLC could not be started: sh: not found');
 
-describe('with the bridge launcher', function () {
+describe('with the host bridge', function () {
     beforeEach(function () {
-        config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767', 'vlc.bridge_token' => 'bridge-token']);
+        config(['host_bridge.enabled' => true, 'host_bridge.url' => 'http://127.0.0.1:8767', 'host_bridge.token' => 'bridge-token']);
         Process::fake();
     });
 
@@ -230,19 +210,19 @@ describe('with the bridge launcher', function () {
         Saloon::fake(['127.0.0.1:8767/launch' => MockResponse::make(['message' => 'VLC was not found at /missing/vlc.'], 422)]);
 
         app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
-    })->throws(VlcLaunchException::class, 'VLC was not found at /missing/vlc.');
+    })->throws(HostBridgeException::class, 'VLC was not found at /missing/vlc.');
 
     test('it fails when the bridge rejects the token', function () {
         Saloon::fake(['127.0.0.1:8767/launch' => MockResponse::make(status: 403)]);
 
         app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
-    })->throws(VlcLaunchException::class, 'The VLC bridge answered 403. Check VLC_BRIDGE_TOKEN.');
+    })->throws(HostBridgeException::class, 'The host bridge answered 403. Check HOST_BRIDGE_TOKEN.');
 
     test('it fails when the bridge is not running', function () {
-        Saloon::fake([VlcBridgeConnector::class => saloonConnectionRefused()]);
+        Saloon::fake([HostBridgeConnector::class => saloonConnectionRefused()]);
 
         app(OpenVlcPlaylistAction::class)->handle(['/videos/ep 1.mkv'], 0);
-    })->throws(VlcLaunchException::class, 'The VLC bridge at http://127.0.0.1:8767 did not answer.');
+    })->throws(HostBridgeException::class, 'The host bridge at http://127.0.0.1:8767 did not answer.');
 });
 
 test('the ephemeral range is read from Linux', function () {

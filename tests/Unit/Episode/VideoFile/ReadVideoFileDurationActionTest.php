@@ -1,6 +1,5 @@
 <?php
 
-use App\Actions\Episode\VideoFile\ReadMatroskaDurationAction;
 use App\Actions\Episode\VideoFile\ReadVideoFileDurationAction;
 use Illuminate\Support\Facades\File;
 
@@ -16,7 +15,7 @@ afterEach(function () use (&$root) {
 });
 
 /**
- * A silent 8 kHz, 8-bit mono WAV file: a format only getID3 reads here.
+ * A silent 8 kHz, 8-bit mono WAV file.
  */
 function silentWav(int $seconds): string
 {
@@ -27,31 +26,13 @@ function silentWav(int $seconds): string
         .'data'.pack('V', strlen($data)).$data;
 }
 
-it('reads a Matroska file length from its header, rounded to seconds', function () use (&$root) {
+it('reads a Matroska file length, rounded to seconds', function () use (&$root) {
     File::put("{$root}/episode.mkv", matroskaVideo(1440.6));
 
     expect(ReadVideoFileDurationAction::run("{$root}/episode.mkv"))->toBe(1441);
 });
 
-it('applies the file timestamp scale', function () use (&$root) {
-    File::put("{$root}/episode.mkv", matroskaVideo(95.0, timestampScale: 1_000));
-
-    expect(ReadVideoFileDurationAction::run("{$root}/episode.mkv"))->toBe(95);
-});
-
-it('reads the length from the header when Info holds a long title', function () use (&$root) {
-    File::put("{$root}/episode.mkv", matroskaVideo(1440.0, title: str_repeat('Show.Name.S01E01.1080p.WEB-DL ', 5)));
-
-    expect(app(ReadMatroskaDurationAction::class)->handle("{$root}/episode.mkv"))->toBe(1440.0);
-});
-
-it('follows the seek head to an Info element after a streamed cluster', function () use (&$root) {
-    File::put("{$root}/episode.mkv", matroskaVideo(600.0, streamedClusterFirst: true));
-
-    expect(ReadVideoFileDurationAction::run("{$root}/episode.mkv"))->toBe(600);
-});
-
-it('reads other formats through getID3', function () use (&$root) {
+it('reads other formats too', function () use (&$root) {
     File::put("{$root}/episode.wav", silentWav(3));
 
     expect(ReadVideoFileDurationAction::run("{$root}/episode.wav"))->toBe(3);

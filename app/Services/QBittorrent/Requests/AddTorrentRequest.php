@@ -2,6 +2,7 @@
 
 namespace App\Services\QBittorrent\Requests;
 
+use App\Dtos\QBittorrent\QBittorrentNewTorrentData;
 use Saloon\Contracts\Body\HasBody;
 use Saloon\Data\MultipartValue;
 use Saloon\Enums\Method;
@@ -18,10 +19,7 @@ final class AddTorrentRequest extends Request implements HasBody
 
     protected Method $method = Method::POST;
 
-    /**
-     * @param  array<string, string>  $fields
-     */
-    public function __construct(private readonly array $fields) {}
+    public function __construct(private readonly QBittorrentNewTorrentData $torrent) {}
 
     public function resolveEndpoint(): string
     {
@@ -33,10 +31,15 @@ final class AddTorrentRequest extends Request implements HasBody
      */
     protected function defaultBody(): array
     {
-        return array_map(
-            fn (string $name, string $value): MultipartValue => new MultipartValue($name, $value),
-            array_keys($this->fields),
-            $this->fields,
-        );
+        $isMagnet = str_starts_with($this->torrent->url, 'magnet:');
+
+        return [
+            new MultipartValue('urls', $this->torrent->url),
+            new MultipartValue('savepath', $this->torrent->savePath),
+            new MultipartValue('category', $this->torrent->category),
+            // Nothing downloads yet: a `.torrent` link is added stopped, and a magnet runs only until its file list is known
+            new MultipartValue('stopped', $isMagnet ? 'false' : 'true'),
+            new MultipartValue('stopCondition', $isMagnet ? 'MetadataReceived' : 'None'),
+        ];
     }
 }

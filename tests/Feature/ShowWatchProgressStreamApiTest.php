@@ -186,6 +186,8 @@ test('vlc moving to the next episode sends the show again', function () {
     beforeStreamPoll(3, function () use ($user, $second): void {
         Saloon::fake(['127.0.0.1:*' => MockResponse::make([
             'state' => 'playing',
+            'time' => 754,
+            'length' => 1440,
             'information' => ['category' => ['meta' => ['filename' => "{$second->id}_episode.mkv"]]],
         ])]);
         app()->call([new TrackVlcPlaybackJob($user, new VlcConnectionData(45678, 'secret')), 'handle']);
@@ -193,7 +195,7 @@ test('vlc moving to the next episode sends the show again', function () {
 
     expect(streamWatchProgress())->toBe("retry: 3000\n\n"
         .watchProgressEvent($first, '2026-10-31T20:14:02.000000Z')
-        .watchProgressEvent($second, '2026-10-31T20:14:06.000000Z'));
+        .watchProgressEvent($second, '2026-10-31T20:14:06.000000Z', 754));
 });
 
 test('a second save of the same episode within the same second is not sent again', function () {

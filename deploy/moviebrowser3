@@ -25,18 +25,16 @@ usage() {
 Usage: moviebrowser3 <command>
 
   update            Check out the newest release of both clones, rebuild, migrate and restart
-  start | stop      Start or stop every service and the VLC bridge
-  restart           Restart every service and the VLC bridge
+  start | stop      Start or stop every service and the host bridge
+  restart           Restart every service and the host bridge
   bridge <start|stop|restart>
-                    Only the VLC bridge
-  status            Show the services and whether the VLC bridge answers
-  logs [service]    Follow the logs (db, backend, queue, scheduler)
+                    Only the host bridge
+  status            Show the services and whether the host bridge answers
+  logs [service]    Follow the logs (db, backend, queue, imports, scheduler)
   artisan <args>    Run an artisan command in a one-off backend container
   backup            Back up the database now, into the backup folder (BACKUP_PATH in .env)
   restore <backup> [--yes]
                     Replace the database with a backup: a file name from the backup folder, or a path
-  import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]
-                    Import MovieBrowser2 shows, copying the videos from the folder (mounted read-only)
 
 USAGE
 }
@@ -45,9 +43,9 @@ status() {
     docker compose ps
     echo
     if bridge_up; then
-        echo "VLC bridge: running"
+        echo "host bridge: running"
     else
-        echo "VLC bridge: not running (moviebrowser3 bridge start)"
+        echo "host bridge: not running (moviebrowser3 bridge start)"
     fi
 }
 
@@ -61,28 +59,6 @@ bridge() {
             ;;
         *) fail "Usage: moviebrowser3 bridge <start|stop|restart>" ;;
     esac
-}
-
-# import_moviebrowser2 <export .json> <MovieBrowser2 video folder> [artisan options]
-import_moviebrowser2() {
-    (($# >= 2)) || fail "Usage: moviebrowser3 import-moviebrowser2 <export .json> <MovieBrowser2 video folder> [--dry-run]"
-
-    local export_file source_dir
-    export_file=$(cd "$caller_dir" && readlink -f "$1" || true)
-    source_dir=$(cd "$caller_dir" && readlink -f "$2" || true)
-
-    # A missing path is usually an external drive that isn't mounted, so say which one instead of the usage.
-    # The messages use the paths as typed: readlink -f prints nothing when the parent folder is missing too.
-    [[ -f "$export_file" ]] || fail "Export not found: $1 (is the drive mounted? sudo mount /mnt/<letter>)"
-    [[ -d "$source_dir" ]] || fail "MovieBrowser2 video folder not found: $2 (is the drive mounted? sudo mount /mnt/<letter>)"
-    shift 2
-
-    # Both are mounted read-only for this run only, so nothing in the container can change the originals.
-    # The folder keeps its host path; --source-root finds each video by its path relative to it.
-    docker compose run --rm \
-        -v "$export_file:/tmp/moviebrowser2-export.json:ro" \
-        -v "$source_dir:$source_dir:ro" \
-        backend php artisan moviebrowser2:import-shows /tmp/moviebrowser2-export.json --source-root="$source_dir" "$@"
 }
 
 # restore <backup> [--yes]: replaces the whole database with a dump from `backup` or the scheduled backups
@@ -110,7 +86,7 @@ restore() {
     exec 3<"$file"
 
     # Nothing may write while the tables are replaced
-    docker compose stop backend queue scheduler
+    docker compose stop backend queue imports scheduler
     docker compose up -d --wait db
 
     # The current database, in case the restore was the wrong call. A broken database may not dump, which is no reason
@@ -170,6 +146,5 @@ case "$command" in
     artisan) docker compose run --rm backend php artisan "$@" ;;
     backup) docker compose run --rm -T backend php artisan backups:create ;;
     restore) restore "$@" ;;
-    import-moviebrowser2) import_moviebrowser2 "$@" ;;
     *) usage ;;
 esac

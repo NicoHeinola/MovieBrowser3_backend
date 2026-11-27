@@ -9,9 +9,9 @@ enum ApiErrorCode: string
 {
     case Unauthenticated = 'unauthenticated';
     case Forbidden = 'forbidden';
-    case VideoRelocationRunning = 'video_relocation_running';
+    case VideoBaseFolderMoveRunning = 'video_base_folder_move_running';
     case VideoFileCheckRunning = 'video_file_check_running';
-    case VideoDurationScanRunning = 'video_duration_scan_running';
+    case VideoBaseFolderUnavailable = 'video_base_folder_unavailable';
     case TorrentSiteUnavailable = 'torrent_site_unavailable';
     case ShowTemplateNotFound = 'show_template_not_found';
     case ShowTemplateUnavailable = 'show_template_unavailable';
@@ -20,6 +20,5 @@ enum ApiErrorCode: string
     case DownloadClientNotConfigured = 'download_client_not_configured';
     case DownloadExists = 'download_exists';
     case DownloadNotInClient = 'download_not_in_client';
-    case DownloadNotRetryable = 'download_not_retryable';
-    case DownloadImportRunning = 'download_import_running';
+    case NotEnoughDiskSpace = 'not_enough_disk_space';
 }

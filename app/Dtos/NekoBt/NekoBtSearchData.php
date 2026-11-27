@@ -53,7 +53,7 @@ class NekoBtSearchData extends Data
             sort: NekoBtSort::from(ltrim($sort, '-')),
             descending: str_starts_with($sort, '-'),
             page: (int) ($query['page']['number'] ?? 1),
-            batch: self::yesOrNo($filter['batch'] ?? null),
+            batch: self::parseYesOrNo($filter['batch'] ?? null),
             levels: array_map(fn (string $level): NekoBtLevel => NekoBtLevel::from($level), $filter['levels'] ?? []),
             videoSources: array_map(
                 fn (string $source): NekoBtVideoSource => NekoBtVideoSource::from($source),
@@ -64,17 +64,21 @@ class NekoBtSearchData extends Data
                 $filter['video_codecs'] ?? [],
             ),
             audioLanguage: $filter['audio_language'] ?? null,
-            originalTranslation: self::yesOrNo($filter['original_translation'] ?? null),
-            machineTranslation: self::yesOrNo($filter['machine_translation'] ?? null),
-            hardsub: self::yesOrNo($filter['hardsub'] ?? null),
+            originalTranslation: self::parseYesOrNo($filter['original_translation'] ?? null),
+            machineTranslation: self::parseYesOrNo($filter['machine_translation'] ?? null),
+            hardsub: self::parseYesOrNo($filter['hardsub'] ?? null),
         );
     }
 
     /**
      * A yes-or-no filter from the query string, where it is the text `true` or `false`; missing means no filter.
      */
-    private static function yesOrNo(?string $value): ?bool
+    private static function parseYesOrNo(?string $value): ?bool
     {
-        return $value === null ? null : $value === 'true';
+        if ($value === null) {
+            return null;
+        }
+
+        return $value === 'true';
     }
 }

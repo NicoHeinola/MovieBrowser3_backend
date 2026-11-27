@@ -6,16 +6,16 @@ use Saloon\Enums\Method;
 use Saloon\Http\Request;
 
 /**
- * Torrents with their progress: `hashes` picks them.
+ * The torrents with these info hashes.
  */
 final class GetTorrentsRequest extends Request
 {
     protected Method $method = Method::GET;
 
     /**
-     * @param  array<string, string>  $filters
+     * @param  list<string>  $hashes
      */
-    public function __construct(private readonly array $filters = []) {}
+    public function __construct(private readonly array $hashes) {}
 
     public function resolveEndpoint(): string
     {
@@ -27,6 +27,6 @@ final class GetTorrentsRequest extends Request
      */
     protected function defaultQuery(): array
     {
-        return $this->filters;
+        return ['hashes' => implode('|', $this->hashes)];
     }
 }

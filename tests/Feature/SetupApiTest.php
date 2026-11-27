@@ -2,11 +2,11 @@
 
 use App\Models\Setting\Setting;
 use App\Models\User\User;
+use App\Services\HostBridge\HostBridgeConnector;
+use App\Services\HostBridge\Requests\CheckVlcCanStartRequest;
 use App\Services\QBittorrent\QBittorrentConnector;
 use App\Services\QBittorrent\Requests\GetVersionRequest;
 use App\Services\QBittorrent\Requests\LogInRequest;
-use App\Services\VlcBridge\Requests\CheckBinaryRequest;
-use App\Services\VlcBridge\VlcBridgeConnector;
 use Illuminate\Process\PendingProcess;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Process;
@@ -38,25 +38,25 @@ function fakeQBittorrent(string $version = 'v5.1.0'): void
 }
 
 /**
- * Fakes the VLC bridge so only $existing passes its check-binary check.
+ * Fakes the host bridge so only $existing passes its check-binary check.
  */
 function fakeBridgeWithVlcAt(?string $existing): void
 {
-    config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767', 'vlc.bridge_token' => 'bridge-token']);
-    Saloon::fake([VlcBridgeConnector::class => fn (PendingRequest $request): MockResponse => saloonFields($request)['binary'] === $existing
+    config(['host_bridge.enabled' => true, 'host_bridge.url' => 'http://127.0.0.1:8767', 'host_bridge.token' => 'bridge-token']);
+    Saloon::fake([HostBridgeConnector::class => fn (PendingRequest $request): MockResponse => saloonFields($request)['binary'] === $existing
         ? MockResponse::make(status: 204)
         : MockResponse::make(['message' => 'VLC was not found at '.saloonFields($request)['binary'].'.', 'code' => 'vlc_not_found'], 422)]);
 }
 
 test('setup requires an admin', function () {
     getJson('/api/v1/setup')->assertUnauthorized();
-    postJson('/api/v1/setup/checks', ['video_base_path' => '/videos'])->assertUnauthorized();
+    postJson('/api/v1/setup/checks', ['video_base_folder' => '/videos'])->assertUnauthorized();
     postJson('/api/v1/setup/complete')->assertUnauthorized();
 
     withToken(User::factory()->create()->createToken('test-token')->plainTextToken);
 
     getJson('/api/v1/setup')->assertForbidden();
-    postJson('/api/v1/setup/checks', ['video_base_path' => '/videos'])->assertForbidden();
+    postJson('/api/v1/setup/checks', ['video_base_folder' => '/videos'])->assertForbidden();
     postJson('/api/v1/setup/complete')->assertForbidden();
 });
 
@@ -82,13 +82,13 @@ test('it suggests the first usual VLC location the bridge finds', function () {
         ->assertOk()
         ->assertJsonPath('detected_vlc_media_player_path', '/mnt/c/Program Files (x86)/VideoLAN/VLC/vlc.exe');
 
-    $sent = saloonSent(CheckBinaryRequest::class)->first()['request'];
+    $sent = saloonSent(CheckVlcCanStartRequest::class)->first()['request'];
     expect($sent->getUrl())->toBe('http://127.0.0.1:8767/check-binary')
         ->and($sent->headers()->get('Authorization'))->toBe('Bearer bridge-token');
 });
 
 test('without the bridge it finds vlc on the PATH', function () {
-    config(['vlc.detect_paths' => [videoBasePathForTests().'/missing/vlc', 'vlc']]);
+    config(['vlc.detect_paths' => [videoBaseFolderForTests().'/missing/vlc', 'vlc']]);
     Process::fake(fn (PendingProcess $process) => Process::result(exitCode: $process->command[4] === 'vlc' ? 0 : 1));
     actingAsAdmin();
 
@@ -119,7 +119,7 @@ test('a check without any value to check answers required for both', function ()
             'code' => 'required',
             'params' => [],
             'errors' => [
-                'video_base_path' => [['code' => 'required', 'params' => []]],
+                'video_base_folder' => [['code' => 'required', 'params' => []]],
                 'vlc_media_player_path' => [['code' => 'required', 'params' => []]],
                 'qbittorrent_url' => [['code' => 'required', 'params' => []]],
                 'download_path' => [['code' => 'required', 'params' => []]],
@@ -137,28 +137,28 @@ test('an empty VLC path is checked as vlc on the PATH', function () {
 });
 
 test('it says when the bridge is too old to check VLC', function () {
-    config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767']);
+    config(['host_bridge.enabled' => true, 'host_bridge.url' => 'http://127.0.0.1:8767']);
     Saloon::fake(['127.0.0.1:8767/check-binary' => MockResponse::make(['message' => 'Not found.'], 404)]);
     actingAsAdmin();
 
     postJson('/api/v1/setup/checks', ['vlc_media_player_path' => '/mnt/c/vlc/vlc.exe'])
-        ->assertJsonPath('vlc_media_player_path.code', 'vlc_bridge_outdated');
+        ->assertJsonPath('vlc_media_player_path.code', 'host_bridge_outdated');
 });
 
 test('it explains why the bridge cannot check VLC', function () {
-    config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767']);
+    config(['host_bridge.enabled' => true, 'host_bridge.url' => 'http://127.0.0.1:8767']);
     Saloon::fake([saloonConnectionRefused()]);
     actingAsAdmin();
 
     postJson('/api/v1/setup/checks', ['vlc_media_player_path' => '/mnt/c/vlc/vlc.exe'])
         ->assertOk()
         ->assertJsonPath('vlc_media_player_path.ok', false)
-        ->assertJsonPath('vlc_media_player_path.code', 'vlc_bridge_unreachable')
+        ->assertJsonPath('vlc_media_player_path.code', 'host_bridge_unreachable')
         ->assertJsonPath('vlc_media_player_path.params.url', 'http://127.0.0.1:8767');
 });
 
 test('it sends the code for each way the bridge turns a VLC check down', function (int $status, array $body, string $code, array $params) {
-    config(['vlc.launcher' => 'bridge', 'vlc.bridge_url' => 'http://127.0.0.1:8767']);
+    config(['host_bridge.enabled' => true, 'host_bridge.url' => 'http://127.0.0.1:8767']);
     Saloon::fake(['127.0.0.1:8767/check-binary' => MockResponse::make($body, $status)]);
     actingAsAdmin();
 
@@ -167,52 +167,52 @@ test('it sends the code for each way the bridge turns a VLC check down', functio
         ->assertExactJson(['vlc_media_player_path' => ['ok' => false, 'code' => $code, 'params' => $params]]);
 })->with([
     'wrong binary' => [422, ['message' => 'Not VLC.', 'code' => 'vlc_wrong_binary'], 'vlc_wrong_binary', ['path' => '/mnt/c/vlc/other.exe']],
-    'older bridge without a code' => [422, ['message' => 'Not VLC.'], 'vlc_bridge_rejected', []],
-    'unknown code' => [422, ['message' => 'New.', 'code' => 'vlc_something_new'], 'vlc_bridge_rejected', []],
-    'bad token' => [403, ['message' => 'Forbidden.'], 'vlc_bridge_unauthorized', ['status' => '403']],
+    'older bridge without a code' => [422, ['message' => 'Not VLC.'], 'host_bridge_rejected', []],
+    'unknown code' => [422, ['message' => 'New.', 'code' => 'vlc_something_new'], 'host_bridge_rejected', []],
+    'bad token' => [403, ['message' => 'Forbidden.'], 'host_bridge_unauthorized', ['status' => '403']],
 ]);
 
 test('checks encode empty params as a JSON object', function () {
     actingAsAdmin();
 
-    $body = postJson('/api/v1/setup/checks', ['video_base_path' => videoBasePathForTests()])->getContent();
+    $body = postJson('/api/v1/setup/checks', ['video_base_folder' => videoBaseFolderForTests()])->getContent();
 
     expect($body)->toContain('"params":{}');
 });
 
 test('without the bridge only a VLC that exists passes', function () {
-    $vlc = putVideoFile(videoBasePathForTests().'/bin/vlc');
-    $other = putVideoFile(videoBasePathForTests().'/bin/notvlc');
+    $vlc = putVideoFile(videoBaseFolderForTests().'/bin/vlc');
+    $other = putVideoFile(videoBaseFolderForTests().'/bin/notvlc');
     actingAsAdmin();
 
     postJson('/api/v1/setup/checks', ['vlc_media_player_path' => $vlc])->assertJsonPath('vlc_media_player_path.ok', true);
-    postJson('/api/v1/setup/checks', ['vlc_media_player_path' => videoBasePathForTests().'/bin/missing/vlc'])
+    postJson('/api/v1/setup/checks', ['vlc_media_player_path' => videoBaseFolderForTests().'/bin/missing/vlc'])
         ->assertJsonPath('vlc_media_player_path.code', 'vlc_not_found')
-        ->assertJsonPath('vlc_media_player_path.params.path', videoBasePathForTests().'/bin/missing/vlc');
+        ->assertJsonPath('vlc_media_player_path.params.path', videoBaseFolderForTests().'/bin/missing/vlc');
     postJson('/api/v1/setup/checks', ['vlc_media_player_path' => $other])
         ->assertJsonPath('vlc_media_player_path.code', 'vlc_wrong_binary')
         ->assertJsonPath('vlc_media_player_path.params.path', $other);
 });
 
-test('a video folder passes when it is writable or can be created', function () {
-    $base = videoBasePathForTests();
+test('a video base folder passes when it is writable or can be created', function () {
+    $base = videoBaseFolderForTests();
     actingAsAdmin();
 
-    postJson('/api/v1/setup/checks', ['video_base_path' => $base])
+    postJson('/api/v1/setup/checks', ['video_base_folder' => $base])
         ->assertOk()
-        ->assertExactJson(['video_base_path' => ['ok' => true, 'code' => null, 'params' => []]]);
-    postJson('/api/v1/setup/checks', ['video_base_path' => "{$base}/new/MovieBrowser3"])->assertJsonPath('video_base_path.ok', true);
+        ->assertExactJson(['video_base_folder' => ['ok' => true, 'code' => null, 'params' => []]]);
+    postJson('/api/v1/setup/checks', ['video_base_folder' => "{$base}/new/MovieBrowser3"])->assertJsonPath('video_base_folder.ok', true);
 });
 
-test('it says what is wrong with a video folder', function (string $path, string $code) {
-    putVideoFile(videoBasePathForTests().'/a-file.mkv');
+test('it says what is wrong with a video base folder', function (string $path, string $code) {
+    putVideoFile(videoBaseFolderForTests().'/a-file.mkv');
     actingAsAdmin();
 
-    postJson('/api/v1/setup/checks', ['video_base_path' => str_replace('{base}', videoBasePathForTests(), $path)])
+    postJson('/api/v1/setup/checks', ['video_base_folder' => str_replace('{base}', videoBaseFolderForTests(), $path)])
         ->assertOk()
-        ->assertJsonPath('video_base_path.ok', false)
-        ->assertJsonPath('video_base_path.code', $code)
-        ->assertJsonPath('video_base_path.params', []);
+        ->assertJsonPath('video_base_folder.ok', false)
+        ->assertJsonPath('video_base_folder.code', $code)
+        ->assertJsonPath('video_base_folder.params', []);
 })->with([
     'empty' => ['', 'path_required'],
     'relative' => ['videos', 'path_not_absolute'],
@@ -221,40 +221,40 @@ test('it says what is wrong with a video folder', function (string $path, string
     'a file' => ['{base}/a-file.mkv', 'path_is_file'],
 ]);
 
-test('a video folder that cannot be written to fails', function () {
-    $locked = videoBasePathForTests().'/locked';
+test('a video base folder that cannot be written to fails', function () {
+    $locked = videoBaseFolderForTests().'/locked';
     mkdir($locked, recursive: true);
     chmod($locked, 0555);
     actingAsAdmin();
 
     try {
-        postJson('/api/v1/setup/checks', ['video_base_path' => $locked])
-            ->assertJsonPath('video_base_path.code', 'path_not_writable');
-        postJson('/api/v1/setup/checks', ['video_base_path' => "{$locked}/inside"])
-            ->assertJsonPath('video_base_path.code', 'path_not_creatable')
-            ->assertJsonPath('video_base_path.params.parent', $locked);
+        postJson('/api/v1/setup/checks', ['video_base_folder' => $locked])
+            ->assertJsonPath('video_base_folder.code', 'path_not_writable');
+        postJson('/api/v1/setup/checks', ['video_base_folder' => "{$locked}/inside"])
+            ->assertJsonPath('video_base_folder.code', 'path_not_creatable')
+            ->assertJsonPath('video_base_folder.params.parent', $locked);
     } finally {
         chmod($locked, 0755);
     }
 })->skip(fn (): bool => posix_geteuid() === 0, 'root ignores file permissions');
 
-test('in prod a video folder must be inside a mounted media folder', function () {
-    $base = videoBasePathForTests();
+test('in prod a video base folder must be inside a mounted media folder', function () {
+    $base = videoBaseFolderForTests();
     config(['deploy.media_folders' => [$base, '/mnt/h/Vids']]);
     actingAsAdmin();
 
-    postJson('/api/v1/setup/checks', ['video_base_path' => "{$base}/MovieBrowser3"])->assertJsonPath('video_base_path.ok', true);
-    postJson('/api/v1/setup/checks', ['video_base_path' => "{$base}-other"])
-        ->assertJsonPath('video_base_path.ok', false)
-        ->assertJsonPath('video_base_path.code', 'path_outside_media_folders')
-        ->assertJsonPath('video_base_path.params.folders', "{$base}, /mnt/h/Vids");
+    postJson('/api/v1/setup/checks', ['video_base_folder' => "{$base}/MovieBrowser3"])->assertJsonPath('video_base_folder.ok', true);
+    postJson('/api/v1/setup/checks', ['video_base_folder' => "{$base}-other"])
+        ->assertJsonPath('video_base_folder.ok', false)
+        ->assertJsonPath('video_base_folder.code', 'path_outside_media_folders')
+        ->assertJsonPath('video_base_folder.params.folders', "{$base}, /mnt/h/Vids");
 });
 
 test('a check needs at least one string value', function () {
     actingAsAdmin();
 
-    postJson('/api/v1/setup/checks', [])->assertUnprocessable()->assertJsonValidationErrors(['video_base_path', 'vlc_media_player_path']);
-    postJson('/api/v1/setup/checks', ['video_base_path' => ['/videos']])->assertUnprocessable()->assertJsonValidationErrors(['video_base_path']);
+    postJson('/api/v1/setup/checks', [])->assertUnprocessable()->assertJsonValidationErrors(['video_base_folder', 'vlc_media_player_path']);
+    postJson('/api/v1/setup/checks', ['video_base_folder' => ['/videos']])->assertUnprocessable()->assertJsonValidationErrors(['video_base_folder']);
 });
 
 test('completing setup keeps the first time', function () {
@@ -331,8 +331,8 @@ test('the qBittorrent address must be a web address to check it', function () {
     postJson('/api/v1/setup/checks', ['qbittorrent_url' => 'localhost:8080'])->assertUnprocessable()->assertJsonValidationErrors(['qbittorrent_url']);
 });
 
-test('a download folder is checked like the video folder', function () {
-    $base = videoBasePathForTests();
+test('a download folder is checked like the video base folder', function () {
+    $base = videoBaseFolderForTests();
     config(['deploy.media_folders' => [$base]]);
     actingAsAdmin();
 

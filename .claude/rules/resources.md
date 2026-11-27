@@ -12,4 +12,4 @@ applyTo: 'app/Http/Resources/**/*.php'
 - Keep resources presentation-only and keep existing keys stable.
 - User-facing text goes out as a code with string `params` (an enum in `app/Enums`), and the frontend translates it. Build that `{ code, params }` pair with `ApiErrorDetail::make()`, and error responses in exceptions or middleware with `ApiErrorDetail::response()`: both cast `params` to an object so empty encodes as `{}`.
 - Never touch the disk (`tests/Unit/ArchitectureTest.php`): videos can sit on slow Windows drives. For a file check or size, read the stored `has_video_file` and `video_file_size`, which `CheckEpisodeVideoFilesJob` refreshes in the same pass.
-- A field derived by application logic calls the owning action, e.g. `'file_path' => ResolveEpisodeVideoPathAction::run($this->resource)`, never a model accessor.
+- A field derived by application logic calls the owning action, never a model accessor.

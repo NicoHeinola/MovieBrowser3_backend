@@ -2,10 +2,25 @@
 
 namespace App\Exceptions;
 
-use RuntimeException;
+use App\Enums\ApiErrorCode;
+use Illuminate\Contracts\Debug\ShouldntReport;
 
 /**
- * A video doesn't fit on the disk it's copied to (with `CopyVideoFileAction::RESERVED_DISK_BYTES` left over), so the
- * copy wasn't started. Its own class, so a caller can tell a full disk from a failed copy.
+ * Something doesn't fit on the disk it would be written to. Its own class, so an import can tell a full disk from a failed
+ * copy.
  */
-class NotEnoughDiskSpaceException extends RuntimeException {}
+class NotEnoughDiskSpaceException extends ApiException implements ShouldntReport
+{
+    public function __construct(int $neededBytes, int $freeBytes)
+    {
+        // Bytes: the frontend formats them in the reader's language
+        $params = ['needed_bytes' => (string) $neededBytes, 'free_bytes' => (string) $freeBytes];
+
+        parent::__construct(
+            ApiErrorCode::NotEnoughDiskSpace,
+            422,
+            "The disk has {$freeBytes} bytes free, but {$neededBytes} are needed.",
+            $params,
+        );
+    }
+}

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Episode;
 
-use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
 use App\Models\Episode\Episode;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,7 +24,6 @@ class EpisodeResource extends JsonResource
             'video_file_size' => $this->video_file_size,
             'video_duration_seconds' => $this->video_duration_seconds,
             'sequence_number' => $this->sequence_number,
-            'file_path' => ResolveEpisodeVideoPathAction::run($this->resource),
             'download' => EpisodeDownloadResource::make($this->whenLoaded('downloadPick')),
         ];
     }

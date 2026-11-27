@@ -9,6 +9,14 @@ use Spatie\QueryBuilder\AllowedFilter;
 trait HasEpisodeQuery
 {
     /**
+     * Episodes that were given a video file, whether it's still there or not.
+     */
+    public function scopeWithVideoFilename(Builder $query): void
+    {
+        $query->where('filename', '!=', '');
+    }
+
+    /**
      * Episodes without a playable file: the file went missing, or none was ever uploaded.
      */
     public function scopeMissingVideoFile(Builder $query): void
@@ -21,17 +29,15 @@ trait HasEpisodeQuery
      */
     public function scopeLostVideoFile(Builder $query): void
     {
-        $query->where('has_video_file', false)->where('filename', '!=', '');
+        $query->withVideoFilename()->where('has_video_file', false);
     }
 
     /**
-     * Episodes with a file but no length: never read, unreadable, or left waiting by a scan that stopped.
+     * Episodes with a file but no length: not read yet, or unreadable.
      */
     public function scopeUnknownVideoDuration(Builder $query): void
     {
-        $query->where('has_video_file', true)
-            ->where('filename', '!=', '')
-            ->whereNull('video_duration_seconds');
+        $query->withVideoFilename()->where('has_video_file', true)->whereNull('video_duration_seconds');
     }
 
     public static function getAllowedFilters(): array

@@ -24,13 +24,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | How long a GitHub answer is reused, in seconds. Unauthenticated GitHub
-    | calls are limited to 60 an hour, so a found release is kept for hours;
-    | a failed check is retried sooner.
+    | calls are limited to 60 an hour.
     |
     */
 
-    'cache_seconds' => (int) env('RELEASE_CHECK_CACHE_SECONDS', 6 * 60 * 60),
-
-    'failure_cache_seconds' => (int) env('RELEASE_CHECK_FAILURE_CACHE_SECONDS', 10 * 60),
+    'cache_seconds' => (int) env('RELEASE_CHECK_CACHE_SECONDS', 60 * 60),
 
 ];

@@ -1,6 +1,6 @@
 <?php
 
-use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
+use App\Actions\Episode\VideoFile\Path\ResolveEpisodeVideoPathAction;
 use App\Actions\Show\DeleteShowsAction;
 use App\Models\Category\Category;
 use App\Models\Episode\Episode;
@@ -352,11 +352,11 @@ test('an admin can update a show', function () {
 });
 
 test('an admin can delete a show and its titles cascade', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
 
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $show = Show::factory()->create();
     $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
@@ -369,7 +369,7 @@ test('an admin can delete a show and its titles cascade', function () {
         'title' => 'Dr. Stone',
     ]);
 
-    $episodePath = "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $episodePath = "$videoBaseFolder/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
     File::ensureDirectoryExists(dirname($episodePath));
     File::put($episodePath, 'video-bytes');
 
@@ -568,7 +568,7 @@ test('shows can be sorted by the size of their video files', function () {
         ->assertJsonPath('data.*.id', [$large->id, $small->id, $empty->id, $unmeasured->id]);
 });
 
-test('listing shows looks up the video base path only once', function () {
+test('listing shows does not look up where their videos are', function () {
     actingAsAdmin();
 
     Show::factory()->count(3)->create()->each(function (Show $show): void {
@@ -586,12 +586,12 @@ test('listing shows looks up the video base path only once', function () {
         ->filter(fn (array $query): bool => str_contains($query['query'], '"settings"'))
         ->count();
 
-    expect($settingQueries)->toBe(1);
+    expect($settingQueries)->toBe(0);
 });
 
 test('bulk show deletion keeps video files when the transaction rolls back', function () {
-    $videoBasePath = videoBasePathForTests();
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    $videoBaseFolder = videoBaseFolderForTests();
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $deletedShow = Show::factory()->create();
     $failingShow = Show::factory()->create();
@@ -617,12 +617,12 @@ test('bulk show deletion keeps video files when the transaction rolls back', fun
     expect(File::exists($videoPath))->toBeTrue();
     assertDatabaseHas('shows', ['id' => $deletedShow->id]);
 
-    File::deleteDirectory($videoBasePath);
+    File::deleteDirectory($videoBaseFolder);
 });
 
 test('bulk deleting shows removes their video files and keeps other shows files', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     [$firstShow, $secondShow, $keptShow] = Show::factory()->count(3)->create()->all();
     $paths = collect([$firstShow, $secondShow, $keptShow])->mapWithKeys(function (Show $show) use ($base): array {

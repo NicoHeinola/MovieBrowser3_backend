@@ -2,47 +2,38 @@
 
 namespace App\Jobs;
 
-use App\Actions\Episode\VideoFile\CheckEpisodeVideoFilesAction;
-use App\Actions\Episode\VideoFile\UpdateVideoFileCheckResultAction;
+use App\Actions\VideoFileCheck\CheckEpisodeVideoFilesAction;
+use App\Actions\VideoFileCheck\FinishVideoFileCheckAction;
 use App\Enums\VideoFileCheckErrorCode;
 use App\Models\VideoFileCheck\VideoFileCheck;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Once;
 
 /**
- * Refreshes every episode's stored `has_video_file`, one chunk per job. Each job queues the next, so a slow drive
- * can't hit the worker's timeout and VLC tracking, which shares the worker, keeps running in between.
+ * Checks every episode's video file. VLC tracking shares the worker and waits for it, which is fine: it takes seconds.
  */
 class CheckEpisodeVideoFilesJob implements ShouldQueue
 {
     use Queueable;
 
+    // A slow drive can outlast the worker's default 60 second timeout; 0 turns it off for this job
+    public int $timeout = 0;
+
     // A check deleted as stale simply ends here.
     public bool $deleteWhenMissingModels = true;
 
-    public function __construct(
-        public VideoFileCheck $check,
-        public int $afterId = 0,
-    ) {}
+    public function __construct(public VideoFileCheck $check) {}
 
     public function handle(CheckEpisodeVideoFilesAction $checkEpisodeVideoFilesAction): void
     {
-        // queue:work is one long process: without this the base path memoized by an earlier job outlives a settings change
-        Once::flush();
-
-        $nextAfterId = $checkEpisodeVideoFilesAction->handle($this->check, $this->afterId);
-
-        if ($nextAfterId !== null) {
-            self::dispatch($this->check, $nextAfterId);
-        }
+        $checkEpisodeVideoFilesAction->handle($this->check);
     }
 
     /**
-     * An error or the worker's timeout. Ends the check so it shows as failed; only a killed worker needs the stale check.
+     * Ends the check so it shows as failed; only a killed worker needs the stale check.
      */
     public function failed(): void
     {
-        UpdateVideoFileCheckResultAction::run($this->check, VideoFileCheckErrorCode::Failed);
+        FinishVideoFileCheckAction::run($this->check, VideoFileCheckErrorCode::Failed);
     }
 }

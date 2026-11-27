@@ -107,7 +107,7 @@ create_or_upgrade_env() {
 
     [[ -n "$(env_get APP_KEY)" ]] || env_set APP_KEY "base64:$(head -c 32 /dev/urandom | base64)"
     [[ -n "$(env_get DB_PASSWORD)" ]] || env_set DB_PASSWORD "$(random_string 32)"
-    [[ -n "$(env_get VLC_BRIDGE_TOKEN)" ]] || env_set VLC_BRIDGE_TOKEN "$(random_string 48)"
+    [[ -n "$(env_get HOST_BRIDGE_TOKEN)" ]] || env_set HOST_BRIDGE_TOKEN "$(random_string 48)"
     [[ -n "$(env_get APP_UID)" ]] || env_set APP_UID "$(id -u)"
     [[ -n "$(env_get APP_GID)" ]] || env_set APP_GID "$(id -g)"
 }
@@ -127,8 +127,8 @@ write_env() {
     env_set WEB_BIND "$WEB_BIND"
     env_set APP_URL "http://localhost:$WEB_PORT"
     env_set DB_PORT "$DB_PORT"
-    env_set VLC_BRIDGE_PORT "$VLC_BRIDGE_PORT"
-    env_set VLC_BRIDGE_URL "http://127.0.0.1:$VLC_BRIDGE_PORT"
+    env_set HOST_BRIDGE_PORT "$HOST_BRIDGE_PORT"
+    env_set HOST_BRIDGE_URL "http://127.0.0.1:$HOST_BRIDGE_PORT"
 
     mkdir -p "$(dirname "$INSTALL_DIR_POINTER")"
     printf '%s\n' "$INSTALL_DIR" >"$INSTALL_DIR_POINTER"

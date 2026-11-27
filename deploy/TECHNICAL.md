@@ -4,18 +4,20 @@ How the production deploy works. For installing it, see [README.md](README.md).
 
 ## Architecture
 
-MovieBrowser3 runs in Docker on WSL2 (Docker Engine inside WSL, mirrored networking) or on plain Linux. It's built on the same machine from clones of GitHub (the newest release tag of each): no registry, no CI. A small host-side VLC bridge does the one thing a container can't: start VLC.
+MovieBrowser3 runs in Docker on WSL2 (Docker Engine inside WSL, mirrored networking) or on plain Linux. It's built on the same machine from clones of GitHub (the newest release tag of each): no registry, no CI. A small host bridge does the one thing a container can't: start VLC.
 
 ```text
 browser ─▶ backend (FrankenPHP)  127.0.0.1:8780   /api/*, /up → Laravel; everything else → the built frontend
            queue (queue:work)
+           imports (queue:work --queue=imports)
            scheduler (schedule:work)
            pg_dump ─▶ backup folder (BACKUP_PATH)
            db (Postgres 17)      127.0.0.1:7564
-backend / queue ── POST /launch, /windows-paths ─▶ VLC bridge  127.0.0.1:8767 ─▶ vlc.exe
+backend / queue ── POST /launch, /windows-paths ─▶ host bridge  127.0.0.1:8767 ─▶ vlc.exe
 backend / queue ── status.json ─▶ VLC web interface  127.0.0.1:40000-49151
 backend / queue ── Web API v2 ─▶ qBittorrent (Windows)  127.0.0.1:<its Web UI port>, address and login in Settings
-scheduler ── every minute ─▶ SyncDownloadsJob ─▶ queue copies finished files from the download folder (a media folder)
+imports ── POST /copy-file ─▶ host bridge ─▶ robocopy
+scheduler ── every minute ─▶ SyncDownloadsJob (queue) ─▶ imports gives finished files in the download folder (a media folder) to their episodes
 ```
 
 Every service uses the host network, because VLC's web interface and the bridge listen on the host's 127.0.0.1 only. The ports stay clear of dev (frontend 3010, backend 8765, dev db 7563). With network access on (`WEB_BIND=0.0.0.0`), only the app port opens to the LAN; the database and the bridge stay on 127.0.0.1.
@@ -36,7 +38,7 @@ Every service uses the host network, because VLC's web interface and the bridge 
 10. Builds the backend image.
 11. Runs the migrations in a one-off container (`docker compose run --rm backend php artisan migrate --force`). Containers never migrate on start. On an existing database it first backs it up (`backups:create --label=before-update`); a failed backup stops the update. When the admin seed migration hasn't run on this database yet (a new or recreated one), it asks for the admin username and password and passes them to that run only, through the environment (`-e NAME`), so they don't show in the process list. So the password is never stored, and the seed never falls back to its `admin` / `password` default.
 12. Swaps `web/next` in as `web/current`, recreates the backend so its mount picks it up, and starts the rest.
-13. Registers the VLC bridge when it differs from the last one registered (below).
+13. Registers the host bridge when it differs from the last one registered (below).
 14. On WSL, writes `windows/update_movie_browser_3.bat`: `wsl.exe -d <distro> -e bash -lc "<install folder>/moviebrowser3 update"`, then `pause`.
 
 A failed fetch, checkout, build, backup or migration stops the run before step 12, so the previous frontend and containers keep running. `install.sh` loads every module before it starts and runs everything from `main()`, which bash parses in full first, so a backend checkout that replaces those files mid-run is safe.
@@ -51,14 +53,14 @@ A failed fetch, checkout, build, backup or migration stops the run before step 1
 | Backup folder | `BACKUP_PATH` | `<install folder>/backups` |
 | App port | `WEB_PORT`, `APP_URL` | 8780 |
 | Reachable from the network? | `WEB_BIND` (`0.0.0.0` or `127.0.0.1`) | no |
-| Database port, VLC bridge port | `DB_PORT`, `VLC_BRIDGE_PORT`, `VLC_BRIDGE_URL` | 7564, 8767 |
+| Database port, host bridge port | `DB_PORT`, `HOST_BRIDGE_PORT`, `HOST_BRIDGE_URL` | 7564, 8767 |
 | Admin username and password | not saved | `admin` |
 
 Each prompt is prefilled with the saved answer (`read -e -i`, so Tab completes paths). `MOVIEBROWSER3_DIR`, `MOVIEBROWSER3_BACKEND_REPO`, `MOVIEBROWSER3_FRONTEND_REPO`, `MOVIEBROWSER3_MEDIA_DIRS`, `MOVIEBROWSER3_ADMIN_USERNAME` and `MOVIEBROWSER3_ADMIN_PASSWORD` override the saved answers, e.g. for automation without a terminal. `moviebrowser3` finds its install folder from its own resolved path, whatever `MOVIEBROWSER3_DIR` says.
 
 ### `.env`
 
-[`.env.production`](.env.production) is the template and the only place defaults live. The first run copies it (mode 600) and fills the secrets (`APP_KEY`, `DB_PASSWORD`, `VLC_BRIDGE_TOKEN`) and the host user (`APP_UID`, `APP_GID`). Every run then rewrites only the answered keys. Other keys, and manual edits, stay. After editing `.env`, run `moviebrowser3 start`.
+[`.env.production`](.env.production) is the template and the only place defaults live. The first run copies it (mode 600) and fills the secrets (`APP_KEY`, `DB_PASSWORD`, `HOST_BRIDGE_TOKEN`) and the host user (`APP_UID`, `APP_GID`). Every run then rewrites only the answered keys. Other keys, and manual edits, stay. After editing `.env`, run `moviebrowser3 start`.
 
 When settings change between versions:
 
@@ -72,13 +74,13 @@ When settings change between versions:
 | --- | --- |
 | `MovieBrowser3_backend/`, `MovieBrowser3_frontend/` | The clones, each on its newest release tag. Don't edit them: local changes block the update. To recover one, `git -C <clone> reset --hard` (plus `clean -fd` for added files) and re-run. |
 | `.env` | Settings, secrets and installer answers. Compose, the containers and the bridge read it. |
-| `compose.yml` | The stack, copied from the backend clone on every run. `backend`, `queue` and `scheduler` use the locally built `moviebrowser3-backend:local` with `pull_policy: never`. |
+| `compose.yml` | The stack, copied from the backend clone on every run. `backend`, `queue`, `imports` and `scheduler` use the locally built `moviebrowser3-backend:local` with `pull_policy: never`. |
 | `compose.override.yml` | Media folder mounts, rewritten on every run. |
 | `web/current/` | The frontend being served. `web/next/` exists only during an update. |
 | `data/postgres/` | The database. |
-| `storage/app/` | Laravel's local storage, including `storage/app/videos` while `video_base_path` is empty. |
+| `storage/app/` | Laravel's local storage, including `storage/app/videos` while `video_base_folder` is empty. |
 | `backups/` | The database backups, unless `BACKUP_PATH` names another folder. |
-| `vlc_bridge.py`, `windows/` | The bridge, its task script and the update `.bat`. |
+| `host_bridge.py`, `windows/` | The bridge, its task script and the update `.bat`. |
 | `moviebrowser3`, `lib/` | The control command and the modules it shares with the installer. |
 | `.bridge-installed` | Checksum of the bridge files and port that were last registered. |
 
@@ -86,7 +88,7 @@ Logs go through Docker's `json-file` driver, capped at 3 × 10 MB per service.
 
 ## Media Folders
 
-Each media folder is mounted into `backend` and `queue` at the same path as on the host (`/mnt/g/New_Vid:/mnt/g/New_Vid`), so the full paths stored in the database work in the containers and for VLC. They're read-write, because the backend stores, moves and deletes episode files.
+Each media folder is mounted into `backend`, `queue` and `imports` at the same path as on the host (`/mnt/g/New_Vid:/mnt/g/New_Vid`), so the full paths stored in the database work in the containers and for VLC. They're read-write, because the backend stores, moves and deletes episode files.
 
 Windows drives appear as `/mnt/<letter>` (drvfs). WSL only mounts drives present when it starts, and the bridge task keeps WSL running, so an external disk plugged in later needs `sudo mount -t drvfs G: /mnt/g` (or an `/etc/fstab` line with `nofail`, see README step 5). Containers only see mounts that existed when they started, so run `moviebrowser3 restart` afterwards. The installer warns when a `/mnt/<letter>` folder's drive isn't mounted. A disk with a Linux filesystem mounts with `wsl --mount \\.\PHYSICALDRIVE<n> --partition <p>` from an administrator PowerShell, under `/mnt/wsl/`.
 
@@ -94,10 +96,12 @@ Windows drives appear as `/mnt/<letter>` (drvfs). WSL only mounts drives present
 
 `scheduler` runs `schedule:work`, which only queues what `routes/console.php` schedules; `queue` does the work, so `scheduler` needs no media or backup folders.
 
+- **Every minute:** `SyncDownloadsJob` queues an import for each finished torrent file. `imports` runs those one by one, apart from `queue`, so VLC tracking, the sync and the video file checks never wait for a copy. On one drive a file is hard-linked (instant, no extra space), between Windows drives the bridge's robocopy copies it, and without either the container copies it itself, slowly. Run exactly one `imports` worker. Killing it mid-copy is safe: the job comes back and fails, and the next sync queues the file again.
 - **Hourly:** `CreateScheduledBackupJob`, see [Backups](#backups).
-- **Daily:** `CheckEpisodeVideoFilesJob` refreshes every episode's stored `has_video_file`, 200 episodes per job so VLC tracking keeps running on the shared worker. Admins can start it with `POST /api/v1/video-files/check` and follow it with `GET` on the same path. Each run is a row in `video_file_checks`. Starting one while another runs answers 422 `video_file_check_running`, a unique index backs that up for simultaneous starts, and a run that fails reports `video_file_check_failed`. If the worker is killed before it can report that, the run counts as dead after 5 minutes without progress, so it can't block the next one.
-- While any episode expects a file, a video base folder that doesn't exist or can't be read stops the check: starting one answers 422 `video_base_path_unavailable`, and a run already going (or the daily one) ends with that code without changing anything further.
-- An empty base folder doesn't stop it: the check flags those episodes as missing and finishes without an error, and the status's `missing_video_files_count` shows the result: episodes whose uploaded file is gone, not ones that never had a file. A drive that isn't mounted looks like an empty folder in the containers, so nearly everything showing as missing usually means that. The next check with the drive back restores the flags.
+- **Daily:** `CheckEpisodeVideoFilesJob` records which episodes have their video file, its size, and its length when that's unknown or the file changed. VLC tracking shares the worker and waits for it, which takes seconds. Admins can start it with `POST /api/v1/video-files/check` and follow it with `GET` on the same path; starting one while another runs follows that one. A unique index on the `video_file_checks` row decides simultaneous starts. A check that fails reports `video_file_check_failed`. If the worker is killed before it can report that, the check counts as dead after 5 minutes without progress, so it can't block the next one.
+- `POST /api/v1/shows/{show}/video-file-check` checks one show's episodes in the request and returns what's wrong. It answers 409 `video_base_folder_unavailable` while the drive isn't there.
+- While any episode expects a file, a video base folder that doesn't exist or can't be read ends the check with `video_base_folder_unavailable`, without changing anything further.
+- An empty video base folder doesn't stop it: the check flags those episodes as missing and finishes without an error. A drive that isn't mounted looks like an empty folder in the containers, so nearly everything showing as missing usually means that. The next check with the drive back restores the flags. Sizes and lengths are kept meanwhile.
 
 ## Backups
 
@@ -106,7 +110,7 @@ The backend dumps the database with `pg_dump --format=custom` into `BACKUP_PATH`
 - **When:** every hour the scheduler queues `CreateScheduledBackupJob`, and `queue` dumps once the newest dump, whoever made it, is older than `BACKUP_INTERVAL_HOURS` (24); it takes a second or two. Hourly rather than at a fixed time, because the PC is often off at night. Also before every update (`-before-update`), before a restore (`-before-restore`) and on `moviebrowser3 backup`, which run `backups:create` in a one-off container.
 - **Retention:** after each dump, only the newest `BACKUP_KEEP` (14) dumps stay. The before-restore dump skips this (`--no-prune`), since it could delete the very dump being restored. Other files in the folder are never touched. A dump is written as its own `.partial` and renamed when complete; partials older than twice the dump timeout are removed.
 - **API:** admins list the dumps, newest first, with `GET /api/v1/backups`. A failed scheduled backup only shows in the queue's log (`moviebrowser3 logs queue`) and as no new dump in the list. `POST` dumps within the request: 201 with the new dump, 422 `backup_dir_unavailable` when the folder is missing or not writable (often an unmounted drive), or 500 `backup_failed`. Nothing records runs, so two at once just make two dumps.
-- **Restore:** `moviebrowser3 restore <name or path> [--yes]` asks for `yes`, opens the dump, stops `backend`, `queue` and `scheduler`, backs up the current database, then in the db container turns the dump into SQL with `pg_restore` and runs it with `psql --single-transaction` after dropping the `public` schema. The SQL is complete before `psql` starts, so a truncated dump changes nothing. Then it migrates (an older backup has an older schema) and starts everything again.
+- **Restore:** `moviebrowser3 restore <name or path> [--yes]` asks for `yes`, opens the dump, stops `backend`, `queue`, `imports` and `scheduler`, backs up the current database, then in the db container turns the dump into SQL with `pg_restore` and runs it with `psql --single-transaction` after dropping the `public` schema. The SQL is complete before `psql` starts, so a truncated dump changes nothing. Then it migrates (an older backup has an older schema) and starts everything again.
 
 ## Serving
 
@@ -117,34 +121,34 @@ One FrankenPHP container (classic mode) serves everything on `WEB_PORT`:
 - `/assets/*` has hashed names and is cached for a year. Everything else is `no-cache`, so a new build shows on the next load. Frontend files are compressed with zstd or gzip.
 - The site address matches any Host header, so localhost, 127.0.0.1 and LAN names all work.
 
-FrankenPHP runs `PHP_THREADS` threads (default 24), and each open watch-progress stream holds one. `max_execution_time` is 0, output buffering is off, and uploads have no size cap or timeout. The entrypoint caches config, routes and events, but not views: a clone has no `resources/views`. It doesn't run `artisan optimize`, because laravel-data's step writes to the database cache before the first migration. `backend`, `queue` and `scheduler` run as the host user, so files they write on the media folders stay yours.
+FrankenPHP runs `PHP_THREADS` threads (default 24), and each open watch-progress stream holds one. `max_execution_time` is 0, output buffering is off, and uploads have no size cap or timeout. The entrypoint caches config, routes and events, but not views: a clone has no `resources/views`. It doesn't run `artisan optimize`, because laravel-data's step writes to the database cache before the first migration. `backend`, `queue`, `imports` and `scheduler` run as the host user, so files they write on the media folders stay yours.
 
-## VLC Bridge
+## Host Bridge
 
-`vlc_bridge.py` (Python 3 standard library) listens on `127.0.0.1:${VLC_BRIDGE_PORT}` and needs `Authorization: Bearer ${VLC_BRIDGE_TOKEN}`, both read from the `.env` next to it:
+`host_bridge.py` (Python 3 standard library) listens on `127.0.0.1:${HOST_BRIDGE_PORT}` and needs `Authorization: Bearer ${HOST_BRIDGE_TOKEN}`, both read from the `.env` next to it:
 
 - `POST /launch {"binary", "port", "password"}` starts VLC detached, with its web interface on that port. It returns 204, or 422 when the binary is missing or isn't named `vlc` / `vlc.exe`. The bridge never starts anything else.
 - `POST /windows-paths {"paths": [...]}` returns `{"paths": [...]}` converted with `wslpath -w`, or 422.
 - `POST /check-binary {"binary"}` returns 204 when that binary passes the same check as `/launch`, or 422 with the reason as `message` and `code` (`vlc_not_found`, `vlc_wrong_binary`). The first-login setup wizard uses it to find and test VLC.
+- `POST /copy-file {"from", "to"}` copies a file and returns 204 once it's complete, or 422. Both paths must be in a media folder (`MOVIEBROWSER3_MEDIA_DIRS`, read for every copy), and `to` must not exist. A file on the same drive gets a second name (a hard link) instead. Robocopy copies into `<to>.copying/` first. Asking again while that copy still runs fails, and the backend copies the file itself.
 - A bad token gets 403, anything else 404.
 
-The backend uses it when `VLC_LAUNCHER=bridge`, which `compose.yml` sets. The setup wizard's media-folder rule comes from `MOVIEBROWSER3_MEDIA_DIRS` too (`config('deploy.media_folders')`): in prod, a video folder outside them is invisible to the containers and VLC. In dev it stays `local` and starts VLC itself.
+The backend uses it when `HOST_BRIDGE_ENABLED=true`, which `compose.yml` sets. The setup wizard's media-folder rule comes from `MOVIEBROWSER3_MEDIA_DIRS` too (`config('deploy.media_folders')`): in prod, a video base folder outside them is invisible to the containers and VLC. In dev it's off: the backend starts VLC itself, and copies between drives without Windows.
 
-**WSL.** `windows/register-vlc-bridge.ps1` registers the "MovieBrowser3 VLC bridge" task. At logon it runs `conhost.exe --headless wsl.exe -d <distro> -e python3 <install folder>/vlc_bridge.py`, with no window. Started through `wsl.exe`, the bridge has Windows interop, so VLC appears on the desktop. It also keeps WSL, and with it Docker, running. Remove the task with `powershell.exe -File register-vlc-bridge.ps1 -Unregister`. The task only fires at logon, so `wsl --shutdown` leaves the bridge dead until something starts it again.
+**WSL.** `windows/register-host-bridge.ps1` registers the "MovieBrowser3 host bridge" task. At logon it runs `conhost.exe --headless wsl.exe -d <distro> -e python3 <install folder>/host_bridge.py`, with no window. Started through `wsl.exe`, the bridge has Windows interop, so VLC appears on the desktop. It also keeps WSL, and with it Docker, running. Remove the task with `powershell.exe -File register-host-bridge.ps1 -Unregister`. The task only fires at logon, so `wsl --shutdown` leaves the bridge dead until something starts it again.
 
-**Linux.** The bridge runs as the `moviebrowser3-vlc-bridge` user service. VLC needs the graphical session, so if it doesn't appear, run `systemctl --user import-environment DISPLAY WAYLAND_DISPLAY` from the desktop session and restart the service.
+**Linux.** The bridge runs as the `moviebrowser3-host-bridge` user service. VLC needs the graphical session, so if it doesn't appear, run `systemctl --user import-environment DISPLAY WAYLAND_DISPLAY` from the desktop session and restart the service.
 
 `moviebrowser3 start` and `update` start the bridge (the task, or the user service on Linux) when nothing listens on its port, `stop` stops it, and `restart` restarts it. `moviebrowser3 bridge <start|stop|restart>` does only the bridge, and `status` says whether it answers. On WSL, a stopped bridge no longer keeps WSL running.
 
-The installer registers and restarts the bridge only when the checksum of `vlc_bridge.py`, the task script, `lib/bridge.sh` and the port differs from `.bridge-installed`, which it writes after registering succeeds. A failed update therefore retries the registration next time.
+The installer registers and restarts the bridge only when the checksum of `host_bridge.py`, the task script, `lib/bridge.sh` and the port differs from `.bridge-installed`, which it writes after registering succeeds. A failed update therefore retries the registration next time.
 
 ## Troubleshooting
 
 - **"can't check out release":** the clone has local changes. Check `git -C <clone> status`, then `git -C <clone> reset --hard`, plus `git -C <clone> clean -fd` if it lists added files, and re-run.
 - **"can't be fast-forwarded":** only while a repo has no release tag yet, when it follows `main`. The clone has local commits or changes: check `git -C <clone> status`, then `git -C <clone> reset --hard origin/main`.
-- **Playback answers 503 "The VLC bridge … did not answer":** the bridge isn't running (for example after `wsl --shutdown`). Run `moviebrowser3 bridge start`, or on Windows run the task from Task Scheduler. On Linux, check `systemctl --user status moviebrowser3-vlc-bridge`.
+- **Playback answers 503 "The host bridge … did not answer":** the bridge isn't running (for example after `wsl --shutdown`). Run `moviebrowser3 bridge start`, or on Windows run the task from Task Scheduler. On Linux, check `systemctl --user status moviebrowser3-host-bridge`.
 - **VLC opens, but the playing episode is never tracked:** mirrored networking is off. Set `networkingMode=mirrored` under `[wsl2]` in `%UserProfile%\.wslconfig`, then run `wsl --shutdown`.
 - **Videos are missing:** the disk isn't mounted in WSL, or it was mounted after the containers started. Mount it, then `moviebrowser3 restart`.
 - **No new backups, or the update stops at the database backup:** the backup folder's drive isn't mounted, or the folder isn't writable by the host user. Mount it, `moviebrowser3 restart`, then `moviebrowser3 backup`.
 - **One-off commands:** `moviebrowser3 artisan <command>`, e.g. `moviebrowser3 artisan migrate:status`.
-- **MovieBrowser2 import:** `moviebrowser3 import-moviebrowser2 <export .json> <folder>` runs `moviebrowser2:import-shows` in a one-off container with the export and the MovieBrowser2 folder mounted read-only (the folder at its host path, passed as `--source-root`), so it needn't be a media folder.

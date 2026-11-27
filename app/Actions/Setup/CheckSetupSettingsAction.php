@@ -2,8 +2,8 @@
 
 namespace App\Actions\Setup;
 
-use App\Actions\Download\CheckQBittorrentConnectionAction;
-use App\Actions\EpisodePlayback\CheckVlcBinaryAction;
+use App\Actions\Download\Client\CheckQBittorrentConnectionAction;
+use App\Actions\EpisodePlayback\CheckVlcCanStartAction;
 use App\Dtos\QBittorrent\QBittorrentConnectionData;
 use App\Dtos\Setup\CheckSetupSettingsData;
 use App\Dtos\Setup\SetupCheckData;
@@ -17,7 +17,7 @@ class CheckSetupSettingsAction
     use AsAction;
 
     public function __construct(
-        private readonly CheckVlcBinaryAction $checkVlcBinaryAction,
+        private readonly CheckVlcCanStartAction $checkVlcCanStartAction,
         private readonly CheckMediaFolderPathAction $checkMediaFolderPathAction,
         private readonly CheckQBittorrentConnectionAction $checkQBittorrentConnectionAction,
     ) {}
@@ -31,16 +31,16 @@ class CheckSetupSettingsAction
     {
         $checks = [];
 
-        if (!$data->videoBasePath instanceof Optional) {
-            $checks[SettingKey::VideoBasePath->value] = $this->checkMediaFolderPathAction->handle($data->videoBasePath);
+        if (!$data->videoBaseFolder instanceof Optional) {
+            $checks[SettingKey::VideoBaseFolder->value] = $this->checkMediaFolderPathAction->handle($data->videoBaseFolder);
         }
 
         if (!$data->vlcMediaPlayerPath instanceof Optional) {
-            $checks[SettingKey::VlcMediaPlayerPath->value] = $this->checkVlcBinaryAction->handle($data->vlcMediaPlayerPath);
+            $checks[SettingKey::VlcMediaPlayerPath->value] = $this->checkVlcCanStartAction->handle($data->vlcMediaPlayerPath);
         }
 
         if (!$data->qbittorrentUrl instanceof Optional) {
-            $checks[SettingKey::QBittorrentUrl->value] = $this->checkQBittorrentConnectionAction->handle($this->qBittorrentConnection($data));
+            $checks[SettingKey::QBittorrentUrl->value] = $this->checkQBittorrentConnectionAction->handle($this->getQBittorrentConnection($data));
         }
 
         if (!$data->downloadPath instanceof Optional) {
@@ -53,11 +53,13 @@ class CheckSetupSettingsAction
     /**
      * The sent qBittorrent values, with the saved password when none was sent: the form never gets it back to resend.
      */
-    private function qBittorrentConnection(CheckSetupSettingsData $data): QBittorrentConnectionData
+    private function getQBittorrentConnection(CheckSetupSettingsData $data): QBittorrentConnectionData
     {
-        $password = $data->qbittorrentPassword instanceof Optional
-            ? Setting::query()->find(SettingKey::QBittorrentPassword->value)?->value
-            : $data->qbittorrentPassword;
+        $password = $data->qbittorrentPassword;
+
+        if ($password instanceof Optional) {
+            $password = Setting::query()->find(SettingKey::QBittorrentPassword->value)?->value;
+        }
 
         return new QBittorrentConnectionData(
             (string) $data->qbittorrentUrl,

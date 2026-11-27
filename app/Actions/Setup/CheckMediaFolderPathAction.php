@@ -12,8 +12,9 @@ class CheckMediaFolderPathAction
     use AsAction;
 
     /**
-     * A folder the app writes to (the video folder, the download folder) must be visible here (inside a mounted media
-     * folder in prod, so VLC and the download client see it too) and writable, or creatable when it doesn't exist yet.
+     * A folder the app writes to (the video base folder, the download folder) must be visible here (inside a mounted
+     * media folder in prod, so VLC and the download client see it too) and writable, or creatable when it doesn't exist
+     * yet.
      */
     public function handle(?string $path): SetupCheckData
     {
@@ -45,7 +46,8 @@ class CheckMediaFolderPathAction
             return is_writable($path) ? SetupCheckData::passed() : SetupCheckData::failed(SetupCheckCode::PathNotWritable);
         }
 
-        // A folder that doesn't exist yet is created when it's first written to: its nearest existing parent must allow that
+        // A folder that doesn't exist yet is created when it's first written to: its nearest existing parent must allow
+        // that
         $parent = dirname($path);
 
         while (!file_exists($parent)) {

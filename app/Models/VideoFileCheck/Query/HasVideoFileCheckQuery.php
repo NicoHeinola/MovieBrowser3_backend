@@ -2,14 +2,33 @@
 
 namespace App\Models\VideoFileCheck\Query;
 
-use App\Models\Query\HasStaleRunScopes;
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * A dead worker leaves its check running, so one that stops making progress counts as stale and a new one may replace
+ * it.
+ */
 trait HasVideoFileCheckQuery
 {
-    use HasStaleRunScopes;
-
-    protected function staleAfterSeconds(): int
+    /**
+     * Checks still making progress.
+     */
+    public function scopeActive(Builder $query): void
     {
-        return (int) config('video_files.check_stale_after_seconds');
+        $query->where('running', true)->where('updated_at', '>=', $this->getStaleBefore());
+    }
+
+    /**
+     * Checks that never finished and stopped making progress: their worker died.
+     */
+    public function scopeStale(Builder $query): void
+    {
+        $query->where('running', true)->where('updated_at', '<', $this->getStaleBefore());
+    }
+
+    private function getStaleBefore(): CarbonInterface
+    {
+        return now()->subSeconds((int) config('video_files.check_stale_after_seconds'));
     }
 }

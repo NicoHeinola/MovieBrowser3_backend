@@ -2,53 +2,25 @@
 
 use Symfony\Component\Finder\Finder;
 
-test('write actions run inside a database transaction', function () {
+test('actions that write more than once do it in a database transaction', function () {
     $actionsPath = dirname(__DIR__, 2).'/app/Actions';
 
-    // Backup dumps and their files write no rows (and must work before the migrations), filesystem and VLC helpers write no rows and run inside their caller's transaction; login must not hold one open during its delay,
-    // the read-only progress stream (and the change lists it polls) must not hold one open for its whole lifetime, and the app version, dashboard stats, legacy import checks, torrent and MyAnimeList search, folder and qBittorrent checks, download reads, show templates, relocation and length scan status only read.
+    // Each of their writes stands on its own: one per download or torrent with slow work in between, one of several
+    // outcomes, or a cleanup that is right whatever comes after
     $exempt = [
-        'AppVersion/FetchLatestReleaseAction.php',
-        'AppVersion/GetAppVersionAction.php',
-        'Auth/LoginUserAction.php',
-        'Backup/CreateBackupAction.php',
-        'Backup/CreateScheduledBackupAction.php',
-        'Backup/DeleteOldBackupsAction.php',
-        'Backup/ListBackupFilesAction.php',
-        'Dashboard/GetDashboardStatsAction.php',
-        'Download/CheckQBittorrentConnectionAction.php',
-        'Download/GetDownloadDetailsAction.php',
-        'Download/ListDownloadsAction.php',
-        'Download/ResolveDownloadDetailsAction.php',
-        'Download/ResolveDownloadGoneAction.php',
-        'Download/ResolveDownloadPathAction.php',
-        'Download/ResolveMagnetInfoHashAction.php',
-        'Download/ResolveQBittorrentConnectionAction.php',
-        'Episode/DeleteEpisodeVideosAction.php',
-        'EpisodePlayback/CheckVlcBinaryAction.php',
-        'EpisodePlayback/OpenVlcPlaylistAction.php',
-        'EpisodePlayback/ResolveEphemeralPortRangeAction.php',
-        'LegacyImport/CheckLegacyShowImportAction.php',
-        'LegacyImport/ResolveLegacyEpisodeSourcePathAction.php',
-        'Mal/SearchMalAnimeAction.php',
-        'NekoBt/ListNekoBtTorrentsAction.php',
-        'Setup/CheckMediaFolderPathAction.php',
-        'Setup/CheckSetupSettingsAction.php',
-        'Setup/GetSetupStatusAction.php',
-        'Show/RelocateShowVideosAction.php',
-        'ShowEntryWatchStatus/ListChangedShowEntryWatchStatusesAction.php',
-        'ShowTemplate/GetShowTemplateAction.php',
-        'ShowTemplate/ResolveShowTemplateSourceAction.php',
-        'ShowWatchProgress/ListChangedShowWatchProgressAction.php',
-        'ShowWatchProgress/StreamShowWatchProgressAction.php',
-        'VideoDurationScan/GetVideoDurationScanAction.php',
-        'VideoRelocation/GetVideoRelocationAction.php',
+        'Download/Client/SyncUnfinishedDownloadsAction.php',
+        'VideoFileCheck/CheckEpisodeVideoFileAction.php',
+        'VideoFileCheck/StartVideoFileCheckAction.php',
     ];
 
-    $missing = collect(Finder::create()->files()->in($actionsPath)->name('*Action.php')->notPath('Episode/VideoFile'))
+    // Methods of a model, a query or a relation; `$this->` ones are the action's own
+    $writes = '/(?<!\$this)->(create|createOrFirst|firstOrCreate|updateOrCreate|update|save|increment|delete|attach|detach)\(/';
+
+    $missing = collect(Finder::create()->files()->in($actionsPath)->name('*Action.php'))
+        ->filter(fn (SplFileInfo $file): bool => preg_match_all($writes, $file->getContents()) > 1)
+        ->reject(fn (SplFileInfo $file): bool => str_contains($file->getContents(), 'DB::transaction('))
         ->map(fn (SplFileInfo $file): string => str_replace('\\', '/', $file->getRelativePathname()))
         ->reject(fn (string $path): bool => in_array($path, $exempt, true))
-        ->reject(fn (string $path): bool => str_contains(file_get_contents("{$actionsPath}/{$path}"), 'DB::transaction('))
         ->values()
         ->all();
 

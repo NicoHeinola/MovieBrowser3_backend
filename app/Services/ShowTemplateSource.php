@@ -7,8 +7,8 @@ use App\Exceptions\ShowTemplateNotFoundException;
 use App\Exceptions\ShowTemplateUnavailableException;
 
 /**
- * An outside site that can describe a show in the app's own terms, from a link to its page. Each source is a service
- * tagged with this interface in `AppServiceProvider`; the first one that supports a link answers for it.
+ * An outside site that can describe a show in the app's own terms, from a link to its page. `ResolveShowTemplateSourceAction`
+ * picks the one for a link.
  */
 interface ShowTemplateSource
 {

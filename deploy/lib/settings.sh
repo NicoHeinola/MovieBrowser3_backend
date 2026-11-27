@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # The installer's settings: asked, prefilled with the saved answer, or taken as they are with --update.
 # Sets INSTALL_DIR, BACKEND_REPO, FRONTEND_REPO, MEDIA_DIRS, BACKUP_PATH, WEB_PORT, WEB_BIND, DB_PORT and
-# VLC_BRIDGE_PORT.
+# HOST_BRIDGE_PORT.
 
 configure() {
     has_tty || { TTY=false; ASK_SETTINGS=false; }
@@ -26,8 +26,10 @@ configure() {
 
     saved=$(env_get DB_PORT)
     ask_port DB_PORT "Database port (localhost only)" "${saved:-7564}"
-    saved=$(env_get VLC_BRIDGE_PORT)
-    ask_port VLC_BRIDGE_PORT "VLC bridge port (localhost only)" "${saved:-8767}"
+    saved=$(env_get HOST_BRIDGE_PORT)
+    # Read before write_env renames it in an .env from before 4.0.0
+    saved=${saved:-$(env_get VLC_BRIDGE_PORT)}
+    ask_port HOST_BRIDGE_PORT "host bridge port (localhost only)" "${saved:-8767}"
 }
 
 # The install folder comes first: every other saved answer is read from its .env

@@ -19,7 +19,7 @@ check_host() {
     command -v docker >/dev/null || fail "Docker is not installed. Install Docker Engine (inside WSL on Windows) and re-run."
     docker compose version >/dev/null 2>&1 || fail "The Docker Compose plugin is missing ('docker compose')."
     docker info >/dev/null 2>&1 || fail "Cannot reach the Docker daemon. Is it running, and is $USER in the docker group?"
-    command -v python3 >/dev/null || fail "python3 is needed for the VLC bridge."
+    command -v python3 >/dev/null || fail "python3 is needed for the host bridge."
 }
 
 # Every install uses the Docker Compose project "moviebrowser3", so a second install on this machine would take over

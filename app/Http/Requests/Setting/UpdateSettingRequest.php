@@ -6,7 +6,7 @@ use App\Enums\SettingKey;
 use App\Models\Setting\Setting;
 use App\Rules\AbsolutePath;
 use App\Rules\MediaFolderPath;
-use App\Rules\VideoBasePathNeedsRelocation;
+use App\Rules\VideoBaseFolderNeedsMove;
 use App\Rules\VlcBinary;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -44,8 +44,8 @@ class UpdateSettingRequest extends FormRequest
                 ];
             }
 
-            if ($setting->key === SettingKey::VideoBasePath->value) {
-                $rules['value'] = [new VideoBasePathNeedsRelocation];
+            if ($setting->key === SettingKey::VideoBaseFolder->value) {
+                $rules['value'] = [new VideoBaseFolderNeedsMove];
             }
 
             // Empty turns downloads off

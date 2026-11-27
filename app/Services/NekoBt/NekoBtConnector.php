@@ -2,20 +2,15 @@
 
 namespace App\Services\NekoBt;
 
-use App\Services\LenientJsonResponse;
-use Saloon\Http\Connector;
+use App\Services\ServiceConnector;
 use Saloon\Traits\Plugins\AcceptsJson;
-use Saloon\Traits\Plugins\HasTimeout;
 
 /**
  * nekoBT's public JSON API. Only `NekoBtService` uses it.
  */
-final class NekoBtConnector extends Connector
+final class NekoBtConnector extends ServiceConnector
 {
     use AcceptsJson;
-    use HasTimeout;
-
-    protected ?string $response = LenientJsonResponse::class;
 
     public function resolveBaseUrl(): string
     {
@@ -25,10 +20,5 @@ final class NekoBtConnector extends Connector
     public function getRequestTimeout(): float
     {
         return (float) config('nekobt.timeout_seconds');
-    }
-
-    public function getConnectTimeout(): float
-    {
-        return $this->getRequestTimeout();
     }
 }

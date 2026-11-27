@@ -11,7 +11,7 @@ use Illuminate\Validation\Validator;
 class StoreSetupCheckRequest extends FormRequest
 {
     private const array CHECKABLE = [
-        SettingKey::VideoBasePath->value,
+        SettingKey::VideoBaseFolder->value,
         SettingKey::VlcMediaPlayerPath->value,
         SettingKey::QBittorrentUrl->value,
         SettingKey::DownloadPath->value,
@@ -24,7 +24,7 @@ class StoreSetupCheckRequest extends FormRequest
     {
         // Empty is allowed (it arrives as null): an empty VLC path means `vlc` on the PATH, as for playback
         return [
-            SettingKey::VideoBasePath->value => ['sometimes', 'nullable', 'string'],
+            SettingKey::VideoBaseFolder->value => ['sometimes', 'nullable', 'string'],
             SettingKey::VlcMediaPlayerPath->value => ['sometimes', 'nullable', 'string'],
             SettingKey::QBittorrentUrl->value => ['sometimes', 'nullable', 'string', 'url:http,https'],
             SettingKey::QBittorrentUsername->value => ['sometimes', 'nullable', 'string'],

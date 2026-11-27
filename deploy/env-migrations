@@ -11,3 +11,7 @@
 # Keys that .env.production adds don't need a line: every run adds missing keys with their defaults.
 
 1 set VLC_TRACK_INTERVAL_SECONDS 5
+2 rename VLC_BRIDGE_PORT HOST_BRIDGE_PORT
+3 rename VLC_BRIDGE_URL HOST_BRIDGE_URL
+4 rename VLC_BRIDGE_TOKEN HOST_BRIDGE_TOKEN
+5 remove VLC_LAUNCHER

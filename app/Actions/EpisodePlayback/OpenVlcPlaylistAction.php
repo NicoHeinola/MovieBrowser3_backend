@@ -4,12 +4,11 @@ namespace App\Actions\EpisodePlayback;
 
 use App\Dtos\EpisodePlayback\VlcConnectionData;
 use App\Enums\SettingKey;
-use App\Enums\SetupCheckCode;
 use App\Enums\VlcLaunchCode;
 use App\Exceptions\VlcLaunchException;
 use App\Models\Setting\Setting;
+use App\Services\HostBridge\HostBridgeService;
 use App\Services\Vlc\VlcService;
-use App\Services\VlcBridge\VlcBridgeService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Sleep;
@@ -33,76 +32,70 @@ class OpenVlcPlaylistAction
     private const int PORT_RANGE_END = 49151;
 
     public function __construct(
-        private readonly VlcService $vlcService,
-        private readonly VlcBridgeService $vlcBridgeService,
+        private readonly HostBridgeService $hostBridgeService,
         private readonly ResolveEphemeralPortRangeAction $resolveEphemeralPortRangeAction,
     ) {}
 
     /**
-     * Opens a new VLC window whose playlist holds every path in order and plays the one at $startIndex, from
-     * $startSeconds into it.
+     * Opens a new VLC window whose playlist holds every path in order, and plays one of them.
      *
      * VLC has no command-line flag for a start item, so it is started with its web interface and the playlist is
-     * built through that: `in_enqueue` appends a file, `in_play` appends it and starts playing it. The start time is a
-     * `start-time` option on that one item, so the episodes after it still play from their beginning.
+     * built through that (`VlcService`).
      *
-     * With the `bridge` launcher (vlc.launcher) the host-side VLC bridge starts VLC and converts the paths, because a
+     * With the host bridge (host_bridge.enabled) the bridge starts VLC and converts the paths, because a
      * containerized backend can neither see vlc.exe nor run wslpath.
      *
      * @param  list<string>  $paths
+     * @param  int  $startIndex  Which of the paths plays first
+     * @param  int  $startSeconds  How far into it playback starts
      * @return VlcConnectionData How to reach this VLC window afterwards, e.g. to track what it is playing.
      */
     public function handle(array $paths, int $startIndex, int $startSeconds = 0): VlcConnectionData
     {
-        $binary = $this->resolveBinary();
-        $inputs = $this->isWindowsBinary($binary) ? $this->toWindowsPaths($paths) : $paths;
-        $vlc = new VlcConnectionData($this->findFreePort(), Str::random(32));
+        $binary = $this->resolveVlcBinary();
+        $port = $this->findFreePort();
+        $vlcConnection = new VlcConnectionData($port, password: Str::random(32));
 
-        $this->launch($binary, $vlc);
-        $this->waitUntilReady($vlc);
+        if ($this->isWindowsBinary($binary)) {
+            $paths = $this->toWindowsPaths($paths);
+        }
 
-        foreach ($inputs as $index => $input) {
-            $command = $index === $startIndex
-                ? array_filter(['command' => 'in_play', 'input' => $input, 'option' => $startSeconds > 0 ? "start-time={$startSeconds}" : null])
-                : ['command' => 'in_enqueue', 'input' => $input];
+        $this->launchVlc($binary, $vlcConnection);
 
-            $status = $this->vlcService->getStatus($vlc, $command);
+        $vlcService = new VlcService($vlcConnection);
+        $this->waitUntilVlcReady($vlcService);
 
-            if ($status === null) {
+        foreach ($paths as $index => $path) {
+            if ($index === $startIndex) {
+                $isAdded = $vlcService->playFile($path, $startSeconds);
+            } else {
+                $isAdded = $vlcService->enqueueFile($path);
+            }
+
+            if (!$isAdded) {
                 throw new VlcLaunchException('VLC was closed before the playlist was built.', VlcLaunchCode::VlcClosedEarly);
             }
         }
 
-        return $vlc;
+        return $vlcConnection;
     }
 
     /**
-     * The VLC executable comes from the vlc_media_player_path setting, or `vlc` on the PATH when it is empty.
-     * The bridge checks it on its own side, where the file is visible.
+     * VLC's path from the settings, or `vlc` on the PATH when it's empty.
      */
-    private function resolveBinary(): string
+    private function resolveVlcBinary(): string
     {
-        $binary = Setting::query()->whereKey(SettingKey::VlcMediaPlayerPath->value)->value('value') ?: 'vlc';
-
-        if (!$this->usesBridge() && str_contains($binary, '/') && !is_file($binary)) {
-            throw new VlcLaunchException(
-                "VLC was not found at {$binary}. Check the vlc_media_player_path setting.",
-                SetupCheckCode::VlcNotFound,
-                ['path' => $binary],
-            );
-        }
-
-        return $binary;
+        return Setting::query()->whereKey(SettingKey::VlcMediaPlayerPath->value)->value('value') ?: 'vlc';
     }
 
     /**
      * Starts VLC with its web interface on localhost only. It runs detached (nohup, in the background) so the window
      * stays open after this request finishes.
      */
-    private function launch(string $binary, VlcConnectionData $vlc): void
+    private function launchVlc(string $binary, VlcConnectionData $vlcConnection): void
     {
-        if ($this->usesBridge()) {
-            $this->vlcBridgeService->launch($binary, $vlc->port, $vlc->password);
+        if (config('host_bridge.enabled')) {
+            $this->hostBridgeService->launchVlc($binary, $vlcConnection->port, $vlcConnection->password);
 
             return;
         }
@@ -112,8 +105,8 @@ class OpenVlcPlaylistAction
             $binary,
             '--extraintf', 'http',
             '--http-host', '127.0.0.1',
-            '--http-port', (string) $vlc->port,
-            '--http-password', $vlc->password,
+            '--http-port', (string) $vlcConnection->port,
+            '--http-password', $vlcConnection->password,
         ]);
 
         if ($result->failed()) {
@@ -128,10 +121,10 @@ class OpenVlcPlaylistAction
     /**
      * VLC needs a moment before its web interface answers; keep asking until it does.
      */
-    private function waitUntilReady(VlcConnectionData $vlc): void
+    private function waitUntilVlcReady(VlcService $vlcService): void
     {
         for ($attempt = 0; $attempt < self::STARTUP_ATTEMPTS; $attempt++) {
-            if ($this->vlcService->getStatus($vlc) !== null) {
+            if ($vlcService->getStatus() !== null) {
                 return;
             }
 
@@ -148,10 +141,10 @@ class OpenVlcPlaylistAction
      */
     private function findFreePort(): int
     {
-        $ephemeral = $this->resolveEphemeralPortRangeAction->handle();
+        $ephemeralPorts = $this->resolveEphemeralPortRangeAction->handle();
         $ports = array_filter(
             range(self::PORT_RANGE_START, self::PORT_RANGE_END),
-            fn (int $port): bool => $ephemeral === null || $port < $ephemeral[0] || $port > $ephemeral[1],
+            fn (int $port): bool => $ephemeralPorts === null || $port < $ephemeralPorts[0] || $port > $ephemeralPorts[1],
         );
 
         foreach (Arr::shuffle($ports) as $port) {
@@ -181,8 +174,8 @@ class OpenVlcPlaylistAction
      */
     private function toWindowsPaths(array $paths): array
     {
-        if ($this->usesBridge()) {
-            return $this->vlcBridgeService->toWindowsPaths($paths);
+        if (config('host_bridge.enabled')) {
+            return $this->hostBridgeService->toWindowsPaths($paths);
         }
 
         return array_map(function (string $path): string {
@@ -198,10 +191,5 @@ class OpenVlcPlaylistAction
 
             return trim($result->output());
         }, $paths);
-    }
-
-    private function usesBridge(): bool
-    {
-        return config('vlc.launcher') === 'bridge';
     }
 }

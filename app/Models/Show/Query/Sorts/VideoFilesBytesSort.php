@@ -22,7 +22,7 @@ class VideoFilesBytesSort implements Sort
             // so the exists flag groups those shows first: they sort as 0 on both databases
             ->orderBy('has_measured_video_files', $direction)
             ->orderBy('video_files_bytes', $direction)
-            // Keeps pages stable when many shows share a size, e.g. 0 before the first scan
+            // Keeps pages stable when many shows share a size, e.g. 0 before the first check
             ->orderBy('shows.id');
     }
 }

@@ -3,50 +3,65 @@
 namespace App\Services\GitHub;
 
 use App\Dtos\AppVersion\ReleaseData;
-use App\Exceptions\GitHubUnavailableException;
 use App\Services\GitHub\Requests\GetLatestReleaseRequest;
+use App\Services\RemembersJson;
 use Illuminate\Support\Facades\Log;
-use Saloon\Exceptions\Request\FatalRequestException;
+use Saloon\Exceptions\SaloonException;
 
-/**
- * Talks to GitHub: it reads a repo's newest release, for the update notice. The connector and request next to it
- * describe the call; this class asks and checks the answer.
- */
 class GitHubService
 {
+    use RemembersJson;
+
     /**
-     * The newest release of a repo, as its `X.Y.Z` version and page.
+     * The newest release of a repo, or null when there's none to be had.
      *
-     * @param  string  $repo  `owner/name`
-     *
-     * @throws GitHubUnavailableException When GitHub doesn't answer, or its newest release has no vX.Y.Z tag
+     * @param  string  $repoUrl  Its git URL, https or ssh; other hosts than GitHub have no releases here
      */
-    public function getLatestRelease(string $repo): ReleaseData
+    public function getLatestRelease(string $repoUrl): ?ReleaseData
     {
+        $repoName = $this->getRepoNameFromUrl($repoUrl);
+
+        if ($repoName === null) {
+            Log::warning("Release check skipped: {$repoUrl} is not a GitHub repo");
+
+            return null;
+        }
+
+        $request = new GetLatestReleaseRequest($repoName);
+
         try {
-            $response = (new GitHubConnector)->send(new GetLatestReleaseRequest($repo));
-        } catch (FatalRequestException $exception) {
-            Log::warning("Release check for {$repo} failed: {$exception->getMessage()}");
+            $release = $this->rememberJson($request, config('releases.cache_seconds'), fn (): array => $this->fetchRelease($request));
+        } catch (SaloonException $exception) {
+            Log::warning("Release check for {$repoName} failed: {$exception->getMessage()}");
 
-            throw new GitHubUnavailableException;
+            return null;
         }
 
-        if ($response->failed()) {
-            Log::warning("Release check for {$repo} failed: GitHub answered {$response->status()}");
+        return ReleaseData::fromGitHub($release);
+    }
 
-            throw new GitHubUnavailableException;
+    /**
+     * @return array<string, mixed>
+     *
+     * @throws SaloonException When GitHub doesn't answer, or with an error
+     */
+    private function fetchRelease(GetLatestReleaseRequest $request): array
+    {
+        $response = (new GitHubConnector)->send($request);
+        $response->throw();
+
+        return $response->json();
+    }
+
+    /**
+     * @return string|null `owner/name`, from `https://github.com/owner/name(.git)` or `git@github.com:owner/name(.git)`
+     */
+    private function getRepoNameFromUrl(string $repoUrl): ?string
+    {
+        if (!preg_match('#github\.com[/:]([\w.-]+/[\w.-]+?)(?:\.git)?/?$#', $repoUrl, $matches)) {
+            return null;
         }
 
-        // Tags are vX.Y.Z; anything else (another tag name, a missing field) isn't a version to compare
-        $version = ltrim((string) $response->json('tag_name'), 'v');
-        $url = $response->json('html_url');
-
-        if (!preg_match('/^\d+\.\d+\.\d+$/', $version) || !is_string($url)) {
-            Log::warning("Release check for {$repo} found no vX.Y.Z release tag");
-
-            throw new GitHubUnavailableException;
-        }
-
-        return new ReleaseData($version, $url);
+        return $matches[1];
     }
 }

@@ -7,7 +7,7 @@ applyTo: 'app/Http/Controllers/**/*.php'
 
 # Controller Rules
 
-- Controllers coordinate HTTP flow only: type-hint the request class, extract `validated()`, call an action (injected into the method, `$action->handle(...)`) or a query builder, and return a resource.
+- Controllers coordinate HTTP flow only: type-hint the request class, extract `validated()`, call an action (injected into the method, `$action->handle(...)`), a query builder or, for a search that is only passed on, a service, and return a resource. A read of a few lines with one caller, such as a status, is a private method here, not an action.
 - No validation rules, persistence workflows or domain branching here. Authorization is route middleware plus `$this->authorize(...)` policy checks.
 - Use route-model binding instead of manual lookups.
 - Return payloads through resource classes, never raw `response()->json([...])`, and no generic `message` fields.

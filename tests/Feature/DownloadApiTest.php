@@ -1,6 +1,6 @@
 <?php
 
-use App\Actions\Download\ResolveDownloadPathAction;
+use App\Actions\Download\Client\ResolveDownloadFolderAction;
 use App\Enums\DownloadErrorCode;
 use App\Enums\DownloadStatus;
 use App\Models\Download\Download;
@@ -261,6 +261,7 @@ test('a download reports its progress and picked files live', function () {
         ->assertOk()
         ->assertJsonPath('status', 'downloading')
         ->assertJsonPath('error_code', null)
+        ->assertJsonPath('client_removed_at', null)
         ->assertJsonPath('progress', 0.25)
         ->assertJsonPath('size_bytes', 4000000000)
         ->assertJsonPath('downloaded_bytes', 1000000000)
@@ -275,6 +276,21 @@ test('a download reports its progress and picked files live', function () {
         ->assertJsonPath('files.0.imported_at', '2026-11-23T12:00:00.000000Z')
         ->assertJsonPath('files.1.episode_id', null)
         ->assertJsonPath('files.1.imported_at', null);
+});
+
+test('a download that qBittorrent removed after seeding says when', function () {
+    $download = Download::factory()->create([
+        'hash' => DOWNLOAD_HASH,
+        'status' => DownloadStatus::Completed,
+        'client_removed_at' => '2026-11-26 12:00:00',
+    ]);
+    fakeQBittorrentApi(['torrents/info' => [], 'torrents/files' => []]);
+    actingAsAdmin();
+
+    getJson("/api/v1/downloads/{$download->id}")
+        ->assertOk()
+        ->assertJsonPath('status', 'completed')
+        ->assertJsonPath('client_removed_at', '2026-11-26T12:00:00.000000Z');
 });
 
 test('an unknown ETA is null', function () {
@@ -400,6 +416,19 @@ test('an episode that got its file can take a better one', function () {
     expect($download->picks()->sole())->file_index->toBe(1)->imported_at->toBeNull();
 });
 
+test('an episode that waits for another download can take a file of this one', function () {
+    [$show, $first] = showWithTwoEpisodes();
+    $oldPick = DownloadPick::factory()->create(['episode_id' => $first->id]);
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info'), 'torrents/files' => qBittorrentAnswer('torrents-files')]);
+    actingAsAdmin();
+
+    putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 0, 'episode_id' => $first->id]]])->assertOk();
+
+    expect($oldPick->fresh())->toBeNull()
+        ->and($download->picks()->sole()->episode_id)->toBe($first->id);
+});
+
 test('a file that became an episode\'s video can not be picked for another', function () {
     [$show, $first, $second] = showWithTwoEpisodes();
     $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'status' => DownloadStatus::Downloading]);
@@ -427,13 +456,11 @@ test('picking again clears why it failed', function () {
 test('it says which picked file or episode does not fit', function (Closure $files, string $field, string $code) {
     [$show, $first] = showWithTwoEpisodes();
     [, $otherShowEpisode] = showWithTwoEpisodes();
-    $busyEpisode = DownloadPick::factory()->create()->episode;
-    $busyEpisode->entry()->associate($first->entry)->save();
     $download = Download::factory()->create(['hash' => DOWNLOAD_HASH]);
     fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info'), 'torrents/files' => qBittorrentAnswer('torrents-files')]);
     actingAsAdmin();
 
-    $response = putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => $files($first, $otherShowEpisode, $busyEpisode)])
+    $response = putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => $files($first, $otherShowEpisode)])
         ->assertUnprocessable();
 
     // Field names hold dots, so they're read as keys, not as a JSON path
@@ -443,7 +470,6 @@ test('it says which picked file or episode does not fit', function (Closure $fil
 })->with([
     'no such file' => [fn (Episode $first) => [['index' => 9, 'episode_id' => $first->id]], 'files.0.index', 'file_index_invalid'],
     'another show' => [fn (Episode $first, Episode $other) => [['index' => 0, 'episode_id' => $other->id]], 'files.0.episode_id', 'episode_not_in_show'],
-    'waits for another download' => [fn (Episode $first, Episode $other, Episode $busy) => [['index' => 0, 'episode_id' => $busy->id]], 'files.0.episode_id', 'episode_already_downloading'],
     'same file twice' => [fn (Episode $first, Episode $other) => [['index' => 0, 'episode_id' => $first->id], ['index' => 0, 'episode_id' => $other->id]], 'files.0.index', 'distinct'],
 ]);
 
@@ -451,8 +477,8 @@ test('picked files must fit on the download disk', function () {
     [$show, $first, $second] = showWithTwoEpisodes();
     $download = Download::factory()->create(['hash' => DOWNLOAD_HASH]);
     // The disk is measured at the download folder's nearest existing parent: this test's own, nearly empty space
-    Setting::query()->find('download_path')->update(['value' => videoBasePathForTests()]);
-    $free = (int) disk_free_space(dirname(videoBasePathForTests()));
+    Setting::query()->find('download_path')->update(['value' => videoBaseFolderForTests()]);
+    $free = (int) disk_free_space(dirname(videoBaseFolderForTests()));
     fakeQBittorrentApi([
         'torrents/info' => qBittorrentAnswer('torrents-info'),
         'torrents/files' => qBittorrentAnswer('torrents-files', fn (array $files) => [[...$files[0], 'size' => $free * 4, 'progress' => 0.5]]),
@@ -461,8 +487,9 @@ test('picked files must fit on the download disk', function () {
 
     putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 0, 'episode_id' => $first->id]]])
         ->assertUnprocessable()
-        ->assertJsonPath('errors.files.0.code', 'not_enough_disk_space')
-        ->assertJsonPath('errors.files.0.params.needed_bytes', (string) ($free * 2));
+        ->assertJsonPath('code', 'not_enough_disk_space')
+        // Half is downloaded already, and 1 GB stays free
+        ->assertJsonPath('params.needed_bytes', (string) ($free * 2 + 1024 ** 3));
 });
 
 test('picking files of a torrent qBittorrent lost says so', function () {
@@ -474,21 +501,6 @@ test('picking files of a torrent qBittorrent lost says so', function () {
     putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 0, 'episode_id' => $first->id]]])
         ->assertConflict()
         ->assertExactJson(['code' => 'download_not_in_client', 'params' => []]);
-});
-
-test('an episode can let go of a file of a torrent qBittorrent lost', function () {
-    [$show, $first, $second] = showWithTwoEpisodes();
-    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'status' => DownloadStatus::Failed, 'error_code' => DownloadErrorCode::ClientLostTorrent]);
-    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $first->id]);
-    DownloadPick::factory()->for($download)->create(['file_index' => 1, 'episode_id' => $second->id]);
-    fakeQBittorrentApi(['torrents/info' => [], 'torrents/files' => MockResponse::make('Not Found', 404)]);
-    actingAsAdmin();
-
-    putJson("/api/v1/downloads/{$download->id}/files", ['show_id' => $show->id, 'files' => [['index' => 1, 'episode_id' => $second->id]]])
-        ->assertOk()
-        ->assertJsonPath('status', 'failed');
-
-    expect($download->picks()->pluck('episode_id', 'file_index')->all())->toBe([1 => $second->id]);
 });
 
 test('picking files needs a show and well-formed files', function (array $body, string $field) {
@@ -529,8 +541,8 @@ test('deleting an episode drops its link but keeps the download', function () {
 test('qBittorrent gets the download folder the way it sees it', function (string $path, string $forClient) {
     Setting::query()->find('download_path')->update(['value' => $path]);
 
-    expect(ResolveDownloadPathAction::run(forClient: true))->toBe($forClient)
-        ->and(ResolveDownloadPathAction::run())->toBe(rtrim($path, '/'));
+    expect(ResolveDownloadFolderAction::run(isForClient: true))->toBe($forClient)
+        ->and(ResolveDownloadFolderAction::run())->toBe(rtrim($path, '/'));
 })->with([
     'a WSL drive mount' => ['/mnt/d/MovieBrowser3/Downloads', 'D:\\MovieBrowser3\\Downloads'],
     'a drive root' => ['/mnt/e/', 'E:\\'],
@@ -724,16 +736,28 @@ test('cancelling can remove the episodes made for it, but never one that has its
         ->and(Episode::query()->find($replaced->id))->not->toBeNull();
 });
 
-test('a download can not be cancelled while its files are copied into their episodes', function () {
+test('an importing download can be cancelled', function () {
     $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'status' => DownloadStatus::Importing]);
-    Saloon::fake([QBittorrentConnector::class => saloonConnectionRefused()]);
+    DownloadPick::factory()->for($download)->create();
+    fakeQBittorrentApi();
     actingAsAdmin();
 
-    deleteJson("/api/v1/downloads/{$download->id}")
-        ->assertStatus(409)
-        ->assertJsonPath('code', 'download_import_running');
+    deleteJson("/api/v1/downloads/{$download->id}")->assertNoContent();
 
-    expect(Download::query()->find($download->id))->not->toBeNull();
+    expect($download->fresh())->toBeNull();
+});
+
+test('a download says how many of its files are in place', function () {
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'status' => DownloadStatus::Importing]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'imported_at' => now()]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 1]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 2]);
+    fakeQBittorrentApi(['torrents/info' => qBittorrentAnswer('torrents-info'), 'torrents/files' => qBittorrentAnswer('torrents-files')]);
+    actingAsAdmin();
+
+    getJson('/api/v1/downloads')
+        ->assertJsonPath('0.picked_file_count', 3)
+        ->assertJsonPath('0.imported_file_count', 1);
 });
 
 test('a closed qBittorrent keeps the download to cancel again', function () {

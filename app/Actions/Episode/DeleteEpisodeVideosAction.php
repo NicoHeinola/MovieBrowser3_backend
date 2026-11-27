@@ -2,9 +2,9 @@
 
 namespace App\Actions\Episode;
 
-use App\Actions\Download\ReleaseEpisodeDownloadsAction;
+use App\Actions\Download\Client\StopDownloadsOfDeletedEpisodesAction;
 use App\Actions\Episode\VideoFile\DeleteVideoFileAction;
-use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
+use App\Actions\Episode\VideoFile\Path\ResolveEpisodeVideoPathAction;
 use App\Models\Episode\Episode;
 use Illuminate\Support\Facades\DB;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -16,33 +16,27 @@ class DeleteEpisodeVideosAction
     public function __construct(
         private readonly DeleteVideoFileAction $deleteVideoFileAction,
         private readonly ResolveEpisodeVideoPathAction $resolveEpisodeVideoPathAction,
-        private readonly ReleaseEpisodeDownloadsAction $releaseEpisodeDownloadsAction,
+        private readonly StopDownloadsOfDeletedEpisodesAction $stopDownloadsOfDeletedEpisodesAction,
     ) {}
 
     /**
-     * Resolve paths now, while the episode relations still exist, and delete the files only
-     * once the surrounding transaction commits so a rollback keeps them on disk. Torrent files still
-     * downloading for the episodes stop then too.
+     * Gets the video paths now, while the episodes' relations still exist. It deletes the files after the transaction is
+     * saved, so a rollback keeps them on disk. Then it also stops the downloads of torrent files for the episodes.
      *
      * @param  iterable<Episode>  $episodes
      */
     public function handle(iterable $episodes): void
     {
-        $this->releaseEpisodeDownloadsAction->handle($episodes);
+        $this->stopDownloadsOfDeletedEpisodesAction->handle($episodes);
 
         $videoPaths = collect($episodes)
             ->filter(fn (Episode $episode): bool => $episode->filename !== '')
             ->map(fn (Episode $episode): string => $this->resolveEpisodeVideoPathAction->handle($episode))
-            ->values()
             ->all();
 
-        if ($videoPaths === []) {
-            return;
-        }
-
         DB::afterCommit(function () use ($videoPaths): void {
-            foreach ($videoPaths as $path) {
-                $this->deleteVideoFileAction->handle($path);
+            foreach ($videoPaths as $videoPath) {
+                $this->deleteVideoFileAction->handle($videoPath);
             }
         });
     }

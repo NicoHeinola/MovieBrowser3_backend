@@ -2,8 +2,9 @@
 
 use App\Actions\Episode\DeleteEpisodeAction;
 use App\Actions\Episode\UpdateEpisodeAction;
-use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
-use App\Actions\Episode\VideoFile\StoreVideoFileAction;
+use App\Actions\Episode\VideoFile\Path\ResolveEpisodeVideoPathAction;
+use App\Actions\Episode\VideoFile\ReplaceEpisodeVideoAction;
+use App\Actions\Episode\VideoFile\StoreUploadedVideoAction;
 use App\Dtos\Episode\UpdateEpisodeData;
 use App\Models\Episode\Episode;
 use App\Models\Setting\Setting;
@@ -27,17 +28,17 @@ use function Pest\Laravel\post;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\withToken;
 
-$videoBasePath = videoBasePathForTests();
+$videoBaseFolder = videoBaseFolderForTests();
 
 test('episode read endpoints require authentication', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $entry = ShowEntry::factory()->create();
 
     getJson("/api/v1/show-entries/{$entry->id}/episodes")->assertUnauthorized();
 });
 
 test('episode write endpoints require admin', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
@@ -49,7 +50,7 @@ test('episode write endpoints require admin', function () {
 });
 
 test('authenticated users can list episodes for an entry', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
@@ -63,13 +64,13 @@ test('authenticated users can list episodes for an entry', function () {
         ->assertJsonCount(2, 'data');
 });
 
-test('authenticated users can view a single episode with file_path', function () {
-    global $videoBasePath;
+test('authenticated users can view a single episode', function () {
+    global $videoBaseFolder;
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $show = Show::factory()->create();
     ShowTitle::factory()->for($show)->primary()->create(['title' => 'Dr. Stone']);
@@ -86,13 +87,12 @@ test('authenticated users can view a single episode with file_path', function ()
         ->assertJsonPath('id', $episode->id)
         ->assertJsonPath('name', 'Episode 1')
         ->assertJsonPath('filename', 'episode_1.mkv')
-        ->assertJsonPath('sequence_number', 1)
-        ->assertJsonPath('file_path', "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
+        ->assertJsonPath('sequence_number', 1);
 });
 
-test('resolving preloaded episode video paths does not trigger extra queries', function () {
-    global $videoBasePath;
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+test('resolving preloaded episode video paths loads no relations', function () {
+    global $videoBaseFolder;
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $show = Show::factory()->create();
     ShowTitle::factory()->for($show)->primary()->create(['title' => 'Dr. Stone']);
@@ -127,18 +127,18 @@ test('resolving preloaded episode video paths does not trigger extra queries', f
     $connection->disableQueryLog();
 
     expect($paths)->toBe([
-        "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeOne->id}_Episode 1.mkv",
-        "$videoBasePath/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeTwo->id}_Episode 2.mkv",
+        "$videoBaseFolder/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeOne->id}_Episode 1.mkv",
+        "$videoBaseFolder/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episodeTwo->id}_Episode 2.mkv",
     ]);
-    // The video base path is resolved once and reused for every episode.
-    expect($queryLog)->toHaveCount(1);
+    // Only the video base folder's setting, once for each
+    expect($queryLog)->toHaveCount(2);
 });
 
 test('an admin can create an episode', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $entry = ShowEntry::factory()->create();
     $video = UploadedFile::fake()->create('episode_1.mkv', 1);
@@ -157,7 +157,6 @@ test('an admin can create an episode', function () {
         ->assertCreated()
         ->assertJsonPath('name', 'Episode 1')
         ->assertJsonPath('filename', 'episode_1.mkv')
-        ->assertJsonPath('file_path', "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episodeId}_Episode 1.mkv")
         ->assertJsonPath('sequence_number', 1);
 
     assertDatabaseHas('episodes', [
@@ -167,14 +166,14 @@ test('an admin can create an episode', function () {
         'sequence_number' => 1,
     ]);
 
-    expect(File::exists("$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episodeId}_Episode 1.mkv"))->toBeTrue();
+    expect(File::exists("$videoBaseFolder/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episodeId}_Episode 1.mkv"))->toBeTrue();
 });
 
 test('an admin can create an episode without uploading a file', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $entry = ShowEntry::factory()->create();
 
@@ -196,10 +195,10 @@ test('an admin can create an episode without uploading a file', function () {
 });
 
 test('an admin can update an episode', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $entry = ShowEntry::factory()->create();
     $episode = Episode::factory()->for($entry, 'entry')->create([
@@ -208,7 +207,7 @@ test('an admin can update an episode', function () {
         'sequence_number' => 1,
     ]);
 
-    $oldPath = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1.mkv";
+    $oldPath = "$videoBaseFolder/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1.mkv";
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'old-video-bytes');
 
@@ -223,7 +222,6 @@ test('an admin can update an episode', function () {
         ->assertOk()
         ->assertJsonPath('name', 'Episode 1 - Revised')
         ->assertJsonPath('filename', 'ep1_revised.mkv')
-        ->assertJsonPath('file_path', "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Revised.mkv")
         ->assertJsonPath('sequence_number', 1);
 
     assertDatabaseHas('episodes', [
@@ -232,15 +230,15 @@ test('an admin can update an episode', function () {
         'filename' => 'ep1_revised.mkv',
     ]);
 
-    expect(File::exists("$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Revised.mkv"))->toBeTrue();
+    expect(File::exists("$videoBaseFolder/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Revised.mkv"))->toBeTrue();
     expect(File::exists($oldPath))->toBeFalse();
 });
 
 test('renaming an episode without a new upload moves existing file to the new path', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $entry = ShowEntry::factory()->create();
     $episode = Episode::factory()->for($entry, 'entry')->create([
@@ -249,8 +247,8 @@ test('renaming an episode without a new upload moves existing file to the new pa
         'sequence_number' => 1,
     ]);
 
-    $oldPath = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1.mkv";
-    $newPath = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Renamed.mkv";
+    $oldPath = "$videoBaseFolder/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1.mkv";
+    $newPath = "$videoBaseFolder/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1 - Renamed.mkv";
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'video-bytes');
 
@@ -259,18 +257,17 @@ test('renaming an episode without a new upload moves existing file to the new pa
     ])
         ->assertOk()
         ->assertJsonPath('name', 'Episode 1 - Renamed')
-        ->assertJsonPath('filename', 'ep1.mkv')
-        ->assertJsonPath('file_path', $newPath);
+        ->assertJsonPath('filename', 'ep1.mkv');
 
     expect(File::exists($oldPath))->toBeFalse();
     expect(File::exists($newPath))->toBeTrue();
 });
 
 test('an admin can delete an episode', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $entry = ShowEntry::factory()->create();
     $episode = Episode::factory()->for($entry, 'entry')->create([
@@ -279,7 +276,7 @@ test('an admin can delete an episode', function () {
         'sequence_number' => 1,
     ]);
 
-    $path = "$videoBasePath/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1.mkv";
+    $path = "$videoBaseFolder/{$entry->show_id}_{$entry->show_id}/{$entry->id}_{$entry->name}/{$episode->id}_Episode 1.mkv";
     $episodeDirectory = dirname($path);
     File::ensureDirectoryExists($episodeDirectory);
     File::put($path, 'video-bytes');
@@ -294,7 +291,7 @@ test('an admin can delete an episode', function () {
 });
 
 test('creating an episode requires name, file, and sequence_number', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $entry = ShowEntry::factory()->create();
@@ -306,7 +303,7 @@ test('creating an episode requires name, file, and sequence_number', function ()
 
 test('uploading a video stores its file size', function () {
     actingAsAdmin();
-    useTestVideoBasePath();
+    useTestVideoBaseFolder();
 
     $episode = Episode::factory()->create(['filename' => '', 'has_video_file' => false]);
 
@@ -319,7 +316,7 @@ test('uploading a video stores its file size', function () {
 
 test('re-uploading a video with the same name and extension keeps the new file', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
@@ -328,8 +325,7 @@ test('re-uploading a video with the same name and extension keeps the new file',
     patch("/api/v1/episodes/{$episode->id}", [
         'file' => UploadedFile::fake()->createWithContent('ep1.mkv', 'new-bytes'),
     ], ['Accept' => 'application/json'])
-        ->assertOk()
-        ->assertJsonPath('file_path', $path);
+        ->assertOk();
 
     expect(File::get($path))->toBe('new-bytes');
     expect(File::files(dirname($path)))->toHaveCount(1);
@@ -337,7 +333,7 @@ test('re-uploading a video with the same name and extension keeps the new file',
 
 test('re-uploading a video with a different extension replaces the old file', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
@@ -348,8 +344,7 @@ test('re-uploading a video with a different extension replaces the old file', fu
         'file' => UploadedFile::fake()->createWithContent('ep1.mp4', 'new-bytes'),
     ], ['Accept' => 'application/json'])
         ->assertOk()
-        ->assertJsonPath('filename', 'ep1.mp4')
-        ->assertJsonPath('file_path', "$directory/{$episode->id}_Episode 1.mp4");
+        ->assertJsonPath('filename', 'ep1.mp4');
 
     expect(File::exists($oldPath))->toBeFalse();
     expect(File::get("$directory/{$episode->id}_Episode 1.mp4"))->toBe('new-bytes');
@@ -357,7 +352,7 @@ test('re-uploading a video with a different extension replaces the old file', fu
 
 test('uploading a video to an episode without one keeps sibling episode files', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $directory = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1";
@@ -368,8 +363,7 @@ test('uploading a video to an episode without one keeps sibling episode files', 
     patch("/api/v1/episodes/{$episode->id}", [
         'file' => UploadedFile::fake()->createWithContent('ep2.mkv', 'new-bytes'),
     ], ['Accept' => 'application/json'])
-        ->assertOk()
-        ->assertJsonPath('file_path', "$directory/{$episode->id}_Episode 2.mkv");
+        ->assertOk();
 
     expect(File::get("$directory/{$episode->id}_Episode 2.mkv"))->toBe('new-bytes');
     expect(File::get($siblingPath))->toBe('sibling-bytes');
@@ -377,7 +371,7 @@ test('uploading a video to an episode without one keeps sibling episode files', 
 
 test('deleting an episode keeps sibling episode files and their folder', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $directory = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1";
@@ -392,9 +386,9 @@ test('deleting an episode keeps sibling episode files and their folder', functio
     expect(File::get($siblingPath))->toBe('sibling-bytes');
 });
 
-test('deleting the last episode prunes empty folders but keeps the base path', function () {
+test('deleting the last episode prunes empty folders but keeps the video base folder', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
@@ -408,7 +402,7 @@ test('deleting the last episode prunes empty folders but keeps the base path', f
 
 test('deleting an episode whose video is already missing still succeeds', function () {
     actingAsAdmin();
-    useTestVideoBasePath();
+    useTestVideoBaseFolder();
 
     $episode = Episode::factory()->create(['filename' => 'missing.mkv']);
 
@@ -419,22 +413,21 @@ test('deleting an episode whose video is already missing still succeeds', functi
 
 test('updating an episode without renaming leaves its video in place', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv', 'sequence_number' => 1]);
     $path = putVideoFile("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv");
 
     patchJson("/api/v1/episodes/{$episode->id}", ['sequence_number' => 5])
-        ->assertOk()
-        ->assertJsonPath('file_path', $path);
+        ->assertOk();
 
     expect(File::exists($path))->toBeTrue();
 });
 
 test('renaming an episode with slashes and extra spaces stores a safe file name', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
@@ -442,15 +435,14 @@ test('renaming an episode with slashes and extra spaces stores a safe file name'
     putVideoFile("$directory/{$episode->id}_Episode 1.mkv");
 
     patchJson("/api/v1/episodes/{$episode->id}", ['name' => '  Part 1/2 \\ the   End  '])
-        ->assertOk()
-        ->assertJsonPath('file_path', "$directory/{$episode->id}_Part 1-2 - the End.mkv");
+        ->assertOk();
 
     expect(File::exists("$directory/{$episode->id}_Part 1-2 - the End.mkv"))->toBeTrue();
 });
 
 test('uploaded file names cannot escape the episode folder', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
 
@@ -462,47 +454,45 @@ test('uploaded file names cannot escape the episode folder', function () {
 
     $expectedPath = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1/{$response->json('id')}_Episode 1.mkv";
 
-    $response->assertJsonPath('filename', 'escape.mkv')->assertJsonPath('file_path', $expectedPath);
+    $response->assertJsonPath('filename', 'escape.mkv');
     expect(File::exists($expectedPath))->toBeTrue();
     expect(File::exists(dirname($base).'/escape.mkv'))->toBeFalse();
 });
 
-test('a rolled back re-upload restores the replaced video', function () {
-    $base = useTestVideoBasePath();
+test('an upload that can not be put in place keeps the old video', function () {
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
-    $path = putVideoFile("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv", 'old-bytes');
+    $directory = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1";
+    $oldPath = putVideoFile("$directory/{$episode->id}_Episode 1.mkv", 'old-bytes');
+    // A folder where the new video belongs, so nothing can be renamed to it
+    File::ensureDirectoryExists("$directory/{$episode->id}_Episode 1.mp4");
 
-    expect(fn () => DB::transaction(function () use ($episode): void {
-        app(StoreVideoFileAction::class)->handle($episode, UploadedFile::fake()->createWithContent('ep1.mkv', 'new-bytes'));
+    expect(fn () => StoreUploadedVideoAction::run($episode, UploadedFile::fake()->createWithContent('ep1.mp4', 'new-bytes')))
+        ->toThrow(ErrorException::class);
 
-        throw new RuntimeException('Simulated failure');
-    }))->toThrow(RuntimeException::class);
-
-    expect(File::get($path))->toBe('old-bytes');
-    expect(File::files(dirname($path)))->toHaveCount(1);
+    expect(File::get($oldPath))->toBe('old-bytes')
+        ->and(File::files($directory))->toHaveCount(1)
+        ->and($episode->fresh()->filename)->toBe('ep1.mkv');
 });
 
-test('a rolled back first upload removes the stored video', function () {
-    $base = useTestVideoBasePath();
+test('a first upload that fails leaves no file and no folders', function () {
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => '']);
+    ReplaceEpisodeVideoAction::mock()->shouldReceive('handle')->andThrow(new RuntimeException('Simulated failure'));
 
-    expect(fn () => DB::transaction(function () use ($episode): void {
-        app(StoreVideoFileAction::class)->handle($episode, UploadedFile::fake()->createWithContent('ep1.mkv', 'new-bytes'));
+    expect(fn () => StoreUploadedVideoAction::run($episode, UploadedFile::fake()->createWithContent('ep1.mkv', 'new-bytes')))
+        ->toThrow(RuntimeException::class);
 
-        throw new RuntimeException('Simulated failure');
-    }))->toThrow(RuntimeException::class);
-
-    expect(File::exists("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv"))->toBeFalse();
     expect(File::isDirectory("$base/{$entry->show_id}_{$entry->show_id}"))->toBeFalse();
 });
 
 test('moving an episode to another entry of its show moves its row, video and watch progress', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $show = Show::factory()->create();
     $from = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
@@ -519,8 +509,7 @@ test('moving an episode to another entry of its show moves its row, video and wa
         'show_entry_id' => $to->id,
     ], ['Accept' => 'application/json'])
         ->assertOk()
-        ->assertJsonPath('show_entry_id', $to->id)
-        ->assertJsonPath('file_path', $newPath);
+        ->assertJsonPath('show_entry_id', $to->id);
 
     assertDatabaseHas('episodes', ['id' => $episode->id, 'show_entry_id' => $to->id]);
     assertDatabaseHas('show_watch_progress', [
@@ -537,7 +526,7 @@ test('moving an episode to another entry of its show moves its row, video and wa
 
 test('moving and renaming an episode at once lands its video on one final path', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $show = Show::factory()->create();
     $from = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
@@ -547,8 +536,7 @@ test('moving and renaming an episode at once lands its video on one final path',
     $newPath = "$base/{$show->id}_{$show->id}/{$to->id}_Season 2/{$episode->id}_Pilot.mkv";
 
     patchJson("/api/v1/episodes/{$episode->id}", ['name' => 'Pilot', 'show_entry_id' => $to->id])
-        ->assertOk()
-        ->assertJsonPath('file_path', $newPath);
+        ->assertOk();
 
     expect(File::get($newPath))->toBe('video-bytes');
     expect(File::exists($oldPath))->toBeFalse();
@@ -556,7 +544,7 @@ test('moving and renaming an episode at once lands its video on one final path',
 
 test('moving an episode with a new upload stores the new video in the new entry and deletes the old one', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $show = Show::factory()->create();
     $from = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
@@ -570,8 +558,7 @@ test('moving an episode with a new upload stores the new video in the new entry 
         'file' => UploadedFile::fake()->createWithContent('ep1.mp4', 'new-bytes'),
     ], ['Accept' => 'application/json'])
         ->assertOk()
-        ->assertJsonPath('filename', 'ep1.mp4')
-        ->assertJsonPath('file_path', $newPath);
+        ->assertJsonPath('filename', 'ep1.mp4');
 
     expect(File::get($newPath))->toBe('new-bytes');
     expect(File::exists($oldPath))->toBeFalse();
@@ -580,7 +567,7 @@ test('moving an episode with a new upload stores the new video in the new entry 
 
 test('sending the current entry id leaves the episode and its video in place', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
@@ -589,8 +576,7 @@ test('sending the current entry id leaves the episode and its video in place', f
 
     patchJson("/api/v1/episodes/{$episode->id}", ['name' => 'Episode 1', 'show_entry_id' => $entry->id])
         ->assertOk()
-        ->assertJsonPath('show_entry_id', $entry->id)
-        ->assertJsonPath('file_path', $path);
+        ->assertJsonPath('show_entry_id', $entry->id);
 
     expect(File::exists($path))->toBeTrue();
     assertDatabaseHas('show_watch_progress', ['id' => $progress->id, 'show_entry_id' => $entry->id]);
@@ -598,7 +584,7 @@ test('sending the current entry id leaves the episode and its video in place', f
 
 test('an episode cannot move to an entry of another show or a missing entry', function (int $targetId) {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
@@ -628,7 +614,7 @@ function failAfter(Closure $work): void
 }
 
 test('a rolled back rename moves the video back to its old path', function () {
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
     $folder = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1";
@@ -642,7 +628,7 @@ test('a rolled back rename moves the video back to its old path', function () {
 });
 
 test('a rolled back move to another entry puts the video back and prunes the new folder', function () {
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
     $show = Show::factory()->create();
     $from = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
     $to = ShowEntry::factory()->for($show)->create(['name' => 'Season 2']);
@@ -656,25 +642,8 @@ test('a rolled back move to another entry puts the video back and prunes the new
         ->and($episode->fresh()->show_entry_id)->toBe($from->id);
 });
 
-test('a rolled back re-upload with another extension keeps the old video and removes the new one', function () {
-    $base = useTestVideoBasePath();
-    $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
-    $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
-    $folder = "$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1";
-    $oldPath = putVideoFile("$folder/{$episode->id}_Episode 1.mkv", 'old-bytes');
-
-    failAfter(fn () => UpdateEpisodeAction::run(UpdateEpisodeData::from([
-        'episode' => $episode,
-        'file' => UploadedFile::fake()->createWithContent('ep1.mp4', 'new-bytes'),
-    ])));
-
-    expect(File::get($oldPath))->toBe('old-bytes')
-        ->and(File::exists("$folder/{$episode->id}_Episode 1.mp4"))->toBeFalse()
-        ->and($episode->fresh()->filename)->toBe('ep1.mkv');
-});
-
 test('a rolled back episode delete keeps its video', function () {
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
     $entry = ShowEntry::factory()->create(['name' => 'Season 1']);
     $episode = Episode::factory()->for($entry, 'entry')->create(['name' => 'Episode 1', 'filename' => 'ep1.mkv']);
     $path = putVideoFile("$base/{$entry->show_id}_{$entry->show_id}/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv", 'bytes');

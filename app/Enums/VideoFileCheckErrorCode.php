@@ -7,6 +7,6 @@ namespace App\Enums;
  */
 enum VideoFileCheckErrorCode: string
 {
-    case VideoBasePathUnavailable = 'video_base_path_unavailable';
+    case VideoBaseFolderUnavailable = 'video_base_folder_unavailable';
     case Failed = 'video_file_check_failed';
 }

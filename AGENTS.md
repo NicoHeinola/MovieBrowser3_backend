@@ -10,9 +10,19 @@ Guidance for AI coding agents (Claude Code and Copilot). File-specific rules liv
 - Preserve existing API response fields and status codes unless the task explicitly changes the contract.
 - Every new `env()` key gets a commented line in `.env.example` (`tests/Unit/ArchitectureTest.php` checks it), and in `deploy/.env.production` when production should set it.
 
+## Words
+
+One word per thing, in code, API, UI texts, docs and commits:
+
+- **Video base folder**: the folder all videos are in (setting `video_base_folder`). **Download folder**: where qBittorrent puts its files.
+- **Move**: the video base folder to another place (`VideoBaseFolderMove`). **Rename**: a video within the video base folder, when its episode, entry or show changes.
+- **Check**: look which video files are there and record it (`VideoFileCheck`).
+- **Pick**: a torrent file chosen for an episode (`DownloadPick`). **Import**: put a finished pick's file in place as its episode's video.
+- **Host bridge**: the program outside the containers that starts VLC and copies files.
+
 ## Commands
 
-- `composer dev`: server (port 8765, `composer dev -- --port=9000` for another) plus queue worker and scheduler (`schedule:work`, the jobs in `routes/console.php`, such as the download sync). Runs with `--no-reload` so `PHP_CLI_SERVER_WORKERS` (4) applies: restart after `.env` changes.
+- `composer dev`: server (port 8765, `composer dev -- --port=9000` for another) plus queue worker, import worker (downloaded files, queue `imports`) and scheduler (`schedule:work`, the jobs in `routes/console.php`, such as the download sync). Runs with `--no-reload` so `PHP_CLI_SERVER_WORKERS` (4) applies: restart after `.env` changes.
 - `php artisan test --compact`, or `--filter=CategoryApiTest`, or a file path.
 - `composer lint:check` / `composer lint:fix`: Pint, `laravel` preset (`!$x` without a space after `!`).
 - Run `composer lint:fix` and the relevant tests before calling work done.
@@ -30,11 +40,11 @@ Guidance for AI coding agents (Claude Code and Copilot). File-specific rules liv
   Then set `DB_DATABASE=<db>`, `APP_URL=http://localhost:<port>` and add the frontend's `localhost:<port>` to `SANCTUM_STATEFUL_DOMAINS` in its `.env`, run `php artisan migrate`, and start `composer dev -- --port=<port>`. Drop it with `docker exec moviebrowser3_backend-db-1 dropdb -U moviebrowser --force <db>`.
 - Queue, cache and sessions use the `database` driver, so a separate database keeps them apart too.
 - Never run `migrate:fresh`, `db:wipe` or other resetting commands in a checkout: there is no `.env.testing`, so even `--env=testing` hits that checkout's own database. Tests need none of it; `phpunit.xml` gives them in-memory SQLite.
-- Video files are not copied: `video_base_path` is a database setting, so a clone still points at the shared dev folder (`/mnt/g/New_Vid_Dev3`). Before work that moves or deletes video files, point the clone's setting at a scratch folder with a few test files.
+- Video files are not copied: `video_base_folder` is a database setting, so a clone still points at the shared dev folder (`/mnt/g/New_Vid_Dev3`). Before work that moves or deletes video files, point the clone's setting at a scratch folder with a few test files.
 
 ## Architecture
 
-Request → controller → action → model, with resources shaping the output. Requests validate, controllers orchestrate, actions hold application logic, models represent the database only, resources shape payloads. Outside systems (torrent sites, other websites and APIs, qBittorrent, the VLC bridge) are reached through a service in `app/Services/<System>/`, built on a Saloon connector, which actions call.
+Request → controller → action → model, with resources shaping the output. Requests validate, controllers orchestrate, actions hold application logic, models represent the database only, resources shape payloads. Outside systems (torrent sites, other websites and APIs, qBittorrent, the host bridge) are reached through a service in `app/Services/<System>/`, built on a Saloon connector, which actions call.
 
 Layout per domain `X`:
 
@@ -50,7 +60,7 @@ tests/Feature/XApiTest.php
 ```
 
 - Routes live in `routes/api.php` under `v1`: reads in the `auth:sanctum` group, writes in the `['auth:sanctum', 'admin']` group.
-- Every action that writes to the database wraps `handle()` in `DB::transaction`; `tests/Unit/ActionTransactionTest.php` enforces it.
+- An action that writes more than once does it in a `DB::transaction` (`tests/Unit/ActionTransactionTest.php`); a single write needs none.
 - Enums are string-backed and live in `app/Enums`.
 - `tests/Unit/ArchitectureTest.php` checks the layer rules that code can show (models don't use actions, actions get no requests, resources don't touch the disk, ...). A new checkable rule goes there, not only into prose.
 

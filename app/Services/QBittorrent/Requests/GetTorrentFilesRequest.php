@@ -6,16 +6,13 @@ use Saloon\Enums\Method;
 use Saloon\Http\Request;
 
 /**
- * A torrent's files: `hash`. 404 for a torrent qBittorrent doesn't have.
+ * A torrent's files. 404 when qBittorrent doesn't have the torrent.
  */
 final class GetTorrentFilesRequest extends Request
 {
     protected Method $method = Method::GET;
 
-    /**
-     * @param  array<string, string>  $filters
-     */
-    public function __construct(private readonly array $filters = []) {}
+    public function __construct(private readonly string $hash) {}
 
     public function resolveEndpoint(): string
     {
@@ -27,6 +24,6 @@ final class GetTorrentFilesRequest extends Request
      */
     protected function defaultQuery(): array
     {
-        return $this->filters;
+        return ['hash' => $this->hash];
     }
 }

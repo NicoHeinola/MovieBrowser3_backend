@@ -18,7 +18,7 @@ class ListDownloadsAction
 
     /**
      * Every download, newest first, with progress as qBittorrent reports it now (one request for all of them). Files
-     * aren't read; the count of episodes that wait only for each one is, for cancelling.
+     * aren't read; how many of them are picked, imported and waited for is.
      *
      * @return list<DownloadDetailsData>
      */
@@ -26,7 +26,7 @@ class ListDownloadsAction
     {
         $downloads = Download::query()
             ->with('show.titles')
-            ->withCount(Download::waitingEpisodeCount())
+            ->withCount(Download::getPickCounts())
             ->latest()
             ->orderByDesc('id')
             ->get();
@@ -37,7 +37,6 @@ class ListDownloadsAction
             ->map(fn (Download $download): DownloadDetailsData => $this->resolveDownloadDetailsAction->handle(
                 $download,
                 $torrents[$download->hash] ?? null,
-                waitingEpisodeCount: (int) $download->waiting_episode_count,
             ))
             ->all();
     }

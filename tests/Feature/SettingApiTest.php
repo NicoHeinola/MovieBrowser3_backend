@@ -121,15 +121,15 @@ test('the VLC path can be a Linux path, empty or the vlc that setup detects on t
     'on the PATH' => 'vlc',
 ]);
 
-test('the video base path is only changed by a relocation', function () {
+test('the video base folder is only changed by a video base folder move', function () {
     actingAsAdmin();
-    $before = Setting::query()->find('video_base_path')->value;
+    $before = Setting::query()->find('video_base_folder')->value;
 
-    patchJson('/api/v1/settings/video_base_path', ['value' => '/somewhere/else'])
+    patchJson('/api/v1/settings/video_base_folder', ['value' => '/somewhere/else'])
         ->assertUnprocessable()
-        ->assertJsonPath('errors.value.0.code', 'video_base_path_needs_relocation');
+        ->assertJsonPath('errors.value.0.code', 'video_base_folder_needs_move');
 
-    expect(Setting::query()->find('video_base_path')->value)->toBe($before);
+    expect(Setting::query()->find('video_base_folder')->value)->toBe($before);
 });
 
 test('the VLC path must name vlc or vlc.exe', function (string $path) {
@@ -194,7 +194,7 @@ test('the qBittorrent address must be a web address or empty', function () {
 });
 
 test('the download folder must be one the app can write to, or empty', function () {
-    $base = videoBasePathForTests();
+    $base = videoBaseFolderForTests();
     config(['deploy.media_folders' => [$base]]);
     actingAsAdmin();
 

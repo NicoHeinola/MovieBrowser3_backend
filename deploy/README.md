@@ -124,11 +124,11 @@ It asks a few questions. Each answer is filled in already: press Enter to keep i
 | --- | --- |
 | Install folder | Enter keeps the default. |
 | Backend repo, Frontend repo | Enter. |
-| Media folder 1, 2, … | Your video folders, as in step 5 (`/mnt/g/New_Vid`). An empty line finishes. |
+| Media folder 1, 2, … | The folders that hold your videos, as in step 5 (`/mnt/g/New_Vid`). An empty line finishes. |
 | Backup folder | Where the database backups go. A folder on another drive is safest (`/mnt/g/MovieBrowser3_backups`), so one broken disk can't take both. Enter keeps `backups` in the install folder. |
 | App port | Enter (8780). |
 | Reachable from other devices on the network? | `y` to use MovieBrowser3 from a phone or another PC at home, otherwise `n`. |
-| Database port, VLC bridge port | Enter. |
+| Database port, host bridge port | Enter. |
 | Admin username and password | The login you'll use in MovieBrowser3. Only asked the first time. |
 
 When it's done it prints the app's address, `http://localhost:8780`, and where it put the update shortcut, `update_movie_browser_3.bat`. Copy that file anywhere you like, for example to your desktop.
@@ -137,7 +137,7 @@ When it's done it prints the app's address, `http://localhost:8780`, and where i
 
 1. Open http://localhost:8780 in your browser and log in with the admin username and password.
 2. A setup wizard opens. It asks for these and suggests an answer for each:
-   - **Video folder**: where new videos are stored. It must be inside one of your media folders, e.g. `/mnt/g/New_Vid/MovieBrowser3`.
+   - **Video base folder**: where new videos are stored. It must be inside one of your media folders, e.g. `/mnt/g/New_Vid/MovieBrowser3`.
    - **VLC**: where VLC is, usually `/mnt/c/Program Files/VideoLAN/VLC/vlc.exe`. The wizard finds it by itself when it's installed in the usual place.
    - **Downloads** (optional): see [Downloading Torrents](#downloading-torrents). Leave the address empty to skip it.
 
@@ -154,32 +154,6 @@ MovieBrowser3 can download torrents straight into shows through your own qBittor
 3. In **Admin → Settings → Downloads**, enter qBittorrent's address (`http://127.0.0.1:8080`), the username, the password and the download folder (`/mnt/d/MovieBrowser3 Downloads`), then Save. It checks the login and the folder first.
 
 Then send a torrent into a show from **Admin → Torrents**, pick its files for episodes in the show editor and save. **Admin → Downloads** shows the progress. Within a minute of a file finishing, it's copied into its episode and plays. qBittorrent decides how long to seed (its share limit): once it stops a finished torrent, MovieBrowser3 removes it and its files from the download folder.
-
-## Moving From MovieBrowser2
-
-MovieBrowser3 can import your MovieBrowser2 shows: titles, images, descriptions, categories, seasons, episodes and your watch statuses. It **copies** the videos into the video folder from step 7 and only reads the originals, so MovieBrowser2 keeps working. Websites aren't imported.
-
-1. Save the JSON from MovieBrowser2's export endpoint anywhere Ubuntu can see it, e.g. `G:\New_Vid\movies.json` (`/mnt/g/New_Vid/movies.json`).
-2. Check first. Pass the export, then MovieBrowser2's video folder. This copies nothing: it lists missing videos and the size to copy, and checks there's enough free space:
-
-   ```bash
-   moviebrowser3 import-moviebrowser2 /mnt/g/New_Vid/movies.json /mnt/g/New_Vid --dry-run
-   ```
-
-   **Videos missing** should be close to 0, and **Copy into** should be your video folder from step 7. If no video is found at all, it stops and says so.
-3. Import. It asks before it starts, then goes one show at a time:
-
-   ```bash
-   moviebrowser3 import-moviebrowser2 /mnt/g/New_Vid/movies.json /mnt/g/New_Vid
-   ```
-
-- The MovieBrowser2 folder doesn't need to be a media folder: this command shows it to MovieBrowser3 read-only, for the import only, so the originals can't be changed.
-- Copying a lot takes hours. Keep the Ubuntu window open. Ctrl+C stops after the current video and undoes the show in progress.
-- A show that fails is undone and the others carry on. Run the same command again to retry: shows already imported are skipped.
-- If a video becomes unreadable during the import (an external disk dropping out), that show fails and is undone. Reconnect the disk, run `moviebrowser3 restart`, and run the command again.
-- The check also lists shows that were imported with fewer videos than the originals. Add `--redo-incomplete` to delete those shows (only their MovieBrowser3 copies) and import them again.
-- `--only=12 --only=15` imports just those MovieBrowser2 show ids, e.g. to try one first or when the disk is short on space.
-- Watch statuses go to the MovieBrowser3 user with the same username (ignoring upper and lower case).
 
 ## Everyday Use
 
@@ -209,7 +183,7 @@ To go back to a backup, run `moviebrowser3 restore <name>` with a name from that
 | --- | --- |
 | The page doesn't load | Run `moviebrowser3 status`. If something isn't "Up", run `moviebrowser3 restart`. |
 | Videos are missing | The disk isn't visible to Ubuntu: see step 5, then run `moviebrowser3 restart`. |
-| Playing says "The VLC bridge … did not answer" | Run `moviebrowser3 bridge start`. Or open Task Scheduler and run **MovieBrowser3 VLC bridge**. |
+| Playing says "The host bridge … did not answer" | Run `moviebrowser3 bridge start`. Or open Task Scheduler and run **MovieBrowser3 host bridge**. |
 | VLC opens, but MovieBrowser3 doesn't notice what's playing | Mirrored networking is off: redo step 2. |
 | The update stops with a red ✖ | It shows the end of the log, and the whole log is in `~/prod_codes/MovieBrowser3/install.log`. To watch every command's output live, run `MOVIEBROWSER3_VERBOSE=1 moviebrowser3 update`. The previous version keeps running. |
 | The update says "can't be fast-forwarded" or "can't check out release" | Someone changed files in the install folder. Ask a developer, or see TECHNICAL.md. |

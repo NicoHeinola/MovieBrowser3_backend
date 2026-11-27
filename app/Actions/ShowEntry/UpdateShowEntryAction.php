@@ -2,8 +2,8 @@
 
 namespace App\Actions\ShowEntry;
 
-use App\Actions\Episode\VideoFile\MoveVideoFileAction;
-use App\Actions\Episode\VideoFile\ResolveEpisodeVideoPathAction;
+use App\Actions\Episode\VideoFile\Path\ResolveEpisodeVideoPathAction;
+use App\Actions\Episode\VideoFile\RenameVideoFileAction;
 use App\Dtos\ShowEntry\UpdateShowEntryData;
 use App\Models\ShowEntry\ShowEntry;
 use Illuminate\Support\Arr;
@@ -15,7 +15,7 @@ class UpdateShowEntryAction
     use AsAction;
 
     public function __construct(
-        private readonly MoveVideoFileAction $moveVideoFileAction,
+        private readonly RenameVideoFileAction $renameVideoFileAction,
         private readonly ResolveEpisodeVideoPathAction $resolveEpisodeVideoPathAction,
     ) {}
 
@@ -24,29 +24,28 @@ class UpdateShowEntryAction
         return DB::transaction(function () use ($data): ShowEntry {
             $data->showEntry->loadMissing('show.titles', 'episodes');
             $oldEntryName = $data->showEntry->name;
-            $episodeOldPaths = $data->showEntry->episodes
-                ->filter(fn ($episode) => $episode->filename !== '')
-                ->mapWithKeys(fn ($episode) => [$episode->id => $this->resolveEpisodeVideoPathAction->handle($episode, entryName: $oldEntryName)])
-                ->all();
 
             $data->showEntry->fill(Arr::only($data->all(), $data->showEntry->getFillable()))->save();
 
-            if ($data->showEntry->wasChanged('name')) {
-                foreach ($data->showEntry->episodes as $episode) {
-                    if ($episode->filename === '' || !isset($episodeOldPaths[$episode->id])) {
-                        continue;
-                    }
-
-                    $oldPath = $episodeOldPaths[$episode->id];
-                    $newPath = $this->resolveEpisodeVideoPathAction->handle($episode, entryName: $data->showEntry->name);
-
-                    if ($oldPath !== $newPath) {
-                        $this->moveVideoFileAction->handle($oldPath, $newPath);
-                    }
-                }
-            }
+            $this->renameEntryVideos($data->showEntry, $oldEntryName);
 
             return $data->showEntry->fresh();
         });
+    }
+
+    /**
+     * Gives the entry's videos their new paths: the entry's name is part of them. It renames nothing when the name is
+     * the same.
+     */
+    private function renameEntryVideos(ShowEntry $showEntry, string $oldEntryName): void
+    {
+        $episodesWithVideo = $showEntry->episodes->where('filename', '!=', '');
+
+        foreach ($episodesWithVideo as $episode) {
+            $oldPath = $this->resolveEpisodeVideoPathAction->handle($episode, entryName: $oldEntryName);
+            $newPath = $this->resolveEpisodeVideoPathAction->handle($episode, entryName: $showEntry->name);
+
+            $this->renameVideoFileAction->handle($oldPath, $newPath);
+        }
     }
 }

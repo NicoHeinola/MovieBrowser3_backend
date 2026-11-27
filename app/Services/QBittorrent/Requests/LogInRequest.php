@@ -8,7 +8,7 @@ use Saloon\Http\Request;
 use Saloon\Traits\Body\HasFormBody;
 
 /**
- * Logs in: `username` and `password`. Answers "Ok." with a session cookie, "Fails." for a wrong login.
+ * Logs in. The session cookie comes back in the headers.
  */
 final class LogInRequest extends Request implements HasBody
 {
@@ -16,10 +16,10 @@ final class LogInRequest extends Request implements HasBody
 
     protected Method $method = Method::POST;
 
-    /**
-     * @param  array<string, string>  $fields
-     */
-    public function __construct(private readonly array $fields) {}
+    public function __construct(
+        private readonly string $username,
+        private readonly string $password,
+    ) {}
 
     public function resolveEndpoint(): string
     {
@@ -31,6 +31,6 @@ final class LogInRequest extends Request implements HasBody
      */
     protected function defaultBody(): array
     {
-        return $this->fields;
+        return ['username' => $this->username, 'password' => $this->password];
     }
 }

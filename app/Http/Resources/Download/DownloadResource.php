@@ -16,7 +16,6 @@ class DownloadResource extends JsonResource
     public function toArray(Request $request): array
     {
         $download = $this->download;
-        $show = $download->show;
 
         return [
             'id' => $download->id,
@@ -25,15 +24,19 @@ class DownloadResource extends JsonResource
             'hash' => $download->hash,
             'status' => $this->status,
             'error_code' => $this->errorCode,
+            // qBittorrent removes a torrent after it seeds. Then its sizes are gone too
+            'client_removed_at' => $download->client_removed_at,
             'progress' => $this->torrent->progress ?? 0,
             'size_bytes' => $this->torrent->sizeBytes ?? 0,
             'downloaded_bytes' => $this->torrent->downloadedBytes ?? 0,
             'download_speed' => $this->torrent->downloadSpeed ?? 0,
-            'eta_seconds' => $this->torrent?->etaSeconds,
+            'eta_seconds' => $this->torrent?->eta,
             // Loaded with its titles only, which is all a download needs to name it
-            'show' => $show === null ? null : ShowResource::make($show),
+            'show' => ShowResource::make($download->show),
             'files' => $this->when($this->files !== null, fn () => DownloadFileResource::collection($this->files)),
-            'waiting_episode_count' => $this->when($this->waitingEpisodeCount !== null, $this->waitingEpisodeCount),
+            'picked_file_count' => (int) $download->picked_file_count,
+            'imported_file_count' => (int) $download->imported_file_count,
+            'waiting_episode_count' => (int) $download->waiting_episode_count,
             'created_at' => $download->created_at,
         ];
     }

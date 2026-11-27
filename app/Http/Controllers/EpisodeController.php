@@ -20,8 +20,6 @@ class EpisodeController extends Controller
 {
     public function index(ShowEntry $showEntry): JsonResponse
     {
-        $showEntry->loadMissing('show.titles');
-
         $episodes = QueryBuilder::for($showEntry->episodes())
             ->allowedFilters(...Episode::getAllowedFilters())
             ->allowedSorts(...Episode::getAllowedSorts())
@@ -34,12 +32,12 @@ class EpisodeController extends Controller
     {
         $episode = $action->handle($showEntry, CreateEpisodeData::from($request->validated()));
 
-        return EpisodeResource::make($episode->load('entry.show.titles'))->response()->setStatusCode(201);
+        return EpisodeResource::make($episode)->response()->setStatusCode(201);
     }
 
     public function show(Episode $episode): JsonResponse
     {
-        return EpisodeResource::make($episode->load('entry.show.titles'))->response();
+        return EpisodeResource::make($episode)->response();
     }
 
     public function update(Episode $episode, UpdateEpisodeRequest $request, UpdateEpisodeAction $action): JsonResponse
@@ -49,7 +47,7 @@ class EpisodeController extends Controller
             'episode' => $episode,
         ]));
 
-        return EpisodeResource::make($updatedEpisode->load('entry.show.titles'))->response();
+        return EpisodeResource::make($updatedEpisode)->response();
     }
 
     public function destroy(Episode $episode, DeleteEpisodeAction $action): Response

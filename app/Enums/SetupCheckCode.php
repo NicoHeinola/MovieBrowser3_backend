@@ -16,10 +16,10 @@ enum SetupCheckCode: string
     case PathNotCreatable = 'path_not_creatable';
     case VlcNotFound = 'vlc_not_found';
     case VlcWrongBinary = 'vlc_wrong_binary';
-    case VlcBridgeUnreachable = 'vlc_bridge_unreachable';
-    case VlcBridgeOutdated = 'vlc_bridge_outdated';
-    case VlcBridgeUnauthorized = 'vlc_bridge_unauthorized';
-    case VlcBridgeRejected = 'vlc_bridge_rejected';
+    case HostBridgeUnreachable = 'host_bridge_unreachable';
+    case HostBridgeOutdated = 'host_bridge_outdated';
+    case HostBridgeUnauthorized = 'host_bridge_unauthorized';
+    case HostBridgeRejected = 'host_bridge_rejected';
     case UrlRequired = 'url_required';
     case QBittorrentUnreachable = 'qbittorrent_unreachable';
     case QBittorrentLoginFailed = 'qbittorrent_login_failed';

@@ -2,8 +2,8 @@
 
 namespace App\Actions\ShowTitle;
 
-use App\Actions\Episode\VideoFile\ResolveShowVideoFolderNameAction;
-use App\Actions\Show\RelocateShowVideosAction;
+use App\Actions\Episode\VideoFile\Path\ResolveShowFolderNameAction;
+use App\Actions\Show\RenameShowVideosAction;
 use App\Dtos\ShowTitle\CreateShowTitleData;
 use App\Models\Show\Show;
 use App\Models\ShowTitle\ShowTitle;
@@ -15,13 +15,13 @@ class CreateShowTitleAction
     use AsAction;
 
     public function __construct(
-        private readonly RelocateShowVideosAction $relocateShowVideosAction,
-        private readonly ResolveShowVideoFolderNameAction $resolveShowVideoFolderNameAction,
+        private readonly RenameShowVideosAction $renameShowVideosAction,
+        private readonly ResolveShowFolderNameAction $resolveShowFolderNameAction,
     ) {}
 
     public function handle(Show $show, CreateShowTitleData $data): ShowTitle
     {
-        $oldFolderName = $this->resolveShowVideoFolderNameAction->handle($show);
+        $oldFolderName = $this->resolveShowFolderNameAction->handle($show);
 
         return DB::transaction(function () use ($show, $data, $oldFolderName): ShowTitle {
             if ($data->isPrimary) {
@@ -33,7 +33,7 @@ class CreateShowTitleAction
                 'is_primary' => $data->isPrimary,
             ]);
 
-            $this->relocateShowVideosAction->handle($show->fresh(), $oldFolderName);
+            $this->renameShowVideosAction->handle($show->fresh(), $oldFolderName);
 
             return $createdTitle;
         });

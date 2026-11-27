@@ -17,14 +17,14 @@ use function Pest\Laravel\postJson;
 use function Pest\Laravel\withToken;
 
 test('show title read endpoints require authentication', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $show = Show::factory()->create();
 
     getJson("/api/v1/shows/{$show->id}/titles")->assertUnauthorized();
 });
 
 test('show title write endpoints require admin', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
@@ -36,7 +36,7 @@ test('show title write endpoints require admin', function () {
 });
 
 test('authenticated users can list show titles', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
@@ -51,7 +51,7 @@ test('authenticated users can list show titles', function () {
 });
 
 test('authenticated users can view a single title', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     $user = User::factory()->create();
     $token = $user->createToken('test-token')->plainTextToken;
     withToken($token);
@@ -69,7 +69,7 @@ test('authenticated users can view a single title', function () {
 });
 
 test('an admin can create a title for a show', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -93,7 +93,7 @@ test('an admin can create a title for a show', function () {
 });
 
 test('an admin can update a title', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -117,11 +117,11 @@ test('an admin can update a title', function () {
     ]);
 });
 
-test('updating the primary show title relocates episode files', function () {
-    global $videoBasePath;
+test('updating the primary show title moves episode files', function () {
+    global $videoBaseFolder;
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $show = Show::factory()->create();
     $title = ShowTitle::factory()->for($show)->primary()->create([
@@ -133,8 +133,8 @@ test('updating the primary show title relocates episode files', function () {
         'filename' => 'episode_1.mkv',
     ]);
 
-    $oldPath = "$videoBasePath/{$show->id}_Old Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
-    $newPath = "$videoBasePath/{$show->id}_Updated Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $oldPath = "$videoBaseFolder/{$show->id}_Old Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $newPath = "$videoBaseFolder/{$show->id}_Updated Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'video-bytes');
 
@@ -150,7 +150,7 @@ test('updating the primary show title relocates episode files', function () {
 });
 
 test('an admin can delete a non-primary title', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -166,7 +166,7 @@ test('an admin can delete a non-primary title', function () {
 });
 
 test('creating a primary title auto-demotes the existing primary', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -191,11 +191,11 @@ test('creating a primary title auto-demotes the existing primary', function () {
     ]);
 });
 
-test('creating a new primary title relocates episode files to the new show folder', function () {
-    global $videoBasePath;
+test('creating a new primary title moves episode files to the new show folder', function () {
+    global $videoBaseFolder;
     actingAsAdmin();
 
-    Setting::query()->whereKey('video_base_path')->update(['value' => $videoBasePath]);
+    Setting::query()->whereKey('video_base_folder')->update(['value' => $videoBaseFolder]);
 
     $show = Show::factory()->create();
     ShowTitle::factory()->for($show)->primary()->create([
@@ -207,8 +207,8 @@ test('creating a new primary title relocates episode files to the new show folde
         'filename' => 'episode_1.mkv',
     ]);
 
-    $oldPath = "$videoBasePath/{$show->id}_Old Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
-    $newPath = "$videoBasePath/{$show->id}_New Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $oldPath = "$videoBaseFolder/{$show->id}_Old Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
+    $newPath = "$videoBaseFolder/{$show->id}_New Primary/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv";
 
     File::ensureDirectoryExists(dirname($oldPath));
     File::put($oldPath, 'video-bytes');
@@ -226,7 +226,7 @@ test('creating a new primary title relocates episode files to the new show folde
 });
 
 test('updating a title to primary auto-demotes the existing primary', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -253,7 +253,7 @@ test('updating a title to primary auto-demotes the existing primary', function (
 });
 
 test('cannot delete the only primary title', function () {
-    global $videoBasePath;
+    global $videoBaseFolder;
     actingAsAdmin();
 
     $show = Show::factory()->create();
@@ -310,7 +310,7 @@ test('cannot unset the only primary title', function () {
 
 test('non-primary title changes leave episode files in place', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $show = Show::factory()->create();
     ShowTitle::factory()->for($show)->primary()->create(['title' => 'Primary']);
@@ -326,9 +326,9 @@ test('non-primary title changes leave episode files in place', function () {
     expect(File::exists($path))->toBeTrue();
 });
 
-test('promoting a title to primary relocates episode files', function () {
+test('promoting a title to primary moves episode files', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $show = Show::factory()->create();
     ShowTitle::factory()->for($show)->primary()->create(['title' => 'Old Primary']);
@@ -346,7 +346,7 @@ test('promoting a title to primary relocates episode files', function () {
 
 test('the first primary title moves files out of the id-named show folder', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $show = Show::factory()->create();
     $entry = ShowEntry::factory()->for($show)->create(['name' => 'Season 1']);
@@ -359,9 +359,9 @@ test('the first primary title moves files out of the id-named show folder', func
     expect(File::exists("$base/{$show->id}_Dr. Stone/{$entry->id}_Season 1/{$episode->id}_Episode 1.mkv"))->toBeTrue();
 });
 
-test('a failed relocation restores moved files and keeps the old title', function () {
+test('a failed move restores moved files and keeps the old title', function () {
     actingAsAdmin();
-    $base = useTestVideoBasePath();
+    $base = useTestVideoBaseFolder();
 
     $show = Show::factory()->create();
     $title = ShowTitle::factory()->for($show)->primary()->create(['title' => 'Old']);

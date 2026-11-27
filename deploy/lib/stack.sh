@@ -2,7 +2,7 @@
 # The install folder's files, the frontend build, the backend image, migrations and the running containers.
 
 # Copied from the backend clone's deploy/ on every run. lib/ goes along because the moviebrowser3 command uses it.
-DEPLOY_FILES=(compose.yml vlc_bridge.py moviebrowser3 windows/register-vlc-bridge.ps1)
+DEPLOY_FILES=(compose.yml host_bridge.py moviebrowser3 windows/register-host-bridge.ps1)
 
 install_files() {
     local source_dir="$INSTALL_DIR/MovieBrowser3_backend/deploy" file
@@ -16,7 +16,7 @@ install_files() {
     for file in "${DEPLOY_FILES[@]}"; do
         cp "$source_dir/$file" "$INSTALL_DIR/$file"
     done
-    chmod +x "$INSTALL_DIR/moviebrowser3" "$INSTALL_DIR/vlc_bridge.py"
+    chmod +x "$INSTALL_DIR/moviebrowser3" "$INSTALL_DIR/host_bridge.py"
 
     # Replaced whole, so a module a newer release drops doesn't linger
     rm -rf "$INSTALL_DIR/lib"
@@ -36,7 +36,7 @@ write_compose_override() {
     {
         echo "# Written by install.sh from MOVIEBROWSER3_MEDIA_DIRS and BACKUP_PATH: media and backup folders, mounted at the same path as on the host."
         echo "services:"
-        for service in backend queue; do
+        for service in backend queue imports; do
             echo "  $service:"
             echo "    volumes:"
             for dir in "$BACKUP_PATH" "${MEDIA_DIRS[@]}"; do
@@ -86,7 +86,7 @@ start_stack() {
     # Recreate the backend even when its image is unchanged: its mount must pick up the new web/current
     run_quiet "Backend on the new version" docker compose up -d --force-recreate --no-deps backend ||
         fail "The backend failed to start."
-    run_quiet "Database, queue and scheduler" docker compose up -d --remove-orphans ||
+    run_quiet "Database, queues and scheduler" docker compose up -d --remove-orphans ||
         fail "The services failed to start."
     rm -rf "$INSTALL_DIR/web/previous"
 }

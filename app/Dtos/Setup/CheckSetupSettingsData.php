@@ -12,7 +12,7 @@ use Spatie\LaravelData\Optional;
 class CheckSetupSettingsData extends Data
 {
     public function __construct(
-        public string|Optional|null $videoBasePath,
+        public string|Optional|null $videoBaseFolder,
         public string|Optional|null $vlcMediaPlayerPath,
         public string|Optional|null $qbittorrentUrl,
         public string|Optional|null $qbittorrentUsername,

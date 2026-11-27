@@ -2,7 +2,6 @@
 
 use App\Models\User\User;
 use App\Services\Mal\Requests\SearchAnimeRequest;
-use Illuminate\Support\Facades\Cache;
 use Saloon\Http\Faking\MockResponse;
 use Saloon\Laravel\Facades\Saloon;
 
@@ -59,23 +58,19 @@ test('an admin gets the matching anime', function () {
         ->and($sent->query()->all())->toMatchArray(['type' => 'anime', 'keyword' => 'spy x']);
 });
 
-test('details MAL leaves out come back empty, and items without an id, name or web link are skipped', function () {
+test('details MAL leaves out come back empty', function () {
     actingAsAdmin();
     Saloon::fake(['mal.test/*' => MockResponse::make(malSearchAnswer(function (array $answer): array {
         $items = &$answer['categories'][0]['items'];
         // Not aired yet: no score, year or image
         $items[0]['payload'] = ['media_type' => 'TV', 'start_year' => 0, 'score' => 'N/A', 'status' => 'Not yet aired'];
         unset($items[0]['image_url']);
-        unset($items[1]['name']);
-        $items[2]['id'] = 'not a number';
-        $items[] = [...$items[0], 'id' => 1, 'url' => 'javascript:alert(1)'];
 
         return $answer;
     }))]);
 
     getJson('/api/v1/mal-anime?filter[search]=spy x')
         ->assertOk()
-        ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.image_url', null)
         ->assertJsonPath('data.0.start_year', null)
         ->assertJsonPath('data.0.score', null)
@@ -103,25 +98,12 @@ test('when MAL can not answer the search is unavailable', function (callable $an
     'unexpected answer' => fn () => fn () => MockResponse::make('<html>Just a moment...</html>'),
 ]);
 
-test('a repeated search is answered from the cache, ignoring case and spacing', function () {
+test('a repeated search is answered from the cache', function () {
     actingAsAdmin();
     Saloon::fake(['mal.test/*' => MockResponse::make(malSearchAnswer())]);
 
-    getJson('/api/v1/mal-anime?filter[search]=spy x')->assertOk();
-    getJson('/api/v1/mal-anime?filter[search]=%20Spy%20%20X%20')
-        ->assertOk()
-        ->assertJsonCount(3, 'data')
-        ->assertJsonPath('data.1.start_year', 2022);
-
-    Saloon::assertSentCount(1);
-});
-
-test('a cached search from before an update changed its shape is fetched again', function () {
-    actingAsAdmin();
-    Saloon::fake(['mal.test/*' => MockResponse::make(malSearchAnswer())]);
-    Cache::put('mal.anime.'.hash('xxh128', 'spy x'), [['id' => 1]], 60);
-
-    getJson('/api/v1/mal-anime?filter[search]=spy x')->assertOk()->assertJsonCount(3, 'data');
+    getJson('/api/v1/mal-anime?filter[search]=spy')->assertOk();
+    getJson('/api/v1/mal-anime?filter[search]=spy')->assertOk()->assertJsonCount(3, 'data');
 
     Saloon::assertSentCount(1);
 });

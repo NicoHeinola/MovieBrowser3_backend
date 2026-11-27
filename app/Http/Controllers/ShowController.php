@@ -26,7 +26,7 @@ class ShowController extends Controller
     /**
      * @return array<int|string, string|Closure>
      */
-    private function relations(Request $request): array
+    private function getRelations(Request $request): array
     {
         return [
             'categories',
@@ -41,7 +41,7 @@ class ShowController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $shows = QueryBuilder::for(Show::query()->with($this->relations($request)))
+        $shows = QueryBuilder::for(Show::query()->with($this->getRelations($request)))
             ->allowedFilters(...Show::getAllowedFilters())
             ->allowedSorts(...Show::getAllowedSorts())
             ->jsonPaginate();
@@ -53,12 +53,12 @@ class ShowController extends Controller
     {
         $show = $createShowAction->handle(CreateShowData::from($request->validated()));
 
-        return ShowResource::make($show->load($this->relations($request)))->response()->setStatusCode(201);
+        return ShowResource::make($show->load($this->getRelations($request)))->response()->setStatusCode(201);
     }
 
     public function show(Show $show, Request $request): JsonResponse
     {
-        return ShowResource::make($show->load($this->relations($request)))->response();
+        return ShowResource::make($show->load($this->getRelations($request)))->response();
     }
 
     public function update(Show $show, UpdateShowRequest $request, UpdateShowAction $updateShowAction): JsonResponse
@@ -68,7 +68,7 @@ class ShowController extends Controller
             'show' => $show,
         ]));
 
-        return ShowResource::make($updatedShow->load($this->relations($request)))->response();
+        return ShowResource::make($updatedShow->load($this->getRelations($request)))->response();
     }
 
     public function destroy(Show $show, DeleteShowAction $deleteShowAction): Response

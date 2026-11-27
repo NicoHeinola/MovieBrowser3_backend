@@ -2,6 +2,7 @@
 
 namespace App\Models\ShowWatchProgress;
 
+use App\Models\ShowWatchProgress\Query\HasShowWatchProgressQuery;
 use App\Models\ShowWatchProgress\Relations\HasShowWatchProgressRelations;
 use Database\Factories\ShowWatchProgressFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -14,6 +15,7 @@ class ShowWatchProgress extends Model
     /** @use HasFactory<ShowWatchProgressFactory> */
     use HasFactory;
 
+    use HasShowWatchProgressQuery;
     use HasShowWatchProgressRelations;
 
     protected static function newFactory(): ShowWatchProgressFactory

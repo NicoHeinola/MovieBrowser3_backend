@@ -18,20 +18,21 @@ class ResolveDownloadDetailsAction
      * A download as qBittorrent's answer shows it. Reads only: a torrent qBittorrent lost is reported as failed, not
      * stored as failed, and a waiting magnet whose files aren't fetched yet is reported as fetching them.
      *
+     * @param  Download  $download  With its pick counts loaded
      * @param  QBittorrentTorrentData|null  $torrent  Null when qBittorrent doesn't have it
      * @param  list<DownloadFileDetailsData>|null  $files  Null when they weren't read
      */
-    public function handle(Download $download, ?QBittorrentTorrentData $torrent, ?array $files = null, ?int $waitingEpisodeCount = null): DownloadDetailsData
+    public function handle(Download $download, ?QBittorrentTorrentData $torrent, ?array $files = null): DownloadDetailsData
     {
         // A completed download's torrent leaves qBittorrent on purpose once it's done seeding
         if ($torrent === null && $download->status !== DownloadStatus::Completed) {
-            return new DownloadDetailsData($download, DownloadStatus::Failed, DownloadErrorCode::ClientLostTorrent, null, $files === null ? null : [], $waitingEpisodeCount);
+            return new DownloadDetailsData($download, DownloadStatus::Failed, DownloadErrorCode::ClientLostTorrent, null, $files);
         }
 
-        $status = $download->status === DownloadStatus::WaitingForFiles && $torrent?->hasMetadata === false
-            ? DownloadStatus::FetchingMetadata
-            : $download->status;
+        if ($download->status === DownloadStatus::WaitingForFiles && $torrent?->hasMetadata === false) {
+            return new DownloadDetailsData($download, DownloadStatus::FetchingMetadata, $download->error_code, $torrent, $files);
+        }
 
-        return new DownloadDetailsData($download, $status, $download->error_code, $torrent, $files, $waitingEpisodeCount);
+        return new DownloadDetailsData($download, $download->status, $download->error_code, $torrent, $files);
     }
 }

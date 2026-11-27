@@ -2,11 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Actions\Episode\VideoFile\ResolveEpisodeFromVideoFileAction;
-use App\Actions\ShowEntryWatchStatus\CompleteEntryOnLastEpisodeAction;
-use App\Actions\ShowWatchProgress\UpdateShowWatchProgressAction;
+use App\Actions\EpisodePlayback\UpdateProgressFromVlcAction;
 use App\Dtos\EpisodePlayback\VlcConnectionData;
-use App\Dtos\ShowWatchProgress\WatchPositionData;
 use App\Models\User\User;
 use App\Services\Vlc\VlcService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -27,60 +24,29 @@ class TrackVlcPlaybackJob implements ShouldQueue
 
     public function __construct(
         public User $user,
-        public VlcConnectionData $vlc,
+        public VlcConnectionData $vlcConnection,
     ) {}
 
     /**
      * Queues the next check of this VLC window, `vlc.track_interval_seconds` (VLC_TRACK_INTERVAL_SECONDS) from now.
      */
-    public static function queueNextCheck(User $user, VlcConnectionData $vlc): PendingDispatch
+    public static function queueNextCheck(User $user, VlcConnectionData $vlcConnection): PendingDispatch
     {
-        return self::dispatch($user, $vlc)->delay((int) config('vlc.track_interval_seconds'));
+        return self::dispatch($user, $vlcConnection)->delay((int) config('vlc.track_interval_seconds'));
     }
 
-    public function handle(
-        VlcService $vlcService,
-        ResolveEpisodeFromVideoFileAction $resolveEpisodeFromVideoFileAction,
-        UpdateShowWatchProgressAction $updateShowWatchProgressAction,
-        CompleteEntryOnLastEpisodeAction $completeEntryOnLastEpisodeAction,
-    ): void {
-        $status = $vlcService->getStatus($this->vlc);
+    public function handle(UpdateProgressFromVlcAction $updateProgressFromVlcAction): void
+    {
+        $vlcService = new VlcService($this->vlcConnection);
+        $status = $vlcService->getStatus();
 
-        // VLC no longer answers: the window was closed, so there is nothing left to follow.
+        // VLC no longer answers: the window was closed, so there is nothing left to follow
         if ($status === null) {
             return;
         }
 
-        // Queue the next check before saving anything, so one failed save does not end the tracking for good.
-        self::queueNextCheck($this->user, $this->vlc);
-
-        // Only an episode that is actually playing counts; a paused or stopped VLC keeps the last saved progress.
-        $filename = data_get($status, 'information.category.meta.filename');
-        $episode = data_get($status, 'state') === 'playing' && is_string($filename)
-            ? $resolveEpisodeFromVideoFileAction->handle($filename)
-            : null;
-
-        if ($episode !== null) {
-            $position = new WatchPositionData(
-                $this->seconds(data_get($status, 'time'), 0),
-                $this->seconds(data_get($status, 'length'), 1),
-            );
-
-            $updateShowWatchProgressAction->handle($episode, $this->user, $position);
-
-            // Reaching the credits of the entry's last episode (or a movie) means the entry has been watched, whatever
-            // status the user set meanwhile.
-            if ($position->isNearEnd()) {
-                $completeEntryOnLastEpisodeAction->handle($episode, $this->user);
-            }
-        }
-    }
-
-    /**
-     * VLC reports whole seconds, and 0 or -1 for a length it doesn't know yet; anything below $min is stored as unknown.
-     */
-    private function seconds(mixed $value, int $min): ?int
-    {
-        return is_numeric($value) && $value >= $min ? (int) $value : null;
+        // Before saving: one save that fails must not end the tracking for the rest of the film
+        self::queueNextCheck($this->user, $this->vlcConnection);
+        $updateProgressFromVlcAction->handle($this->user, $status);
     }
 }
