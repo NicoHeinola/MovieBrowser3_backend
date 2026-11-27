@@ -1,10 +1,13 @@
 # MovieBrowser3 Backend API
 
-Laravel 13 JSON API backend for MovieBrowser3.
+The API of MovieBrowser3, a show and movie library that runs on your own PC. It is a Laravel 13 JSON API. It manages shows, episodes and their video files, watch status and progress, playback in VLC through a host bridge, and torrent search and downloads through qBittorrent. The web app lives in the `MovieBrowser3_frontend` repo.
 
 ## Setup
 
+Start the dev database first, then set up the app:
+
 ```bash
+docker compose up -d
 composer setup
 ```
 
@@ -24,21 +27,14 @@ Dumps go to `storage/app/backups` unless `BACKUP_PATH` says otherwise.
 composer dev
 ```
 
-## Auth
+It starts the server on port 8765, the queue and import workers, and the scheduler.
 
-Uses Sanctum bearer tokens.
+## API
 
-```text
-Authorization: Bearer <token>
-```
-
-## Endpoints
-
-- `POST /api/v1/auth/register`
-- `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
-- `POST /api/v1/auth/logout`
-- `GET /api/v1/watch-progress/stream` (server-sent `watch-progress` events with the user's changed `ShowWatchProgress`)
+- Every route is under `/api/v1`. List them with `php artisan route:list --path=api`.
+- Auth uses Sanctum bearer tokens (`Authorization: Bearer <token>`) from `POST /api/v1/auth/login`.
+- Reads need a signed-in user. Most writes, and calls to outside systems such as the torrent search, need an admin.
+- `GET /api/v1/watch-progress/stream` is a server-sent events stream of the user's watch progress and watch status changes.
 
 ## Test
 
@@ -48,14 +44,8 @@ composer test
 
 ## Production
 
-Docker deploy built on the host from clones of `main`, with a host-side VLC bridge. [deploy/README.md](deploy/README.md) is the step-by-step install guide, and [deploy/TECHNICAL.md](deploy/TECHNICAL.md) explains how it works. To publish, push to `main`, then run `moviebrowser3 update`.
+A Docker deploy, built on the host from the newest release tag of each repo, with a host-side VLC bridge. [deploy/README.md](deploy/README.md) is the step-by-step install guide, and [deploy/TECHNICAL.md](deploy/TECHNICAL.md) explains how it works. To publish, release the backend and then the frontend, and run `~/prod_codes/MovieBrowser3/moviebrowser3 update`.
 
 ## AI Agent Guidance
 
-Agent guidance lives in `.claude/` and works for both Claude Code and Copilot:
-
-- `AGENTS.md`: repo-wide guidance. `CLAUDE.md` imports it, and `.github/copilot-instructions.md` is a symlink to it.
-- `.claude/rules/`: file-specific rules. Claude loads them through `paths`, Copilot through `applyTo`.
-- `.claude/skills/`: workflows. `.github/skills` is a symlink to it.
-
-In VS Code, Copilot loads `AGENTS.md` by default (`chat.useAgentsMdFile`). If it doesn't pick up the rules, add `.claude/rules` to `chat.instructionsFilesLocations` in your user settings.
+Claude Code reads `CLAUDE.md`, the file-specific rules in `.claude/rules/` and the workflows in `.claude/skills/`.
