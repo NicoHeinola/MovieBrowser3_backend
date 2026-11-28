@@ -14,6 +14,7 @@ use App\Services\QBittorrent\QBittorrentConnector;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
 use Saloon\Http\Faking\MockResponse;
+use Saloon\Http\PendingRequest;
 use Saloon\Laravel\Facades\Saloon;
 
 use function Pest\Laravel\deleteJson;
@@ -70,11 +71,13 @@ function showWithTwoEpisodes(): array
 test('downloads require an admin', function () {
     $download = Download::factory()->create();
 
+    getJson('/api/v1/downloads')->assertUnauthorized();
     postJson('/api/v1/downloads', [])->assertUnauthorized();
     getJson("/api/v1/downloads/{$download->id}")->assertUnauthorized();
 
     withToken(User::factory()->create()->createToken('test-token')->plainTextToken);
 
+    getJson('/api/v1/downloads')->assertForbidden();
     postJson('/api/v1/downloads', [])->assertForbidden();
     getJson("/api/v1/downloads/{$download->id}")->assertForbidden();
     putJson("/api/v1/downloads/{$download->id}/files", [])->assertForbidden();
@@ -696,6 +699,52 @@ test('the list shows every download newest first, live from one qBittorrent requ
 
     expect(qBittorrentRequestsTo('torrents/info'))->toBe([['hashes' => DOWNLOAD_HASH.'|'.str_repeat('a', 40)]]);
 });
+
+test('the list takes only the given downloads, with their files', function () {
+    [$show, $episode] = showWithTwoEpisodes();
+    $other = Download::factory()->create(['hash' => str_repeat('b', 40)]);
+    $lost = Download::factory()->create(['hash' => str_repeat('a', 40), 'created_at' => now()->subDay()]);
+    $download = Download::factory()->create(['hash' => DOWNLOAD_HASH, 'show_id' => $show->id, 'status' => DownloadStatus::Downloading]);
+    DownloadPick::factory()->for($download)->create(['file_index' => 0, 'episode_id' => $episode->id]);
+    fakeQBittorrentApi([
+        'torrents/info' => qBittorrentAnswer('torrents-info'),
+        'torrents/files' => fn (PendingRequest $request): MockResponse => $request->query()->get('hash') === DOWNLOAD_HASH
+            ? MockResponse::make(qBittorrentAnswer('torrents-files'))
+            : MockResponse::make('Not Found', 404),
+    ]);
+    actingAsAdmin();
+
+    $unknownId = $download->id + 100;
+
+    getJson("/api/v1/downloads?filter[id][]={$lost->id}&filter[id][]={$download->id}&filter[id][]={$unknownId}&include=files")
+        ->assertOk()
+        ->assertJsonCount(2)
+        ->assertJsonPath('0.id', $download->id)
+        ->assertJsonPath('0.status', 'downloading')
+        ->assertJsonCount(3, '0.files')
+        ->assertJsonPath('0.files.0.episode_id', $episode->id)
+        ->assertJsonPath('0.files.0.show_id', $show->id)
+        ->assertJsonPath('0.files.1.episode_id', null)
+        ->assertJsonPath('1.id', $lost->id)
+        ->assertJsonPath('1.status', 'failed')
+        ->assertJsonPath('1.files', []);
+
+    expect(qBittorrentRequestsTo('torrents/info'))->toBe([['hashes' => DOWNLOAD_HASH.'|'.str_repeat('a', 40)]])
+        ->and(qBittorrentRequestsTo('torrents/files'))->toHaveCount(2)
+        ->and($other->hash)->not->toBeIn(array_column(qBittorrentRequestsTo('torrents/files'), 'hash'));
+});
+
+test('the list refuses unknown filters and includes', function (string $query, string $field) {
+    actingAsAdmin();
+
+    getJson("/api/v1/downloads?{$query}")->assertUnprocessable()->assertJsonValidationErrors([$field]);
+    Saloon::assertNothingSent();
+})->with([
+    'an id that is no number' => ['filter[id][]=x', 'filter.id.0'],
+    'the same id twice' => ['filter[id][]=3&filter[id][]=3', 'filter.id.0'],
+    'another filter' => ['filter[status]=failed', 'filter'],
+    'another include' => ['include=picks', 'include'],
+]);
 
 test('an empty list asks qBittorrent nothing', function () {
     actingAsAdmin();

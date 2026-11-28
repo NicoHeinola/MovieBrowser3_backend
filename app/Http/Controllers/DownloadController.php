@@ -8,6 +8,7 @@ use App\Actions\Download\GetDownloadDetailsAction;
 use App\Actions\Download\ListDownloadsAction;
 use App\Dtos\Download\CreateDownloadData;
 use App\Http\Requests\Download\DestroyDownloadRequest;
+use App\Http\Requests\Download\IndexDownloadRequest;
 use App\Http\Requests\Download\StoreDownloadRequest;
 use App\Http\Resources\Download\DownloadResource;
 use App\Models\Download\Download;
@@ -16,9 +17,22 @@ use Illuminate\Http\Response;
 
 class DownloadController extends Controller
 {
-    public function index(ListDownloadsAction $action): JsonResponse
+    public function index(IndexDownloadRequest $request, ListDownloadsAction $action): JsonResponse
     {
-        return DownloadResource::collection($action->handle())->response();
+        // Query strings hold only strings: the request checked that each id is an integer
+        /** @var list<string>|null $ids */
+        $ids = $request->validated('filter.id');
+
+        if ($ids !== null) {
+            $ids = array_map(intval(...), $ids);
+        }
+
+        $downloads = $action->handle(
+            ids: $ids,
+            withFiles: $request->validated('include') === 'files',
+        );
+
+        return DownloadResource::collection($downloads)->response();
     }
 
     public function store(StoreDownloadRequest $request, CreateDownloadAction $createAction, GetDownloadDetailsAction $getAction): JsonResponse
